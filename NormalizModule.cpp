@@ -30,10 +30,15 @@ using std::pair;
     } catch (libnormaliz::NormalizException& e) { \
         PyErr_SetString( NormalizError, e.what() ); \
         return NULL; \
+    } catch( ... ) { \
+        PyErr_SetString( PyNormalizError, "unknown exception" ); \
+        return NULL; \
     }
 
 static PyObject * NormalizError;
+static PyObject * PyNormalizError;
 static char* cone_name = "Cone";
+static string cone_name_str( cone_name );
 
 
 typedef int py_size_t;
@@ -225,6 +230,14 @@ PyObject* pack_cone( Cone<Integer>* C ){
   return PyCapsule_New( reinterpret_cast<void*>( C ), cone_name, &delete_cone<Integer> );
 }
 
+bool is_cone( PyObject* cone ){
+  if( PyCapsule_CheckExact( cone ) ){
+    // compare as string
+    return cone_name_str == string(PyCapsule_GetName( cone ));
+  }
+  return false;
+}
+
 template<typename Integer>
 static PyObject* _NmzConeIntern(PyObject * input_list)
 {
@@ -283,7 +296,7 @@ PyObject* _NmzCompute(PyObject* self, PyObject* args)
     PyObject* to_compute = PyTuple_GetItem( args, 1 );
     
     if (!PyList_Check( to_compute ) )
-        PyErr_SetString( NormalizError, "wrong input type" );
+        PyErr_SetString( PyNormalizError, "wrong input type" );
 
     ConeProperties propsToCompute;
     // we have a list
@@ -464,10 +477,149 @@ PyObject* _NmzConeProperty( PyObject* self, PyObject* args ){
   PyObject* cone = PyTuple_GetItem( args, 0 );
   PyObject* prop = PyTuple_GetItem( args, 1 );
   
+  if( !is_cone( cone ) ){
+    PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+    return NULL;
+  }
+  
+  if( !PyUnicode_Check( prop ) ){
+    PyErr_SetString( PyNormalizError, "Second argument must be a unicode string" );
+    return NULL;
+  }
+  
   Cone<mpz_class>* C = get_cone<mpz_class>( cone );
   
   return _NmzConePropertyImpl( C, prop );
   FUNC_END
+}
+
+PyObject* NmzSetVerboseDefault( PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+    PyObject * value = PyTuple_GetItem( args, 0 );
+    if (value != Py_True && value != Py_False){
+        PyErr_SetString( PyNormalizError, "Argument must be true or false" );
+        return NULL;
+    }
+    return libnormaliz::setVerboseDefault(value == Py_True) ? Py_True : Py_False;
+    FUNC_END
+}
+
+PyObject* NmzSetVerbose(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    
+    if( !is_cone( cone ) ){
+        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+        return NULL;
+    }
+    
+    PyObject* value = PyTuple_GetItem( args, 1 );
+    if (value != Py_True && value != Py_False){
+        PyErr_SetString( PyNormalizError, "Second argument must be true or false" );
+        return NULL;
+    }
+    bool old_value;
+    Cone<mpz_class>* C = get_cone<mpz_class>( cone );
+    old_value = C->setVerbose(value == Py_True);
+    return old_value ? Py_True : Py_False;
+    FUNC_END
+}
+
+PyObject* NmzEmbeddingDimension(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    if (!is_cone(cone)){
+        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+        return NULL;
+    }
+    Cone<mpz_class>* C = get_cone<mpz_class>(cone);
+    return NmzToPyLong(C->getEmbeddingDim());
+    FUNC_END
+}
+
+template<typename Integer>
+static PyObject* _NmzBasisChangeIntern(PyObject* cone)
+{
+    Cone<Integer>* C = get_cone<Integer>(cone);
+    Sublattice_Representation<Integer> bc = C->getSublattice();
+
+    PyObject* res = PyList_New( 3 );
+    PyList_SetItem(res, 0, NmzMatrixToPyList(bc.getEmbedding()));
+    PyList_SetItem(res, 1, NmzMatrixToPyList(bc.getProjection()));
+    PyList_SetItem(res, 2, NmzToPyLong(bc.getAnnihilator()));
+    // Dim, Rank, Equations and Congruences are already covered by special functions
+    // The index is not always computed and not so relevant
+    return res;
+}
+
+PyObject* _NmzBasisChange(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    if (!is_cone(cone)){
+        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+        return NULL;
+    }
+    return _NmzBasisChangeIntern<mpz_class>(cone);
+    FUNC_END
+}
+
+PyObject* NmzRank(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    if (!is_cone(cone)){
+        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+        return NULL;
+    }
+    Cone<mpz_class>* C = get_cone<mpz_class>(cone);
+    return NmzToPyLong(C->getSublattice().getRank());
+    FUNC_END
+}
+
+
+PyObject* NmzIsInhomogeneous(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    if (!is_cone(cone)){
+        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+        return NULL;
+    }
+    Cone<mpz_class>* C = get_cone<mpz_class>(cone);
+    return C->isInhomogeneous() ? Py_True : Py_False;
+    FUNC_END
+}
+
+PyObject* NmzEquations(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    if (!is_cone(cone)){
+        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+        return NULL;
+    }
+    Cone<mpz_class>* C = get_cone<mpz_class>(cone);
+    C->compute(ConeProperties(libnormaliz::ConeProperty::SupportHyperplanes));
+    return NmzMatrixToPyList(C->getSublattice().getEquations());
+    FUNC_END
+}
+
+PyObject* NmzCongruences(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    if (!is_cone(cone)){
+        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+        return NULL;
+    }
+    Cone<mpz_class>* C = get_cone<mpz_class>(cone);
+    C->compute(ConeProperties(libnormaliz::ConeProperty::SupportHyperplanes));
+    return NmzMatrixToPyList(C->getSublattice().getCongruences());
+    FUNC_END
 }
 
 
@@ -484,6 +636,20 @@ static PyMethodDef PyNormalizMethods[] = {
      "Check if property is computed "},
     {"NmzConeProperty", _NmzConeProperty, METH_VARARGS,
       "Return cone property" },
+    { "NmzSetVerboseDefault", NmzSetVerboseDefault, METH_VARARGS,
+      "Set verbosity" },
+    { "NmzSetVerbose", NmzSetVerbose, METH_VARARGS,
+      "Set verbosity of cone" },
+    { "NmzBasisChange", _NmzBasisChange, METH_VARARGS,
+      "Get information of basis change" },
+    { "NmzIsInhomogeneous", NmzIsInhomogeneous, METH_VARARGS,
+      "Is inhomogeneous cone" },
+    { "NmzEquations", NmzEquations, METH_VARARGS,
+      "Equations" },
+    { "NmzCongruences", NmzCongruences, METH_VARARGS,
+      "Congruences of cone" },
+    { "NmzRank", NmzRank, METH_VARARGS,
+      "Get rank" },
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -509,8 +675,11 @@ PyInit_PyNormaliz(void)
     
     NormalizError = PyErr_NewException( "Normaliz.error", NULL, NULL );
     Py_INCREF( NormalizError );
+    PyNormalizError = PyErr_NewException( "Normaliz.interface_error", NULL, NULL );
+    Py_INCREF( PyNormalizError );
     
     PyModule_AddObject( module, "error", NormalizError );
+    PyModule_AddObject( module, "error", PyNormalizError );
     
     return module;
 }
