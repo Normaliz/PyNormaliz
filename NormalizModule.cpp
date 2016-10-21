@@ -40,16 +40,27 @@ static PyObject * PyNormalizError;
 static char* cone_name = "Cone";
 static string cone_name_str( cone_name );
 
+#if PY_MAJOR_VERSION >= 3
+#define string_check PyUnicode_Check
+#else
+#define string_check PyString_Check
+#endif
+
 
 typedef int py_size_t;
 
 string PyUnicodeToString( PyObject* in ){
+#if PY_MAJOR_VERSION >= 3
   string out = "";
   int length = PyUnicode_GET_SIZE( in );
   for( int i = 0; i < length; i++ ){
       out += PyUnicode_READ_CHAR( in, i );
   }
   return out;
+#else
+  char* out = PyString_AsString( in );
+  return string(out);
+#endif
 }
 
 // Converting MPZ's to PyLong and back via strings. Worst possible solution ever.
@@ -63,7 +74,7 @@ bool PyLongToNmz( PyObject * in, mpz_class& out ){
 
 PyObject* NmzToPyLong( mpz_class in ){
   string mpz_as_string = in.get_str();
-  const char* mpz_as_c_string = mpz_as_string.c_str();
+  char* mpz_as_c_string = const_cast<char*>(mpz_as_string.c_str());
   char * pend;
   PyObject* ret_val = PyLong_FromString( mpz_as_c_string, &pend, 10 );
   return ret_val;
@@ -249,7 +260,7 @@ static PyObject* _NmzConeIntern(PyObject * input_list)
     }
     for (int i = 0; i < n; i += 2) {
         PyObject* type = PyList_GetItem(input_list, i);
-        if (!PyUnicode_Check(type)) {
+        if (!string_check(type)) {
             cerr << "Element " << i+1 << " of the input list must be a type string" << endl;
             return Py_False;
         }
@@ -304,7 +315,7 @@ PyObject* _NmzCompute(PyObject* self, PyObject* args)
 
     for (int i = 0; i < n; ++i) {
         PyObject* prop = PyList_GetItem(to_compute, i);
-        if (!PyUnicode_Check(prop)) {
+        if (!string_check(prop)) {
             cerr << "Element " << i+1 << " of the input list must be a type string";
             return Py_False;
         }
@@ -482,7 +493,7 @@ PyObject* _NmzConeProperty( PyObject* self, PyObject* args ){
     return NULL;
   }
   
-  if( !PyUnicode_Check( prop ) ){
+  if( !string_check( prop ) ){
     PyErr_SetString( PyNormalizError, "Second argument must be a unicode string" );
     return NULL;
   }
@@ -624,53 +635,103 @@ PyObject* NmzCongruences(PyObject* self, PyObject* args)
 
 
 /*
- * Python init stuff
+ * Python mixed init stuff
  */
 
+struct module_state {
+    PyObject *error;
+};
+
+#if PY_MAJOR_VERSION >= 3
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+#else
+#define GETSTATE(m) (&_state)
+static struct module_state _state;
+#endif
+
+static PyObject * error_out(PyObject *m) {
+    struct module_state *st = GETSTATE(m);
+    PyErr_SetString(st->error, "something bad happened");
+    return NULL;
+}
+
 static PyMethodDef PyNormalizMethods[] = {
-    {"NmzCone",  _NmzCone, METH_VARARGS,
+    {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
+    {"NmzCone",  (PyCFunction)_NmzCone, METH_VARARGS,
      "Create a cone"},
-    {"NmzCompute", _NmzCompute, METH_VARARGS,
+    {"NmzCompute", (PyCFunction)_NmzCompute, METH_VARARGS,
      "Compute some stuff"},
-    {"NmzHasConeProperty", NmzHasConeProperty, METH_VARARGS,
+    {"NmzHasConeProperty", (PyCFunction)NmzHasConeProperty, METH_VARARGS,
      "Check if property is computed "},
-    {"NmzConeProperty", _NmzConeProperty, METH_VARARGS,
+    {"NmzConeProperty", (PyCFunction)_NmzConeProperty, METH_VARARGS,
       "Return cone property" },
-    { "NmzSetVerboseDefault", NmzSetVerboseDefault, METH_VARARGS,
+    { "NmzSetVerboseDefault", (PyCFunction)NmzSetVerboseDefault, METH_VARARGS,
       "Set verbosity" },
-    { "NmzSetVerbose", NmzSetVerbose, METH_VARARGS,
+    { "NmzSetVerbose", (PyCFunction)NmzSetVerbose, METH_VARARGS,
       "Set verbosity of cone" },
-    { "NmzBasisChange", _NmzBasisChange, METH_VARARGS,
+    { "NmzBasisChange", (PyCFunction)_NmzBasisChange, METH_VARARGS,
       "Get information of basis change" },
-    { "NmzIsInhomogeneous", NmzIsInhomogeneous, METH_VARARGS,
+    { "NmzIsInhomogeneous", (PyCFunction)NmzIsInhomogeneous, METH_VARARGS,
       "Is inhomogeneous cone" },
-    { "NmzEquations", NmzEquations, METH_VARARGS,
+    { "NmzEquations", (PyCFunction)NmzEquations, METH_VARARGS,
       "Equations" },
-    { "NmzCongruences", NmzCongruences, METH_VARARGS,
+    { "NmzCongruences", (PyCFunction)NmzCongruences, METH_VARARGS,
       "Congruences of cone" },
-    { "NmzRank", NmzRank, METH_VARARGS,
+    { "NmzRank", (PyCFunction)NmzRank, METH_VARARGS,
       "Get rank" },
-    {NULL, NULL, 0, NULL}        /* Sentinel */
+    {NULL, }        /* Sentinel */
 };
 
-static struct PyModuleDef PyNormalizmodule = {
-   PyModuleDef_HEAD_INIT,
-   "PyNormaliz",   /* name of module */
-   NULL, /* module documentation, may be NULL */
-   -1,       /* size of per-interpreter state of the module,
-                or -1 if the module keeps state in global variables. */
-   PyNormalizMethods
+
+#if PY_MAJOR_VERSION >= 3
+
+static int PyNormaliz_traverse(PyObject *m, visitproc visit, void *arg) {
+    Py_VISIT(GETSTATE(m)->error);
+    return 0;
+}
+
+static int PyNormaliz_clear(PyObject *m) {
+    Py_CLEAR(GETSTATE(m)->error);
+    return 0;
+}
+
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "PyNormaliz",
+        NULL,
+        sizeof(struct module_state),
+        PyNormalizMethods,
+        NULL,
+        PyNormaliz_traverse,
+        PyNormaliz_clear,
+        NULL
 };
 
-PyMODINIT_FUNC
-PyInit_PyNormaliz(void)
+#define INITERROR return NULL
+
+PyMODINIT_FUNC PyInit_PyNormaliz(void)
+
+#else
+#define INITERROR return
+
+extern "C" void initPyNormaliz(void)
+#endif
 {
-    PyObject * module;
-    
-    module = PyModule_Create(&PyNormalizmodule);
-    
-    if(module == NULL){
-        return NULL;
+#if PY_MAJOR_VERSION >= 3
+    PyObject *module = PyModule_Create(&moduledef);
+#else
+    PyObject *module = Py_InitModule("PyNormaliz", PyNormalizMethods);
+#endif
+
+    if (module == NULL)
+        INITERROR;
+    struct module_state *st = GETSTATE(module);
+
+    st->error = PyErr_NewException("PyNormaliz.INITError", NULL, NULL);
+    if (st->error == NULL) {
+        Py_DECREF(module);
+        INITERROR;
     }
     
     NormalizError = PyErr_NewException( "Normaliz.error", NULL, NULL );
@@ -680,53 +741,117 @@ PyInit_PyNormaliz(void)
     
     PyModule_AddObject( module, "error", NormalizError );
     PyModule_AddObject( module, "error", PyNormalizError );
-    
+
+#if PY_MAJOR_VERSION >= 3
     return module;
+#endif
 }
+
 
 /*
- * main
+ * Python init stuff
  */
 
-wchar_t *GetWC(const char *c)
-{
-    const size_t cSize = strlen(c)+1;
-    wchar_t* wc = new wchar_t[cSize];
-    mbstowcs (wc, c, cSize);
-
-    return wc;
-}
-
-int main(int argc, char *argv[]){
-
-#ifdef PYTHON_VERSION_OLDER_THREE_FIVE
-    const size_t cSize = strlen(argv[0])+1;
-    wchar_t* program = new wchar_t[cSize];
-    mbstowcs (program, argv[0], cSize);
-#else
-    wchar_t *program = Py_DecodeLocale(argv[0], NULL);
-    if (program == NULL) {
-        fprintf(stderr, "Fatal error: cannot decode argv[0]\n");
-        exit(1);
-    }
-#endif
-
-    /* Add a built-in module, before Py_Initialize */
-
-    PyImport_AppendInittab("PyNormaliz", PyInit_PyNormaliz);
-    /* Pass argv[0] to the Python interpreter */
-    
-    
-    Py_SetProgramName(program);
-
-    /* Initialize the Python interpreter.  Required. */
-    Py_Initialize();
-
-    /* Optionally import the module; alternatively,
-       import can be deferred until the embedded script
-       imports it. */
-    PyImport_ImportModule("PyNormaliz");
-
-    PyMem_RawFree(program);
-    return 0;
-}
+// static PyMethodDef PyNormalizMethods[] = {
+//     {"NmzCone",  _NmzCone, METH_VARARGS,
+//      "Create a cone"},
+//     {"NmzCompute", _NmzCompute, METH_VARARGS,
+//      "Compute some stuff"},
+//     {"NmzHasConeProperty", NmzHasConeProperty, METH_VARARGS,
+//      "Check if property is computed "},
+//     {"NmzConeProperty", _NmzConeProperty, METH_VARARGS,
+//       "Return cone property" },
+//     { "NmzSetVerboseDefault", NmzSetVerboseDefault, METH_VARARGS,
+//       "Set verbosity" },
+//     { "NmzSetVerbose", NmzSetVerbose, METH_VARARGS,
+//       "Set verbosity of cone" },
+//     { "NmzBasisChange", _NmzBasisChange, METH_VARARGS,
+//       "Get information of basis change" },
+//     { "NmzIsInhomogeneous", NmzIsInhomogeneous, METH_VARARGS,
+//       "Is inhomogeneous cone" },
+//     { "NmzEquations", NmzEquations, METH_VARARGS,
+//       "Equations" },
+//     { "NmzCongruences", NmzCongruences, METH_VARARGS,
+//       "Congruences of cone" },
+//     { "NmzRank", NmzRank, METH_VARARGS,
+//       "Get rank" },
+//     {NULL, NULL, 0, NULL}        /* Sentinel */
+// };
+// 
+// static struct PyModuleDef PyNormalizmodule = {
+//    PyModuleDef_HEAD_INIT,
+//    "PyNormaliz",   /* name of module */
+//    NULL, /* module documentation, may be NULL */
+//    -1,       /* size of per-interpreter state of the module,
+//                 or -1 if the module keeps state in global variables. */
+//    PyNormalizMethods
+// };
+// 
+// PyMODINIT_FUNC
+// PyInit_PyNormaliz(void)
+// {
+//     PyObject * module;
+//     
+//     module = PyModule_Create(&PyNormalizmodule);
+//     
+//     if(module == NULL){
+//         return NULL;
+//     }
+//     
+//     NormalizError = PyErr_NewException( "Normaliz.error", NULL, NULL );
+//     Py_INCREF( NormalizError );
+//     PyNormalizError = PyErr_NewException( "Normaliz.interface_error", NULL, NULL );
+//     Py_INCREF( PyNormalizError );
+//     
+//     PyModule_AddObject( module, "error", NormalizError );
+//     PyModule_AddObject( module, "error", PyNormalizError );
+//     
+//     return module;
+// }
+// 
+// /*
+//  * main
+//  */
+// 
+// wchar_t *GetWC(const char *c)
+// {
+//     const size_t cSize = strlen(c)+1;
+//     wchar_t* wc = new wchar_t[cSize];
+//     mbstowcs (wc, c, cSize);
+// 
+//     return wc;
+// }
+// 
+// int main(int argc, char *argv[]){
+// 
+// #ifdef PYTHON_VERSION_OLDER_THREE_FIVE
+//     const size_t cSize = strlen(argv[0])+1;
+//     wchar_t* program = new wchar_t[cSize];
+//     mbstowcs (program, argv[0], cSize);
+// #else
+//     wchar_t *program = Py_DecodeLocale(argv[0], NULL);
+//     if (program == NULL) {
+//         fprintf(stderr, "Fatal error: cannot decode argv[0]\n");
+//         exit(1);
+//     }
+// #endif
+// 
+//     /* Add a built-in module, before Py_Initialize */
+// 
+//     PyImport_AppendInittab("PyNormaliz", PyInit_PyNormaliz);
+//     /* Pass argv[0] to the Python interpreter */
+//     
+//     
+//     Py_SetProgramName(program);
+// 
+//     /* Initialize the Python interpreter.  Required. */
+//     Py_Initialize();
+// 
+//     /* Optionally import the module; alternatively,
+//        import can be deferred until the embedded script
+//        imports it. */
+//     PyImport_ImportModule("PyNormaliz");
+// 
+//     PyMem_RawFree(program);
+//     return 0;
+// }

@@ -1,4 +1,7 @@
-all: module
+all: module2 module3
 
-module: NormalizModule.cpp setup.py
-	python setup.py build_ext --inplace
+module3: NormalizModule.cpp setup.py
+	python3 setup.py build_ext --inplace
+
+module2: NormalizModule.cpp setup.py
+	python2 setup.py build_ext --inplace
