@@ -502,6 +502,10 @@ PyObject* _NmzConePropertyImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::InternalIndex:
         return NmzToPyLong(C->getIndex());
     
+    case libnormaliz::ConeProperty::WitnessNotIntegrallyClosed:
+        return NmzVectorToPyList(C->getWitnessNotIntegrallyClosed());
+    
+    
     /* New stuff */
     
     case libnormaliz::ConeProperty::GradingDenom:
@@ -510,7 +514,8 @@ PyObject* _NmzConePropertyImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::UnitGroupIndex:
         return NmzToPyLong(C->getUnitGroupIndex());
     
-    
+    case libnormaliz::ConeProperty::ModuleGeneratorsOverOriginalMonoid:
+        return NmzMatrixToPyList(C->getModuleGeneratorsOverOriginalMonoid());
     
 
 //  the following properties are compute options and do not return anything
