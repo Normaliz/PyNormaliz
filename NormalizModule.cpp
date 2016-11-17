@@ -499,6 +499,9 @@ PyObject* _NmzConePropertyImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::ExternalIndex:
         return NmzToPyLong(C->getSublattice().getExternalIndex());
     
+    case libnormaliz::ConeProperty::InternalIndex:
+        return NmzToPyLong(C->getIndex());
+    
     /* New stuff */
     
     case libnormaliz::ConeProperty::GradingDenom:
