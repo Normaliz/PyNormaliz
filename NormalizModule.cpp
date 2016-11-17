@@ -496,10 +496,19 @@ PyObject* _NmzConePropertyImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::Sublattice:
         return _NmzBasisChangeIntern(C);
     
+    case libnormaliz::ConeProperty::ExternalIndex:
+        return NmzToPyLong(C->getSublattice().getExternalIndex());
+    
     /* New stuff */
     
     case libnormaliz::ConeProperty::GradingDenom:
         return NmzToPyLong(C->getGradingDenom());
+    
+    case libnormaliz::ConeProperty::UnitGroupIndex:
+        return NmzToPyLong(C->getUnitGroupIndex());
+    
+    
+    
 
 //  the following properties are compute options and do not return anything
     case libnormaliz::ConeProperty::DualMode:
