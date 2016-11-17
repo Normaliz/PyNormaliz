@@ -205,7 +205,7 @@ PyObject* NmzHilbertQuasiPolynomialToPyList(const libnormaliz::HilbertSeries& HS
     for (size_t i = 0; i < n; ++i) {
         PyList_SetItem(return_list, i, NmzVectorToPyList(HQ[i]));
     }
-    PyList_SetItem(return_list, n+1, NmzToPyLong(HS.getHilbertQuasiPolynomialDenom()));
+    PyList_SetItem(return_list, n, NmzToPyLong(HS.getHilbertQuasiPolynomialDenom()));
     return return_list;
 }
 
@@ -522,6 +522,9 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         Cone<Integer>* hull = new Cone<Integer>( C->getIntegerHullCone() );
         return pack_cone( hull ); 
     }
+    
+    case libnormaliz::ConeProperty::HilbertQuasiPolynomial:
+        return NmzHilbertQuasiPolynomialToPyList<Integer>(C->getHilbertSeries());
 
 //  the following properties are compute options and do not return anything
     case libnormaliz::ConeProperty::DualMode:
