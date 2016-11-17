@@ -517,6 +517,11 @@ PyObject* _NmzConePropertyImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::ModuleGeneratorsOverOriginalMonoid:
         return NmzMatrixToPyList(C->getModuleGeneratorsOverOriginalMonoid());
     
+    case libnormaliz::ConeProperty::IntegerHull:
+    {   
+        Cone<Integer>* hull = new Cone<Integer>( C->getIntegerHullCone() );
+        return pack_cone( hull ); 
+    }
 
 //  the following properties are compute options and do not return anything
     case libnormaliz::ConeProperty::DualMode:
