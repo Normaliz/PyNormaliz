@@ -348,6 +348,20 @@ PyObject* NmzHasConeProperty(PyObject* self, PyObject* args)
 }
 
 template<typename Integer>
+static PyObject* _NmzBasisChangeIntern(Cone<Integer>* C)
+{
+    Sublattice_Representation<Integer> bc = C->getSublattice();
+
+    PyObject* res = PyList_New( 3 );
+    PyList_SetItem(res, 0, NmzMatrixToPyList(bc.getEmbedding()));
+    PyList_SetItem(res, 1, NmzMatrixToPyList(bc.getProjection()));
+    PyList_SetItem(res, 2, NmzToPyLong(bc.getAnnihilator()));
+    // Dim, Rank, Equations and Congruences are already covered by special functions
+    // The index is not always computed and not so relevant
+    return res;
+}
+
+template<typename Integer>
 PyObject* _NmzConePropertyImpl(Cone<Integer>* C, PyObject* prop_obj)
 {
     
@@ -461,10 +475,26 @@ PyObject* _NmzConePropertyImpl(Cone<Integer>* C, PyObject* prop_obj)
 
     case libnormaliz::ConeProperty::ClassGroup:
         return NmzVectorToPyList(C->getClassGroup());
-
+    
+    case libnormaliz::ConeProperty::IsInhomogeneous:
+        return C->isInhomogeneous() ? Py_True : Py_False;
+    
+    /* Sublattice properties */
+    
+    case libnormaliz::ConeProperty::Equations:
+        return NmzMatrixToPyList(C->getSublattice().getEquations());
+    
+    case libnormaliz::ConeProperty::Congruences:
+        return NmzMatrixToPyList(C->getSublattice().getCongruences());
+    
+    case libnormaliz::ConeProperty::EmbeddingDim:
+        return NmzToPyLong(C->getEmbeddingDim());
+    
+    case libnormaliz::ConeProperty::Rank:
+        return NmzToPyLong(C->getRank());
+    
     case libnormaliz::ConeProperty::Sublattice:
-        C->compute(p);
-        return C->isComputed(p) ? Py_True : Py_False;
+        return _NmzBasisChangeIntern(C);
 
 //  the following properties are compute options and do not return anything
     case libnormaliz::ConeProperty::DualMode:
@@ -538,102 +568,6 @@ PyObject* NmzSetVerbose(PyObject* self, PyObject* args)
     FUNC_END
 }
 
-PyObject* NmzEmbeddingDimension(PyObject* self, PyObject* args)
-{
-    FUNC_BEGIN
-    PyObject* cone = PyTuple_GetItem( args, 0 );
-    if (!is_cone(cone)){
-        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
-        return NULL;
-    }
-    Cone<mpz_class>* C = get_cone<mpz_class>(cone);
-    return NmzToPyLong(C->getEmbeddingDim());
-    FUNC_END
-}
-
-template<typename Integer>
-static PyObject* _NmzBasisChangeIntern(PyObject* cone)
-{
-    Cone<Integer>* C = get_cone<Integer>(cone);
-    Sublattice_Representation<Integer> bc = C->getSublattice();
-
-    PyObject* res = PyList_New( 3 );
-    PyList_SetItem(res, 0, NmzMatrixToPyList(bc.getEmbedding()));
-    PyList_SetItem(res, 1, NmzMatrixToPyList(bc.getProjection()));
-    PyList_SetItem(res, 2, NmzToPyLong(bc.getAnnihilator()));
-    // Dim, Rank, Equations and Congruences are already covered by special functions
-    // The index is not always computed and not so relevant
-    return res;
-}
-
-PyObject* _NmzBasisChange(PyObject* self, PyObject* args)
-{
-    FUNC_BEGIN
-    PyObject* cone = PyTuple_GetItem( args, 0 );
-    if (!is_cone(cone)){
-        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
-        return NULL;
-    }
-    return _NmzBasisChangeIntern<mpz_class>(cone);
-    FUNC_END
-}
-
-PyObject* NmzRank(PyObject* self, PyObject* args)
-{
-    FUNC_BEGIN
-    PyObject* cone = PyTuple_GetItem( args, 0 );
-    if (!is_cone(cone)){
-        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
-        return NULL;
-    }
-    Cone<mpz_class>* C = get_cone<mpz_class>(cone);
-    return NmzToPyLong(C->getSublattice().getRank());
-    FUNC_END
-}
-
-
-PyObject* NmzIsInhomogeneous(PyObject* self, PyObject* args)
-{
-    FUNC_BEGIN
-    PyObject* cone = PyTuple_GetItem( args, 0 );
-    if (!is_cone(cone)){
-        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
-        return NULL;
-    }
-    Cone<mpz_class>* C = get_cone<mpz_class>(cone);
-    return C->isInhomogeneous() ? Py_True : Py_False;
-    FUNC_END
-}
-
-PyObject* NmzEquations(PyObject* self, PyObject* args)
-{
-    FUNC_BEGIN
-    PyObject* cone = PyTuple_GetItem( args, 0 );
-    if (!is_cone(cone)){
-        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
-        return NULL;
-    }
-    Cone<mpz_class>* C = get_cone<mpz_class>(cone);
-    C->compute(ConeProperties(libnormaliz::ConeProperty::SupportHyperplanes));
-    return NmzMatrixToPyList(C->getSublattice().getEquations());
-    FUNC_END
-}
-
-PyObject* NmzCongruences(PyObject* self, PyObject* args)
-{
-    FUNC_BEGIN
-    PyObject* cone = PyTuple_GetItem( args, 0 );
-    if (!is_cone(cone)){
-        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
-        return NULL;
-    }
-    Cone<mpz_class>* C = get_cone<mpz_class>(cone);
-    C->compute(ConeProperties(libnormaliz::ConeProperty::SupportHyperplanes));
-    return NmzMatrixToPyList(C->getSublattice().getCongruences());
-    FUNC_END
-}
-
-
 /*
  * Python mixed init stuff
  */
@@ -669,16 +603,6 @@ static PyMethodDef PyNormalizMethods[] = {
       "Set verbosity" },
     { "NmzSetVerbose", (PyCFunction)NmzSetVerbose, METH_VARARGS,
       "Set verbosity of cone" },
-    { "NmzBasisChange", (PyCFunction)_NmzBasisChange, METH_VARARGS,
-      "Get information of basis change" },
-    { "NmzIsInhomogeneous", (PyCFunction)NmzIsInhomogeneous, METH_VARARGS,
-      "Is inhomogeneous cone" },
-    { "NmzEquations", (PyCFunction)NmzEquations, METH_VARARGS,
-      "Equations" },
-    { "NmzCongruences", (PyCFunction)NmzCongruences, METH_VARARGS,
-      "Congruences of cone" },
-    { "NmzRank", (PyCFunction)NmzRank, METH_VARARGS,
-      "Get rank" },
     {NULL, }        /* Sentinel */
 };
 
