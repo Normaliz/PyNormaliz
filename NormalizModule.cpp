@@ -332,7 +332,7 @@ PyObject* _NmzCompute(PyObject* self, PyObject* args)
     FUNC_END
 }
 
-PyObject* NmzHasConeProperty(PyObject* self, PyObject* args)
+PyObject* NmzIsComputed(PyObject* self, PyObject* args)
 {
     FUNC_BEGIN
     
@@ -362,7 +362,7 @@ static PyObject* _NmzBasisChangeIntern(Cone<Integer>* C)
 }
 
 template<typename Integer>
-PyObject* _NmzConePropertyImpl(Cone<Integer>* C, PyObject* prop_obj)
+PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
 {
     
     string prop = PyUnicodeToString( prop_obj );
@@ -539,7 +539,7 @@ PyObject* _NmzConePropertyImpl(Cone<Integer>* C, PyObject* prop_obj)
     return Py_None;
 }
 
-PyObject* _NmzConeProperty( PyObject* self, PyObject* args ){
+PyObject* _NmzResult( PyObject* self, PyObject* args ){
   
   FUNC_BEGIN
   PyObject* cone = PyTuple_GetItem( args, 0 );
@@ -557,7 +557,7 @@ PyObject* _NmzConeProperty( PyObject* self, PyObject* args ){
   
   Cone<mpz_class>* C = get_cone<mpz_class>( cone );
   
-  return _NmzConePropertyImpl( C, prop );
+  return _NmzResultImpl( C, prop );
   FUNC_END
 }
 
@@ -622,9 +622,9 @@ static PyMethodDef PyNormalizMethods[] = {
      "Create a cone"},
     {"NmzCompute", (PyCFunction)_NmzCompute, METH_VARARGS,
      "Compute some stuff"},
-    {"NmzIsComputed", (PyCFunction)NmzHasConeProperty, METH_VARARGS,
+    {"NmzIsComputed", (PyCFunction)NmzIsComputed, METH_VARARGS,
      "Check if property is computed "},
-    {"NmzResult", (PyCFunction)_NmzConeProperty, METH_VARARGS,
+    {"NmzResult", (PyCFunction)_NmzResult, METH_VARARGS,
       "Return cone property" },
     { "NmzSetVerboseDefault", (PyCFunction)NmzSetVerboseDefault, METH_VARARGS,
       "Set verbosity" },
@@ -708,9 +708,9 @@ extern "C" void initPyNormaliz(void)
 //      "Create a cone"},
 //     {"NmzCompute", _NmzCompute, METH_VARARGS,
 //      "Compute some stuff"},
-//     {"NmzHasConeProperty", NmzHasConeProperty, METH_VARARGS,
+//     {"NmzIsComputed", NmzIsComputed, METH_VARARGS,
 //      "Check if property is computed "},
-//     {"NmzConeProperty", _NmzConeProperty, METH_VARARGS,
+//     {"NmzConeProperty", _NmzResult, METH_VARARGS,
 //       "Return cone property" },
 //     { "NmzSetVerboseDefault", NmzSetVerboseDefault, METH_VARARGS,
 //       "Set verbosity" },
