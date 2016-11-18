@@ -63,6 +63,12 @@ string PyUnicodeToString( PyObject* in ){
 #endif
 }
 
+// Boolean conversion
+
+inline PyObject* BoolToPyBool( bool in ){
+  return in ? Py_True : Py_False;
+}
+
 // Converting MPZ's to PyLong and back via strings. Worst possible solution ever.
 
 bool PyLongToNmz( PyObject * in, mpz_class& out ){
@@ -438,22 +444,22 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         }
 
     case libnormaliz::ConeProperty::IsPointed:
-        return C->isPointed() ? Py_True : Py_False;
+        return BoolToPyBool(C->isPointed());
 
     case libnormaliz::ConeProperty::IsDeg1ExtremeRays:
-        return C->isDeg1ExtremeRays() ? Py_True : Py_False;
+        return BoolToPyBool(C->isDeg1ExtremeRays());
 
     case libnormaliz::ConeProperty::IsDeg1HilbertBasis:
-        return C->isDeg1HilbertBasis() ? Py_True : Py_False;
+        return BoolToPyBool(C->isDeg1HilbertBasis());
 
     case libnormaliz::ConeProperty::IsIntegrallyClosed:
-        return C->isIntegrallyClosed() ? Py_True : Py_False;
+        return BoolToPyBool(C->isIntegrallyClosed());
 
     case libnormaliz::ConeProperty::OriginalMonoidGenerators:
         return NmzMatrixToPyList(C->getOriginalMonoidGenerators());
 
     case libnormaliz::ConeProperty::IsReesPrimary:
-        return C->isReesPrimary() ? Py_True : Py_False;
+        return BoolToPyBool(C->isReesPrimary());
 
     case libnormaliz::ConeProperty::ReesPrimaryMultiplicity:
         return NmzToPyLong(C->getReesPrimaryMultiplicity());
@@ -477,7 +483,7 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         return NmzVectorToPyList(C->getClassGroup());
     
     case libnormaliz::ConeProperty::IsInhomogeneous:
-        return C->isInhomogeneous() ? Py_True : Py_False;
+        return BoolToPyBool(C->isInhomogeneous());
     
     /* Sublattice properties */
     
@@ -572,7 +578,7 @@ PyObject* NmzSetVerboseDefault( PyObject* self, PyObject* args)
         PyErr_SetString( PyNormalizError, "Argument must be true or false" );
         return NULL;
     }
-    return libnormaliz::setVerboseDefault(value == Py_True) ? Py_True : Py_False;
+    return BoolToPyBool(libnormaliz::setVerboseDefault(value == Py_True));
     FUNC_END
 }
 
@@ -594,7 +600,7 @@ PyObject* NmzSetVerbose(PyObject* self, PyObject* args)
     bool old_value;
     Cone<mpz_class>* C = get_cone<mpz_class>( cone );
     old_value = C->setVerbose(value == Py_True);
-    return old_value ? Py_True : Py_False;
+    return BoolToPyBool(old_value);
     FUNC_END
 }
 
