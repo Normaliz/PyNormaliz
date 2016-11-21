@@ -181,6 +181,28 @@ PyObject* NmzVectorToPyList(const vector<Integer>& in)
     return vector;
 }
 
+PyObject* NmzBoolVectorToPyList(const vector<bool>& in)
+{
+    PyObject* vector;
+    const size_t n = in.size();
+    vector = PyList_New(n);
+    for (size_t i = 0; i < n; ++i) {
+        PyList_SetItem(vector, i, BoolToPyBool(in[i]));
+    }
+    return vector;
+}
+
+PyObject* NmzBoolMatrixToPyList(const vector< vector<bool> >& in)
+{
+    PyObject* matrix;
+    const size_t n = in.size();
+    matrix = PyList_New( n );
+    for (size_t i = 0; i < n; ++i) {
+        PyList_SetItem(matrix, i, NmzBoolVectorToPyList(in[i]));
+    }
+    return matrix;
+}
+
 template<typename Integer>
 PyObject* NmzMatrixToPyList(const vector< vector<Integer> >& in)
 {
@@ -230,6 +252,27 @@ PyObject* NmzTriangleListToPyList(const vector< pair<vector<libnormaliz::key_t>,
     return M;
 }
 
+template<typename Integer>
+PyObject* NmzStanleyDataToPyList(const libnormaliz::STANLEYDATA<Integer>& StanleyData)
+{
+    PyObject* pair = PyList_New(2);
+    PyList_SetItem(pair, 0, NmzVectorToPyList<libnormaliz::key_t>(StanleyData.key));
+    PyList_SetItem(pair, 1, NmzMatrixToPyList(StanleyData.offsets.get_elements()));
+    return pair;
+}
+
+template<typename Integer>
+PyObject* NmzStanleyDecToPyList(const list<libnormaliz::STANLEYDATA<Integer> >& StanleyDec)
+{
+    const size_t n = StanleyDec.size();
+    PyObject* M = PyList_New( n );
+    typename list<libnormaliz::STANLEYDATA<Integer> >::const_iterator S = StanleyDec.begin();
+    for (size_t i = 0; i < n; ++i) {        
+        PyList_SetItem(M, i,NmzStanleyDataToPyList(*S) );
+        ++S;
+    }
+    return M;
+}
 
 template<typename Integer>
 void delete_cone( PyObject* cone ){
@@ -363,7 +406,7 @@ static PyObject* _NmzBasisChangeIntern(Cone<Integer>* C)
     PyList_SetItem(res, 1, NmzMatrixToPyList(bc.getProjection()));
     PyList_SetItem(res, 2, NmzToPyLong(bc.getAnnihilator()));
     // Dim, Rank, Equations and Congruences are already covered by special functions
-    // The index is not always computed and not so relevant
+    // ditto ExternalIndex
     return res;
 }
 
@@ -372,13 +415,6 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
 {
     
     string prop = PyUnicodeToString( prop_obj );
-    
-    // there is no ConeProperty HilbertQuasiPolynomial, it is part of the HilbertSeries
-    // FIXME better way?
-//     if(prop == string("HilbertQuasiPolynomial")) {
-//         C->compute(ConeProperties(libnormaliz::ConeProperty::HilbertSeries));
-//         return NmzHilbertQuasiPolynomialToPyList(C->getHilbertSeries());
-//     }
 
     libnormaliz::ConeProperty::Enum p = libnormaliz::toConeProperty(prop);
 
@@ -464,11 +500,8 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::ReesPrimaryMultiplicity:
         return NmzToPyLong(C->getReesPrimaryMultiplicity());
 
-    // StanleyDec is special and we do not support the required conversion at
-    // this time. If you really need this, contact the developers.
     case libnormaliz::ConeProperty::StanleyDec:
-        //C->getStanleyDec();
-        break;
+        return NmzStanleyDecToPyList(C->getStanleyDec());
 
     case libnormaliz::ConeProperty::ExcludedFaces:
         return NmzMatrixToPyList(C->getExcludedFaces());
@@ -531,6 +564,15 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     
     case libnormaliz::ConeProperty::HilbertQuasiPolynomial:
         return NmzHilbertQuasiPolynomialToPyList<Integer>(C->getHilbertSeries());
+        
+    case libnormaliz::ConeProperty::IsTriangulationNested:
+        return BoolToPyBool(C->isTriangulationNested());
+        
+    case libnormaliz::ConeProperty::IsTriangulationPartial:
+        return BoolToPyBool(C->isTriangulationPartial());
+        
+    case libnormaliz::ConeProperty::ConeDecomposition:
+        return NmzBoolMatrixToPyList(C->getOpenFacets());
 
 //  the following properties are compute options and do not return anything
     case libnormaliz::ConeProperty::DualMode:
@@ -538,7 +580,12 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::Approximate:
     case libnormaliz::ConeProperty::BottomDecomposition:
     case libnormaliz::ConeProperty::KeepOrder:
-        return Py_True;    // FIXME: appropriate value?
+    case libnormaliz::ConeProperty::NoBottomDec:
+    case libnormaliz::ConeProperty::PrimalMode:
+    case libnormaliz::ConeProperty::Symmetrize:
+    case libnormaliz::ConeProperty::NoSymmetrization:
+        // return Py_True;    // FIXME: appropriate value?
+        return Py_False;    // WB's suggestion
 
     default:
         // Case not handled. Should signal an error
