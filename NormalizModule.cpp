@@ -37,7 +37,7 @@ using std::pair;
 
 static PyObject * NormalizError;
 static PyObject * PyNormalizError;
-static char* cone_name = "Cone";
+static const char* cone_name = "Cone";
 static string cone_name_str( cone_name );
 
 #if PY_MAJOR_VERSION >= 3
@@ -735,15 +735,15 @@ extern "C" void initPyNormaliz(void)
         INITERROR;
     struct module_state *st = GETSTATE(module);
 
-    st->error = PyErr_NewException("PyNormaliz.INITError", NULL, NULL);
+    st->error = PyErr_NewException(const_cast<char*>("PyNormaliz.INITError"), NULL, NULL);
     if (st->error == NULL) {
         Py_DECREF(module);
         INITERROR;
     }
     
-    NormalizError = PyErr_NewException( "Normaliz.error", NULL, NULL );
+    NormalizError = PyErr_NewException(const_cast<char*>("Normaliz.error"), NULL, NULL );
     Py_INCREF( NormalizError );
-    PyNormalizError = PyErr_NewException( "Normaliz.interface_error", NULL, NULL );
+    PyNormalizError = PyErr_NewException(const_cast<char*>("Normaliz.interface_error"), NULL, NULL );
     Py_INCREF( PyNormalizError );
     
     PyModule_AddObject( module, "error", NormalizError );
