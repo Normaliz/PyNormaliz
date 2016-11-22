@@ -13,3 +13,6 @@ install3: module3
 
 install2: module2
 	python2 setup.py install
+
+clean:
+	rm PyNormaliz*.so
