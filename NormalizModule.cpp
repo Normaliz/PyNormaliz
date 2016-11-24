@@ -38,7 +38,9 @@ using std::pair;
 static PyObject * NormalizError;
 static PyObject * PyNormalizError;
 static const char* cone_name = "Cone";
+static const char* cone_name_long = "Cone<long long>";
 static string cone_name_str( cone_name );
+static string cone_name_str_long( cone_name_long );
 
 #if PY_MAJOR_VERSION >= 3
 #define string_check PyUnicode_Check
@@ -274,26 +276,47 @@ PyObject* NmzStanleyDecToPyList(const list<libnormaliz::STANLEYDATA<Integer> >& 
     return M;
 }
 
-template<typename Integer>
-void delete_cone( PyObject* cone ){
-  Cone<Integer> * cone_ptr = reinterpret_cast<Cone<Integer>* >( PyCapsule_GetPointer( cone, cone_name ) );
+
+void delete_cone_mpz( PyObject* cone ){
+  Cone<mpz_class> * cone_ptr = reinterpret_cast<Cone<mpz_class>* >( PyCapsule_GetPointer( cone, cone_name ) );
   delete cone_ptr;
 }
 
-template<typename Integer>
-Cone<Integer>* get_cone( PyObject* cone ){
-  return reinterpret_cast<Cone<Integer>*>( PyCapsule_GetPointer( cone, cone_name ) );
+void delete_cone_long( PyObject* cone ){
+  Cone<long long> * cone_ptr = reinterpret_cast<Cone<long long>* >( PyCapsule_GetPointer( cone, cone_name_long ) );
+  delete cone_ptr;
 }
 
-template<typename Integer>
-PyObject* pack_cone( Cone<Integer>* C ){
-  return PyCapsule_New( reinterpret_cast<void*>( C ), cone_name, &delete_cone<Integer> );
+Cone<long long>* get_cone_long( PyObject* cone ){
+  return reinterpret_cast<Cone<long long>*>( PyCapsule_GetPointer( cone, cone_name_long ) );
 }
+
+Cone<mpz_class>* get_cone_mpz( PyObject* cone ){
+  return reinterpret_cast<Cone<mpz_class>*>( PyCapsule_GetPointer( cone, cone_name ) );
+}
+
+// template<typename Integer>
+// Cone<Integer>* get_cone( PyObject* cone ){
+//   return reinterpret_cast<Cone<Integer>*>( PyCapsule_GetPointer( cone, cone_name ) );
+// }
+
+PyObject* pack_cone( Cone<mpz_class>* C ){
+  return PyCapsule_New( reinterpret_cast<void*>( C ), cone_name, &delete_cone_mpz );
+}
+
+PyObject* pack_cone( Cone<long long>* C ){
+  return PyCapsule_New( reinterpret_cast<void*>( C ), cone_name_long, &delete_cone_long );
+}
+
+// template<typename Integer>
+// PyObject* pack_cone( Cone<Integer>* C ){
+//   return PyCapsule_New( reinterpret_cast<void*>( C ), cone_name, &delete_cone<Integer> );
+// }
 
 bool is_cone( PyObject* cone ){
   if( PyCapsule_CheckExact( cone ) ){
     // compare as string
-    return cone_name_str == string(PyCapsule_GetName( cone ));
+    return cone_name_str == string(PyCapsule_GetName( cone )) || cone_name_str_long == string(PyCapsule_GetName( cone ));
   }
   return false;
 }
@@ -334,26 +357,39 @@ static PyObject* _NmzConeIntern(PyObject * input_list)
     return return_container;
 }
 
-PyObject* _NmzCone(PyObject* self, PyObject* args)
+PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* keywds)
 {
     FUNC_BEGIN
+    
+    bool create_as_long_long = false;
+    
+    PyObject* empty = PyTuple_New(0);
+    
+    static const char* string_for_keyword_argument = "CreateAsLongLong";
+    static char* kwlist[] = {const_cast<char*>(string_for_keyword_argument),NULL};
+    
+    if( !PyArg_ParseTupleAndKeywords(empty, keywds,"|$p",kwlist,&create_as_long_long) ){
+      return NULL;
+    }
     
     PyObject* input_list = PyTuple_GetItem( args, 0 );
     
     if (!PyList_Check( input_list ) )
         return Py_False;
-
-    return _NmzConeIntern<mpz_class>(input_list);
+    
+    if( !create_as_long_long ){
+        return _NmzConeIntern<mpz_class>(input_list);
+    }else{
+        return _NmzConeIntern<long long>(input_list);
+    }
 
     FUNC_END
 }
 
-PyObject* _NmzCompute(PyObject* self, PyObject* args)
+template<typename Integer>
+PyObject* _NmzCompute(Cone<Integer>* C, PyObject* to_compute)
 {
     FUNC_BEGIN
-    
-    PyObject* cone = PyTuple_GetItem( args, 0 );
-    PyObject* to_compute = PyTuple_GetItem( args, 1 );
     
     if (!PyList_Check( to_compute ) )
         PyErr_SetString( PyNormalizError, "wrong input type" );
@@ -371,8 +407,7 @@ PyObject* _NmzCompute(PyObject* self, PyObject* args)
         string prop_str(PyUnicodeToString(prop));
         propsToCompute.set( libnormaliz::toConeProperty(prop_str) );
     }
-
-    Cone<mpz_class>* C = get_cone<mpz_class>( cone );
+    
     ConeProperties notComputed = C->compute(propsToCompute);
 
     // Cone.compute returns the not computed properties
@@ -381,18 +416,63 @@ PyObject* _NmzCompute(PyObject* self, PyObject* args)
     FUNC_END
 }
 
-PyObject* NmzIsComputed(PyObject* self, PyObject* args)
+
+PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args){
+  
+  FUNC_BEGIN
+  
+  PyObject* cone = PyTuple_GetItem( args, 0 );
+  PyObject* to_compute = PyTuple_GetItem( args, 1 );
+  
+  if( !is_cone(cone) ){
+      PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+      return NULL;
+  }
+  
+  if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+      Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+      return _NmzCompute(cone_ptr, to_compute);
+  }else{
+      Cone<long long>* cone_ptr = get_cone_long(cone);
+      return _NmzCompute(cone_ptr,to_compute);
+  }
+  
+  FUNC_END
+  
+}
+
+template<typename Integer>
+PyObject* NmzIsComputed(Cone<Integer>* C, PyObject* prop)
+{
+    FUNC_BEGIN
+    
+    libnormaliz::ConeProperty::Enum p = libnormaliz::toConeProperty(PyUnicodeToString( prop ) );
+  
+    return C->isComputed(p) ? Py_True : Py_False;
+
+    FUNC_END
+}
+
+PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
 {
     FUNC_BEGIN
     
     PyObject* cone = PyTuple_GetItem( args, 0 );
-    PyObject* prop = PyTuple_GetItem( args, 1 );
+    PyObject* to_compute = PyTuple_GetItem( args, 1 );
     
-    libnormaliz::ConeProperty::Enum p = libnormaliz::toConeProperty(PyUnicodeToString( prop ) );
-
-    Cone<mpz_class>* C = get_cone<mpz_class>( cone );
-    return C->isComputed(p) ? Py_True : Py_False;
-
+    if( !is_cone(cone) ){
+        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+        return NULL;
+    }
+    
+    if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        return NmzIsComputed(cone_ptr, to_compute);
+    }else{
+        Cone<long long>* cone_ptr = get_cone_long(cone);
+        return NmzIsComputed(cone_ptr,to_compute);
+    }
+    
     FUNC_END
 }
 
@@ -563,7 +643,7 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     }
     
     case libnormaliz::ConeProperty::HilbertQuasiPolynomial:
-        return NmzHilbertQuasiPolynomialToPyList<Integer>(C->getHilbertSeries());
+        return NmzHilbertQuasiPolynomialToPyList<mpz_class>(C->getHilbertSeries()); //FIXME: Why is this return value not parametrized, but mpz_class only?
         
     case libnormaliz::ConeProperty::IsTriangulationNested:
         return BoolToPyBool(C->isTriangulationNested());
@@ -611,9 +691,14 @@ PyObject* _NmzResult( PyObject* self, PyObject* args ){
     return NULL;
   }
   
-  Cone<mpz_class>* C = get_cone<mpz_class>( cone );
+  if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+    Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+    return _NmzResultImpl(cone_ptr, prop);
+  }else{
+    Cone<long long>* cone_ptr = get_cone_long(cone);
+    return _NmzResultImpl(cone_ptr, prop);
+  }
   
-  return _NmzResultImpl( C, prop );
   FUNC_END
 }
 
@@ -629,9 +714,20 @@ PyObject* NmzSetVerboseDefault( PyObject* self, PyObject* args)
     FUNC_END
 }
 
-PyObject* NmzSetVerbose(PyObject* self, PyObject* args)
+template<typename Integer>
+PyObject* NmzSetVerbose(Cone<Integer>* C, PyObject* value)
 {
     FUNC_BEGIN
+    bool old_value;
+    old_value = C->setVerbose(value == Py_True);
+    return BoolToPyBool(old_value);
+    FUNC_END
+}
+
+PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+    
     PyObject* cone = PyTuple_GetItem( args, 0 );
     
     if( !is_cone( cone ) ){
@@ -644,13 +740,18 @@ PyObject* NmzSetVerbose(PyObject* self, PyObject* args)
         PyErr_SetString( PyNormalizError, "Second argument must be true or false" );
         return NULL;
     }
-    bool old_value;
-    Cone<mpz_class>* C = get_cone<mpz_class>( cone );
-    old_value = C->setVerbose(value == Py_True);
-    return BoolToPyBool(old_value);
+    
+    if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        return NmzSetVerbose(cone_ptr, value);
+    }else{
+        Cone<long long>* cone_ptr = get_cone_long(cone);
+        return NmzSetVerbose(cone_ptr, value);
+    }
+    
     FUNC_END
+    
 }
-
 /*
  * Python mixed init stuff
  */
@@ -674,17 +775,17 @@ static PyObject * error_out(PyObject *m) {
 
 static PyMethodDef PyNormalizMethods[] = {
     {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
-    {"NmzCone",  (PyCFunction)_NmzCone, METH_VARARGS,
+    {"NmzCone",  (PyCFunction)_NmzCone, METH_VARARGS|METH_KEYWORDS,
      "Create a cone"},
-    {"NmzCompute", (PyCFunction)_NmzCompute, METH_VARARGS,
+    {"NmzCompute", (PyCFunction)_NmzCompute_Outer, METH_VARARGS,
      "Compute some stuff"},
-    {"NmzIsComputed", (PyCFunction)NmzIsComputed, METH_VARARGS,
+    {"NmzIsComputed", (PyCFunction)NmzIsComputed_Outer, METH_VARARGS,
      "Check if property is computed "},
     {"NmzResult", (PyCFunction)_NmzResult, METH_VARARGS,
       "Return cone property" },
     { "NmzSetVerboseDefault", (PyCFunction)NmzSetVerboseDefault, METH_VARARGS,
       "Set verbosity" },
-    { "NmzSetVerbose", (PyCFunction)NmzSetVerbose, METH_VARARGS,
+    { "NmzSetVerbose", (PyCFunction)NmzSetVerbose_Outer, METH_VARARGS,
       "Set verbosity of cone" },
     {NULL, }        /* Sentinel */
 };
