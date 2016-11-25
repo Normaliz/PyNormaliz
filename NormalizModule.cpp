@@ -322,29 +322,43 @@ bool is_cone( PyObject* cone ){
 }
 
 template<typename Integer>
-static PyObject* _NmzConeIntern(PyObject * input_list)
+static PyObject* _NmzConeIntern(PyObject * args)
 {
     map <InputType, vector< vector<Integer> > > input;
-    const int n = PyList_Size(input_list);
+    
+    PyObject* input_list;
+    
+    if( PyTuple_Size(args)==1 ){
+        input_list = PyTuple_GetItem( args, 0 );
+        if( ! PyList_Check( input_list ) ){
+            PyErr_SetString( PyNormalizError, "Single argument must be a list" );
+            return NULL;
+        }
+        input_list = PyList_AsTuple( input_list );
+    }else{
+        input_list = args;
+    }
+    
+    const int n = PyTuple_Size(input_list);
     if (n&1) {
-        cerr << "Input list must have even number of elements" << endl;
-        return Py_False;
+        PyErr_SetString( PyNormalizError, "Number of arguments must be even" );
+        return NULL;
     }
     for (int i = 0; i < n; i += 2) {
-        PyObject* type = PyList_GetItem(input_list, i);
+        PyObject* type = PyTuple_GetItem(input_list, i);
         if (!string_check(type)) {
-            cerr << "Element " << i+1 << " of the input list must be a type string" << endl;
-            return Py_False;
+            PyErr_SetString( PyNormalizError, "Odd entries must be strings" );
+            return NULL;
         }
         
         string type_str = PyUnicodeToString( type );
         
-        PyObject* M = PyList_GetItem(input_list, i+1);
+        PyObject* M = PyTuple_GetItem(input_list, i+1);
         vector<vector<Integer> > Mat;
         bool okay = PyIntMatrixToNmz(Mat, M);
         if (!okay) {
-            cerr << "Element " << i+2 << " of the input list must integer matrix" << endl;
-            return Py_False;
+            PyErr_SetString( PyNormalizError, "Even entries must be matrices" );
+            return NULL;
         }
 
         input[libnormaliz::to_type(type_str)] = Mat;
@@ -372,15 +386,10 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* keywds)
       return NULL;
     }
     
-    PyObject* input_list = PyTuple_GetItem( args, 0 );
-    
-    if (!PyList_Check( input_list ) )
-        return Py_False;
-    
     if( !create_as_long_long ){
-        return _NmzConeIntern<mpz_class>(input_list);
+        return _NmzConeIntern<mpz_class>(args);
     }else{
-        return _NmzConeIntern<long long>(input_list);
+        return _NmzConeIntern<long long>(args);
     }
 
     FUNC_END
@@ -401,8 +410,8 @@ PyObject* _NmzCompute(Cone<Integer>* C, PyObject* to_compute)
     for (int i = 0; i < n; ++i) {
         PyObject* prop = PyList_GetItem(to_compute, i);
         if (!string_check(prop)) {
-            cerr << "Element " << i+1 << " of the input list must be a type string";
-            return Py_False;
+            PyErr_SetString( PyNormalizError, "All elements must be strings" );
+            return NULL;
         }
         string prop_str(PyUnicodeToString(prop));
         propsToCompute.set( libnormaliz::toConeProperty(prop_str) );
