@@ -375,18 +375,22 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* keywds)
 {
     FUNC_BEGIN
     
-    bool create_as_long_long = false;
-    
-    PyObject* empty = PyTuple_New(0);
-    
     static const char* string_for_keyword_argument = "CreateAsLongLong";
-    static char* kwlist[] = {const_cast<char*>(string_for_keyword_argument),NULL};
+    PyObject* create_as_long_long;
     
-    if( !PyArg_ParseTupleAndKeywords(empty, keywds,"|$p",kwlist,&create_as_long_long) ){
-      return NULL;
+#if PY_MAJOR_VERSION >= 3
+    PyObject* key = PyUnicode_FromString( string_for_keyword_argument );
+#else
+    PyObject* key = PyString_FromString( const_cast<char*>(string_for_keyword_argument) );
+#endif
+    
+    if( keywds != NULL && PyDict_Contains( keywds, key ) == 1 ){
+        create_as_long_long = PyDict_GetItem( keywds, key );
+    }else{
+        create_as_long_long = Py_False;
     }
     
-    if( !create_as_long_long ){
+    if( create_as_long_long!=Py_True ){
         return _NmzConeIntern<mpz_class>(args);
     }else{
         return _NmzConeIntern<long long>(args);
