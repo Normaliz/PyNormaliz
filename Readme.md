@@ -6,8 +6,8 @@ Make sure Normaliz 3.1.4 is properly installed (using make install).
 If you installed them in a prefix hierarchy other than /usr/local,
 set environment variables as follows:
 
-  export LDFLAGS=-L/SOME/PREFIX/lib
-  export CPATH=/SOME/PREFIX/include
+  export LDFLAGS="-L/SOME/PREFIX/lib -Wl,-rpath,$NORMALIZ_PREFIX/lib $LDFLAGS"
+  export CPATH="/SOME/PREFIX/include:$CPATH"
 
 Then install it using
 
