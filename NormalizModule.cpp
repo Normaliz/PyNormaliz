@@ -677,11 +677,13 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::PrimalMode:
     case libnormaliz::ConeProperty::Symmetrize:
     case libnormaliz::ConeProperty::NoSymmetrization:
-        // return Py_True;    // FIXME: appropriate value?
-        return Py_False;    // WB's suggestion
-
+    case libnormaliz::ConeProperty::BigInt:
+    case libnormaliz::ConeProperty::NoNestedTri:
+        PyErr_SetString( PyNormalizError, "ConeProperty is input-only" );
+        return NULL;
     default:
-        // Case not handled. Should signal an error
+        PyErr_SetString( PyNormalizError, "Unknown cone property" );
+        return NULL;
         break;
     }
 
