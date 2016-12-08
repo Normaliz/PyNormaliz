@@ -1,3 +1,5 @@
 build
 *cpython*
 PyNormaliz.so
+dist
+MANIFEST

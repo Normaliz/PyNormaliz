@@ -15,8 +15,9 @@ setup(
     author = 'Sebastian Gutsche',
     author_email = 'sebastian.gutsche@gmail.com',
     url = 'https://github.com/sebasguts/PyNormaliz',
-    ext_modules= [ Extension( "PyNormaliz",
+    ext_modules = [ Extension( "PyNormaliz",
                               [ "NormalizModule.cpp" ],
                               extra_link_args=['-lnormaliz', '-lgmp' ],
                               define_macros = macro_list ) ],
+    package_data = {'': [ "COPYING", "GPLv2" ] },
 )
