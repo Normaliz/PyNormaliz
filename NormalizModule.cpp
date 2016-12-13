@@ -722,7 +722,7 @@ PyObject* NmzSetVerboseDefault( PyObject* self, PyObject* args)
     FUNC_BEGIN
     PyObject * value = PyTuple_GetItem( args, 0 );
     if (value != Py_True && value != Py_False){
-        PyErr_SetString( PyNormalizError, "Argument must be true or false" );
+        PyErr_SetString( PyNormalizError, "Argument must be True or False" );
         return NULL;
     }
     return BoolToPyBool(libnormaliz::setVerboseDefault(value == Py_True));
@@ -752,7 +752,7 @@ PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
     
     PyObject* value = PyTuple_GetItem( args, 1 );
     if (value != Py_True && value != Py_False){
-        PyErr_SetString( PyNormalizError, "Second argument must be true or false" );
+        PyErr_SetString( PyNormalizError, "Second argument must be True or False" );
         return NULL;
     }
     
