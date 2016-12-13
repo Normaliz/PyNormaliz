@@ -400,17 +400,36 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* keywds)
 }
 
 template<typename Integer>
-PyObject* _NmzCompute(Cone<Integer>* C, PyObject* to_compute)
+PyObject* _NmzCompute(Cone<Integer>* C, PyObject* args)
 {
     FUNC_BEGIN
     
-    if (!PyList_Check( to_compute ) )
-        PyErr_SetString( PyNormalizError, "wrong input type" );
+    const int arg_len = PyTuple_Size(args);
+    
+    PyObject* to_compute;
+    
+    if(arg_len==2){
+        PyObject* first_arg = PyTuple_GetItem(args,1);
+        if(PyList_CheckExact( first_arg )){
+            to_compute = first_arg;
+        }else{
+            to_compute = PyList_New( 1 );
+            int result = PyList_SetItem( to_compute, 0, first_arg );
+            if(result!=0){
+                PyErr_SetString( PyNormalizError, "List could not be created" );
+                return NULL;
+            }
+        }
+    }else{
+        to_compute = PyList_New( arg_len - 1 );
+        for( int i = 1;i<arg_len;i++){
+            PyList_SetItem( to_compute, i, PyTuple_GetItem( args, i ) );
+        }
+    }
 
     ConeProperties propsToCompute;
-    // we have a list
     const int n = PyList_Size(to_compute);
-
+    
     for (int i = 0; i < n; ++i) {
         PyObject* prop = PyList_GetItem(to_compute, i);
         if (!string_check(prop)) {
@@ -422,7 +441,7 @@ PyObject* _NmzCompute(Cone<Integer>* C, PyObject* to_compute)
     }
     
     ConeProperties notComputed = C->compute(propsToCompute);
-
+    
     // Cone.compute returns the not computed properties
     // we return a bool, true when everything requested was computed
     return notComputed.none() ? Py_True : Py_False;
@@ -435,7 +454,6 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args){
   FUNC_BEGIN
   
   PyObject* cone = PyTuple_GetItem( args, 0 );
-  PyObject* to_compute = PyTuple_GetItem( args, 1 );
   
   if( !is_cone(cone) ){
       PyErr_SetString( PyNormalizError, "First argument must be a cone" );
@@ -444,10 +462,10 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args){
   
   if( cone_name_str == string(PyCapsule_GetName(cone)) ){
       Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
-      return _NmzCompute(cone_ptr, to_compute);
+      return _NmzCompute(cone_ptr, args);
   }else{
       Cone<long long>* cone_ptr = get_cone_long(cone);
-      return _NmzCompute(cone_ptr,to_compute);
+      return _NmzCompute(cone_ptr,args);
   }
   
   FUNC_END
