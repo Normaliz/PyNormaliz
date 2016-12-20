@@ -48,6 +48,25 @@ static string cone_name_str_long( cone_name_long );
 #define string_check PyString_Check
 #endif
 
+// Hacky 64-bit check. Works for windows and gcc, probably not clang.
+// Check windows
+#if _WIN32 || _WIN64
+#if _WIN64
+#define ENVIRONMENT64
+#else
+#define ENVIRONMENT32
+#endif
+#endif
+
+// Check GCC
+#if __GNUC__
+#if __x86_64__ || __ppc64__
+#define ENVIRONMENT64
+#else
+#define ENVIRONMENT32
+#endif
+#endif
+
 
 typedef int py_size_t;
 
@@ -117,11 +136,13 @@ PyObject* NmzToPyLong( libnormaliz::key_t in ){
   
 }
 
+#ifdef ENVIRONMENT64
 PyObject* NmzToPyLong( size_t in ){
   
   return PyLong_FromLong( in );
   
 }
+#endif
 
 PyObject* NmzToPyLong( long in ){
   
