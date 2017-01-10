@@ -67,6 +67,14 @@ static string cone_name_str_long( cone_name_long );
 #endif
 #endif
 
+#ifndef NMZ_RELEASE
+    static_assert(false,
+       "Your Normaliz version (unknown) is to old! Update to 3.0.0 or newer.");
+#endif
+#if NMZ_RELEASE < 30000
+    static_assert(false, "Your Normaliz version is to old! Update to 3.0.0 or newer.");
+#endif
+
 
 typedef int py_size_t;
 
@@ -720,6 +728,11 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::NoNestedTri:
         PyErr_SetString( PyNormalizError, "ConeProperty is input-only" );
         return NULL;
+#if NMZ_RELEASE >= 30200
+    case libnormaliz::ConeProperty::NoSubdivision:
+        PyErr_SetString( PyNormalizError, "ConeProperty is input-only" );
+        return NULL;
+#endif
     default:
         PyErr_SetString( PyNormalizError, "Unknown cone property" );
         return NULL;
