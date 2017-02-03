@@ -13,6 +13,11 @@ class Cone:
             input_list.append(current_input)
         self.cone = PyNormaliz_cpp.NmzCone( input_list )
 
+    def __str__(self):
+        return "<Normaliz Cone>"
+    
+    def __repr__(self):
+        return "<Normaliz Cone>"
 
     def Compute(self,*args):
         return PyNormaliz_cpp.NmzCompute(self.cone, args)
@@ -186,7 +191,9 @@ class Cone:
 
 
     def IntegerHull(self):
-        return PyNormaliz_cpp.NmzResult(self.cone, "IntegerHull")
+        C = Cone( cone = [ [1,0], [0,1] ] )
+        C.cone = PyNormaliz_cpp.NmzResult(self.cone, "IntegerHull")
+        return C
 
 
     def ConeDecomposition(self):
