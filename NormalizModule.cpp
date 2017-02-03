@@ -31,12 +31,12 @@ using std::pair;
         PyErr_SetString( NormalizError, e.what() ); \
         return NULL; \
     } catch( ... ) { \
-        PyErr_SetString( PyNormalizError, "unknown exception" ); \
+        PyErr_SetString( PyNormaliz_cppError, "unknown exception" ); \
         return NULL; \
     }
 
 static PyObject * NormalizError;
-static PyObject * PyNormalizError;
+static PyObject * PyNormaliz_cppError;
 static const char* cone_name = "Cone";
 static const char* cone_name_long = "Cone<long long>";
 static string cone_name_str( cone_name );
@@ -360,7 +360,7 @@ static PyObject* _NmzConeIntern(PyObject * args)
     if( PyTuple_Size(args)==1 ){
         input_list = PyTuple_GetItem( args, 0 );
         if( ! PyList_Check( input_list ) ){
-            PyErr_SetString( PyNormalizError, "Single argument must be a list" );
+            PyErr_SetString( PyNormaliz_cppError, "Single argument must be a list" );
             return NULL;
         }
         input_list = PyList_AsTuple( input_list );
@@ -370,13 +370,13 @@ static PyObject* _NmzConeIntern(PyObject * args)
     
     const int n = PyTuple_Size(input_list);
     if (n&1) {
-        PyErr_SetString( PyNormalizError, "Number of arguments must be even" );
+        PyErr_SetString( PyNormaliz_cppError, "Number of arguments must be even" );
         return NULL;
     }
     for (int i = 0; i < n; i += 2) {
         PyObject* type = PyTuple_GetItem(input_list, i);
         if (!string_check(type)) {
-            PyErr_SetString( PyNormalizError, "Odd entries must be strings" );
+            PyErr_SetString( PyNormaliz_cppError, "Odd entries must be strings" );
             return NULL;
         }
         
@@ -386,7 +386,7 @@ static PyObject* _NmzConeIntern(PyObject * args)
         vector<vector<Integer> > Mat;
         bool okay = PyIntMatrixToNmz(Mat, M);
         if (!okay) {
-            PyErr_SetString( PyNormalizError, "Even entries must be matrices" );
+            PyErr_SetString( PyNormaliz_cppError, "Even entries must be matrices" );
             return NULL;
         }
 
@@ -445,7 +445,7 @@ PyObject* _NmzCompute(Cone<Integer>* C, PyObject* args)
             to_compute = PyList_New( 1 );
             int result = PyList_SetItem( to_compute, 0, first_arg );
             if(result!=0){
-                PyErr_SetString( PyNormalizError, "List could not be created" );
+                PyErr_SetString( PyNormaliz_cppError, "List could not be created" );
                 return NULL;
             }
         }
@@ -462,7 +462,7 @@ PyObject* _NmzCompute(Cone<Integer>* C, PyObject* args)
     for (int i = 0; i < n; ++i) {
         PyObject* prop = PyList_GetItem(to_compute, i);
         if (!string_check(prop)) {
-            PyErr_SetString( PyNormalizError, "All elements must be strings" );
+            PyErr_SetString( PyNormaliz_cppError, "All elements must be strings" );
             return NULL;
         }
         string prop_str(PyUnicodeToString(prop));
@@ -485,7 +485,7 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args){
   PyObject* cone = PyTuple_GetItem( args, 0 );
   
   if( !is_cone(cone) ){
-      PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+      PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
       return NULL;
   }
   
@@ -521,7 +521,7 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
     PyObject* to_compute = PyTuple_GetItem( args, 1 );
     
     if( !is_cone(cone) ){
-        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+        PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
         return NULL;
     }
     
@@ -726,15 +726,15 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::NoSymmetrization:
     case libnormaliz::ConeProperty::BigInt:
     case libnormaliz::ConeProperty::NoNestedTri:
-        PyErr_SetString( PyNormalizError, "ConeProperty is input-only" );
+        PyErr_SetString( PyNormaliz_cppError, "ConeProperty is input-only" );
         return NULL;
 #if NMZ_RELEASE >= 30200
     case libnormaliz::ConeProperty::NoSubdivision:
-        PyErr_SetString( PyNormalizError, "ConeProperty is input-only" );
+        PyErr_SetString( PyNormaliz_cppError, "ConeProperty is input-only" );
         return NULL;
 #endif
     default:
-        PyErr_SetString( PyNormalizError, "Unknown cone property" );
+        PyErr_SetString( PyNormaliz_cppError, "Unknown cone property" );
         return NULL;
         break;
     }
@@ -749,12 +749,12 @@ PyObject* _NmzResult( PyObject* self, PyObject* args ){
   PyObject* prop = PyTuple_GetItem( args, 1 );
   
   if( !is_cone( cone ) ){
-    PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+    PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
     return NULL;
   }
   
   if( !string_check( prop ) ){
-    PyErr_SetString( PyNormalizError, "Second argument must be a unicode string" );
+    PyErr_SetString( PyNormaliz_cppError, "Second argument must be a unicode string" );
     return NULL;
   }
   
@@ -774,7 +774,7 @@ PyObject* NmzSetVerboseDefault( PyObject* self, PyObject* args)
     FUNC_BEGIN
     PyObject * value = PyTuple_GetItem( args, 0 );
     if (value != Py_True && value != Py_False){
-        PyErr_SetString( PyNormalizError, "Argument must be True or False" );
+        PyErr_SetString( PyNormaliz_cppError, "Argument must be True or False" );
         return NULL;
     }
     return BoolToPyBool(libnormaliz::setVerboseDefault(value == Py_True));
@@ -798,13 +798,13 @@ PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
     PyObject* cone = PyTuple_GetItem( args, 0 );
     
     if( !is_cone( cone ) ){
-        PyErr_SetString( PyNormalizError, "First argument must be a cone" );
+        PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
         return NULL;
     }
     
     PyObject* value = PyTuple_GetItem( args, 1 );
     if (value != Py_True && value != Py_False){
-        PyErr_SetString( PyNormalizError, "Second argument must be True or False" );
+        PyErr_SetString( PyNormaliz_cppError, "Second argument must be True or False" );
         return NULL;
     }
     
@@ -840,7 +840,7 @@ static PyObject * error_out(PyObject *m) {
     return NULL;
 }
 
-static PyMethodDef PyNormalizMethods[] = {
+static PyMethodDef PyNormaliz_cppMethods[] = {
     {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
     {"NmzCone",  (PyCFunction)_NmzCone, METH_VARARGS|METH_KEYWORDS,
      "Create a cone"},
@@ -860,12 +860,12 @@ static PyMethodDef PyNormalizMethods[] = {
 
 #if PY_MAJOR_VERSION >= 3
 
-static int PyNormaliz_traverse(PyObject *m, visitproc visit, void *arg) {
+static int PyNormaliz_cpp_traverse(PyObject *m, visitproc visit, void *arg) {
     Py_VISIT(GETSTATE(m)->error);
     return 0;
 }
 
-static int PyNormaliz_clear(PyObject *m) {
+static int PyNormaliz_cpp_clear(PyObject *m) {
     Py_CLEAR(GETSTATE(m)->error);
     return 0;
 }
@@ -873,37 +873,37 @@ static int PyNormaliz_clear(PyObject *m) {
 
 static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
-        "PyNormaliz",
+        "PyNormaliz_cpp",
         NULL,
         sizeof(struct module_state),
-        PyNormalizMethods,
+        PyNormaliz_cppMethods,
         NULL,
-        PyNormaliz_traverse,
-        PyNormaliz_clear,
+        PyNormaliz_cpp_traverse,
+        PyNormaliz_cpp_clear,
         NULL
 };
 
 #define INITERROR return NULL
 
-PyMODINIT_FUNC PyInit_PyNormaliz(void)
+PyMODINIT_FUNC PyInit_PyNormaliz_cpp(void)
 
 #else
 #define INITERROR return
 
-extern "C" void initPyNormaliz(void)
+extern "C" void initPyNormaliz_cpp(void)
 #endif
 {
 #if PY_MAJOR_VERSION >= 3
     PyObject *module = PyModule_Create(&moduledef);
 #else
-    PyObject *module = Py_InitModule("PyNormaliz", PyNormalizMethods);
+    PyObject *module = Py_InitModule("PyNormaliz_cpp", PyNormaliz_cppMethods);
 #endif
 
     if (module == NULL)
         INITERROR;
     struct module_state *st = GETSTATE(module);
 
-    st->error = PyErr_NewException(const_cast<char*>("PyNormaliz.INITError"), NULL, NULL);
+    st->error = PyErr_NewException(const_cast<char*>("PyNormaliz_cpp.INITError"), NULL, NULL);
     if (st->error == NULL) {
         Py_DECREF(module);
         INITERROR;
@@ -911,11 +911,11 @@ extern "C" void initPyNormaliz(void)
     
     NormalizError = PyErr_NewException(const_cast<char*>("Normaliz.error"), NULL, NULL );
     Py_INCREF( NormalizError );
-    PyNormalizError = PyErr_NewException(const_cast<char*>("Normaliz.interface_error"), NULL, NULL );
-    Py_INCREF( PyNormalizError );
+    PyNormaliz_cppError = PyErr_NewException(const_cast<char*>("Normaliz.interface_error"), NULL, NULL );
+    Py_INCREF( PyNormaliz_cppError );
     
     PyModule_AddObject( module, "error", NormalizError );
-    PyModule_AddObject( module, "error", PyNormalizError );
+    PyModule_AddObject( module, "error", PyNormaliz_cppError );
 
 #if PY_MAJOR_VERSION >= 3
     return module;

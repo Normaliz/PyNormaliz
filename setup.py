@@ -10,14 +10,16 @@ else:
 
 setup(
     name = 'PyNormaliz',
-    version = '1.2',
+    version = '1.3',
     description = 'An interface to Normaliz',
     author = 'Sebastian Gutsche',
     author_email = 'sebastian.gutsche@gmail.com',
     url = 'https://github.com/sebasguts/PyNormaliz',
-    ext_modules = [ Extension( "PyNormaliz",
+    py_modules = [ "PyNormaliz" ],
+    ext_modules = [ Extension( "PyNormaliz_cpp",
                               [ "NormalizModule.cpp" ],
                               extra_link_args=['-lnormaliz', '-lgmp' ],
                               define_macros = macro_list ) ],
+    
     package_data = {'': [ "COPYING", "GPLv2" ] },
 )

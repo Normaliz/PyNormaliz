@@ -1,3 +1,4 @@
+create_class_functions.gi
 build
 *cpython*
 PyNormaliz.so
