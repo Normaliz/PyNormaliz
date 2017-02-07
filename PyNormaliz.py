@@ -23,7 +23,7 @@ class Cone:
     def __process_keyword_args(self,keywords):
         input_list = [ ]
         for i in keywords:
-            if i == True:
+            if keywords[i] == True:
                 input_list.append( i )
         return input_list
 
