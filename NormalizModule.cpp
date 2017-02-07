@@ -726,6 +726,7 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::NoSymmetrization:
     case libnormaliz::ConeProperty::BigInt:
     case libnormaliz::ConeProperty::NoNestedTri:
+    case libnormaliz::ConeProperty::HSOP:
         PyErr_SetString( PyNormaliz_cppError, "ConeProperty is input-only" );
         return NULL;
 #if NMZ_RELEASE >= 30200

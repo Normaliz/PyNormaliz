@@ -16,7 +16,7 @@ class Cone:
         
         for i in kwargs:
             input_list.append(i)
-            input_list.append(current_input)
+            input_list.append(kwargs[i])
         
         self.cone = PyNormaliz_cpp.NmzCone( input_list )
     
