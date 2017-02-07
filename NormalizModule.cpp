@@ -246,12 +246,18 @@ PyObject* NmzMatrixToPyList(const vector< vector<Integer> >& in)
     return matrix;
 }
 
-PyObject* NmzHilbertSeriesToPyList(const libnormaliz::HilbertSeries& HS)
-{
+PyObject* NmzHilbertSeriesToPyList(const libnormaliz::HilbertSeries& HS, bool is_HSOP)
+{   
     PyObject* return_list = PyList_New( 3 );
-    PyList_SetItem(return_list, 0, NmzVectorToPyList(HS.getNum()));
-    PyList_SetItem(return_list, 1, NmzVectorToPyList(libnormaliz::to_vector(HS.getDenom())));
-    PyList_SetItem(return_list, 2, NmzToPyLong(HS.getShift()));
+    if(is_HSOP){
+        PyList_SetItem(return_list, 0, NmzVectorToPyList(HS.getHSOPNum()));
+        PyList_SetItem(return_list, 1, NmzVectorToPyList(libnormaliz::to_vector(HS.getHSOPDenom())));
+        PyList_SetItem(return_list, 2, NmzToPyLong(HS.getShift()));
+    }else{
+        PyList_SetItem(return_list, 0, NmzVectorToPyList(HS.getNum()));
+        PyList_SetItem(return_list, 1, NmzVectorToPyList(libnormaliz::to_vector(HS.getDenom())));
+        PyList_SetItem(return_list, 2, NmzToPyLong(HS.getShift()));
+    }
     return return_list;
 }
 
@@ -610,7 +616,10 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         return NmzMatrixToPyList(C->getDeg1Elements());
 
     case libnormaliz::ConeProperty::HilbertSeries:
-        return NmzHilbertSeriesToPyList(C->getHilbertSeries());
+        {
+        bool is_HSOP = C->isComputed(libnormaliz::ConeProperty::HSOP);
+        return NmzHilbertSeriesToPyList(C->getHilbertSeries(),is_HSOP);
+        }
 
     case libnormaliz::ConeProperty::Grading:
         {
