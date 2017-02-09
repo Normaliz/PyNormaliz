@@ -1,3 +1,9 @@
+/***************************************************************************
+ * 
+ * Include
+ * 
+ ***************************************************************************/
+
 #include <Python.h>
 using namespace std;
 
@@ -23,17 +29,30 @@ using std::map;
 using std::vector;
 using std::pair;
 
-// Macros for try catch
+typedef int py_size_t;
+
+/***************************************************************************
+ * 
+ * Macros for exception handling
+ * 
+ ***************************************************************************/
+
 #define FUNC_BEGIN try {
 
 #define FUNC_END \
     } catch (libnormaliz::NormalizException& e) { \
         PyErr_SetString( NormalizError, e.what() ); \
         return NULL; \
-    } catch( ... ) { \
-        PyErr_SetString( PyNormaliz_cppError, "unknown exception" ); \
+    } catch( exception& e ) { \
+        PyErr_SetString( PyNormaliz_cppError, e.what() ); \
         return NULL; \
     }
+
+/***************************************************************************
+ * 
+ * Static objects
+ * 
+ ***************************************************************************/
 
 static PyObject * NormalizError;
 static PyObject * PyNormaliz_cppError;
@@ -41,6 +60,12 @@ static const char* cone_name = "Cone";
 static const char* cone_name_long = "Cone<long long>";
 static string cone_name_str( cone_name );
 static string cone_name_str_long( cone_name_long );
+
+/***************************************************************************
+ * 
+ * Compiler version control
+ * 
+ ***************************************************************************/
 
 #if PY_MAJOR_VERSION >= 3
 #define string_check PyUnicode_Check
@@ -75,8 +100,11 @@ static string cone_name_str_long( cone_name_long );
     static_assert(false, "Your Normaliz version is to old! Update to 3.0.0 or newer.");
 #endif
 
-
-typedef int py_size_t;
+/***************************************************************************
+ * 
+ * Python-C data conversion functions
+ * 
+ ***************************************************************************/
 
 string PyUnicodeToString( PyObject* in ){
 #if PY_MAJOR_VERSION >= 3
@@ -311,6 +339,25 @@ PyObject* NmzStanleyDecToPyList(const list<libnormaliz::STANLEYDATA<Integer> >& 
     return M;
 }
 
+template<typename Integer>
+static PyObject* _NmzBasisChangeIntern(Cone<Integer>* C)
+{
+    Sublattice_Representation<Integer> bc = C->getSublattice();
+
+    PyObject* res = PyList_New( 3 );
+    PyList_SetItem(res, 0, NmzMatrixToPyList(bc.getEmbedding()));
+    PyList_SetItem(res, 1, NmzMatrixToPyList(bc.getProjection()));
+    PyList_SetItem(res, 2, NmzToPyLong(bc.getAnnihilator()));
+    // Dim, Rank, Equations and Congruences are already covered by special functions
+    // ditto ExternalIndex
+    return res;
+}
+
+/***************************************************************************
+ * 
+ * PyCapsule handler functions
+ * 
+ ***************************************************************************/
 
 void delete_cone_mpz( PyObject* cone ){
   Cone<mpz_class> * cone_ptr = reinterpret_cast<Cone<mpz_class>* >( PyCapsule_GetPointer( cone, cone_name ) );
@@ -330,10 +377,6 @@ Cone<mpz_class>* get_cone_mpz( PyObject* cone ){
   return reinterpret_cast<Cone<mpz_class>*>( PyCapsule_GetPointer( cone, cone_name ) );
 }
 
-// template<typename Integer>
-// Cone<Integer>* get_cone( PyObject* cone ){
-//   return reinterpret_cast<Cone<Integer>*>( PyCapsule_GetPointer( cone, cone_name ) );
-// }
 
 PyObject* pack_cone( Cone<mpz_class>* C ){
   return PyCapsule_New( reinterpret_cast<void*>( C ), cone_name, &delete_cone_mpz );
@@ -343,11 +386,6 @@ PyObject* pack_cone( Cone<long long>* C ){
   return PyCapsule_New( reinterpret_cast<void*>( C ), cone_name_long, &delete_cone_long );
 }
 
-// template<typename Integer>
-// PyObject* pack_cone( Cone<Integer>* C ){
-//   return PyCapsule_New( reinterpret_cast<void*>( C ), cone_name, &delete_cone<Integer> );
-// }
-
 bool is_cone( PyObject* cone ){
   if( PyCapsule_CheckExact( cone ) ){
     // compare as string
@@ -355,6 +393,12 @@ bool is_cone( PyObject* cone ){
   }
   return false;
 }
+
+/***************************************************************************
+ * 
+ * NmzCone
+ * 
+ ***************************************************************************/
 
 template<typename Integer>
 static PyObject* _NmzConeIntern(PyObject * args)
@@ -434,6 +478,12 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* keywds)
     FUNC_END
 }
 
+/***************************************************************************
+ * 
+ * NmzCompute
+ * 
+ ***************************************************************************/
+
 template<typename Integer>
 PyObject* _NmzCompute(Cone<Integer>* C, PyObject* args)
 {
@@ -507,6 +557,12 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args){
   
 }
 
+/***************************************************************************
+ * 
+ * NmzIsComputed
+ * 
+ ***************************************************************************/
+
 template<typename Integer>
 PyObject* NmzIsComputed(Cone<Integer>* C, PyObject* prop)
 {
@@ -542,19 +598,11 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
     FUNC_END
 }
 
-template<typename Integer>
-static PyObject* _NmzBasisChangeIntern(Cone<Integer>* C)
-{
-    Sublattice_Representation<Integer> bc = C->getSublattice();
-
-    PyObject* res = PyList_New( 3 );
-    PyList_SetItem(res, 0, NmzMatrixToPyList(bc.getEmbedding()));
-    PyList_SetItem(res, 1, NmzMatrixToPyList(bc.getProjection()));
-    PyList_SetItem(res, 2, NmzToPyLong(bc.getAnnihilator()));
-    // Dim, Rank, Equations and Congruences are already covered by special functions
-    // ditto ExternalIndex
-    return res;
-}
+/***************************************************************************
+ * 
+ * NmzResult
+ * 
+ ***************************************************************************/
 
 template<typename Integer>
 PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
@@ -779,6 +827,12 @@ PyObject* _NmzResult( PyObject* self, PyObject* args ){
   FUNC_END
 }
 
+/***************************************************************************
+ * 
+ * Python verbosity
+ * 
+ ***************************************************************************/
+
 PyObject* NmzSetVerboseDefault( PyObject* self, PyObject* args)
 {
     FUNC_BEGIN
@@ -829,9 +883,12 @@ PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
     FUNC_END
     
 }
-/*
- * Python mixed init stuff
- */
+
+/***************************************************************************
+ * 
+ * Python init stuff
+ * 
+ ***************************************************************************/
 
 struct module_state {
     PyObject *error;
