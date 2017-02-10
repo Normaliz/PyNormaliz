@@ -120,6 +120,14 @@ string PyUnicodeToString( PyObject* in ){
 #endif
 }
 
+PyObject * StringToPyUnicode( string in ){
+#if PY_MAJOR_VERSION >= 3
+  return PyUnicode_FromString( in.c_str() );
+#else
+  return PyString_FromString( in.c_str() );
+#endif
+}
+
 // Boolean conversion
 
 inline PyObject* BoolToPyBool( bool in ){
@@ -392,6 +400,59 @@ bool is_cone( PyObject* cone ){
     return cone_name_str == string(PyCapsule_GetName( cone )) || cone_name_str_long == string(PyCapsule_GetName( cone ));
   }
   return false;
+}
+
+/***************************************************************************
+ * 
+ * Cone property list
+ * 
+ ***************************************************************************/
+
+static PyObject* NmzListConeProperties(PyObject* args)
+{
+    FUNC_BEGIN
+    
+    PyObject* return_list = PyList_New( 2 );
+    
+    ConeProperties props;
+    for(int i=0; i < libnormaliz::ConeProperty::EnumSize;i++){
+        props.set( static_cast<libnormaliz::ConeProperty::Enum>(i) );
+    }
+    
+    ConeProperties goals = props.goals();
+    ConeProperties options = props.options();
+    
+    int number_goals = goals.count();
+    int number_options = options.count();
+    
+    PyObject* goal_list = PyList_New( number_goals );
+    PyObject* option_list = PyList_New( number_options );
+
+    PyList_SetItem( return_list, 0, goal_list );
+    PyList_SetItem( return_list, 1, option_list );
+    
+    int list_position = 0;
+    for(int i=0; i < libnormaliz::ConeProperty::EnumSize;i++){
+      if(goals.test(static_cast<libnormaliz::ConeProperty::Enum>(i))){
+          string name = libnormaliz::toString(static_cast<libnormaliz::ConeProperty::Enum>(i));
+          PyList_SetItem( goal_list, list_position, StringToPyUnicode( name ) );
+          list_position++;
+      }
+    }
+    
+    list_position = 0;
+    for(int i=0; i < libnormaliz::ConeProperty::EnumSize;i++){
+      if(options.test(static_cast<libnormaliz::ConeProperty::Enum>(i))){
+          string name = libnormaliz::toString(static_cast<libnormaliz::ConeProperty::Enum>(i));
+          PyList_SetItem( option_list, list_position, StringToPyUnicode( name ) );
+          list_position++;
+      }
+    }
+    
+    return return_list;
+    
+    FUNC_END
+    
 }
 
 /***************************************************************************
@@ -921,6 +982,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
       "Set verbosity" },
     { "NmzSetVerbose", (PyCFunction)NmzSetVerbose_Outer, METH_VARARGS,
       "Set verbosity of cone" },
+    { "NmzListConeProperties", (PyCFunction)NmzListConeProperties,METH_NOARGS,
+      "List all available properties" },
     {NULL, }        /* Sentinel */
 };
 
