@@ -15,5 +15,5 @@ eq = [
 ]
 grading = [[1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
-cone = PyNormaliz.NmzCone(["equations", eq,"grading",grading])
-PyNormaliz.NmzResult(cone,"HilbertSeries")
+cone = PyNormaliz.Cone( equations = eq, grading = grading )
+cone.HilbertSeries()
