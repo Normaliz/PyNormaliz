@@ -26,6 +26,15 @@ class Cone:
             if keywords[i] == True:
                 input_list.append( i )
         return input_list
+        
+    def print_properties(self):
+        props = PyNormaliz_cpp.NmzListConeProperties()
+        goals = props[0]
+        for x in goals:
+            if (PyNormaliz_cpp.NmzIsComputed(self.cone,x)):
+                print(x + ":")
+                print(PyNormaliz_cpp.NmzResult(self.cone,x))
+                print("\n")
 
     def __str__(self):
         return "<Normaliz Cone>"
