@@ -55,6 +55,22 @@ class Cone:
         return_cone.cone = new_inner_cone
         return return_cone
 
+
+    def HilbertSeries(self, **kwargs ):
+        try:
+            as_hsop = kwargs["HSOP"]
+        except KeyError:
+            print( "bla" )
+            as_hsop = 28
+        input_list = self.__process_keyword_args( kwargs )
+        input_list.append( "HilbertSeries")
+        PyNormaliz_cpp.NmzCompute( self.cone, input_list )
+        if as_hsop == 28:
+            return PyNormaliz_cpp.NmzHilbertSeries( self.cone )
+        if type(as_hsop) == bool:
+            return PyNormaliz_cpp.NmzHilbertSeries( self.cone, as_hsop )
+        raise TypeError( "If HSOP is given, it must be True or False" )
+
     # Auto generated stuff
 
     def Generators(self, **kwargs ):
@@ -314,13 +330,6 @@ class Cone:
         input_list.append( "Triangulation")
         PyNormaliz_cpp.NmzCompute( self.cone, input_list )
         return PyNormaliz_cpp.NmzResult(self.cone, "Triangulation")
-
-
-    def HilbertSeries(self, **kwargs ):
-        input_list = self.__process_keyword_args( kwargs )
-        input_list.append( "HilbertSeries")
-        PyNormaliz_cpp.NmzCompute( self.cone, input_list )
-        return PyNormaliz_cpp.NmzResult(self.cone, "HilbertSeries")
 
 
     def InclusionExclusionData(self, **kwargs ):
