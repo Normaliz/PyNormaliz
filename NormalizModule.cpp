@@ -560,6 +560,12 @@ PyObject* NmzHilbertSeries(Cone<Integer>* C, PyObject* args)
     PyObject* is_HSOP = PyTuple_GetItem( args, 1 );
     
     if( is_HSOP == Py_True ){
+        //HOTFIX
+        if (!C->isComputed(libnormaliz::ConeProperty::HSOP) && C->isComputed(libnormaliz::ConeProperty::HilbertSeries)){
+            C->resetComputed(libnormaliz::ConeProperty::HilbertSeries);
+            C->compute(libnormaliz::ConeProperty::HSOP);
+            C->compute(libnormaliz::ConeProperty::HilbertSeries);
+        }
         return NmzHilbertSeriesToPyList(C->getHilbertSeries(),true);
     }else{
         return NmzHilbertSeriesToPyList(C->getHilbertSeries(),false);
