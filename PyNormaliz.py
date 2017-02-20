@@ -44,6 +44,9 @@ class Cone:
 
     def Compute(self,*args):
         return PyNormaliz_cpp.NmzCompute(self.cone, args)
+    
+    def setVerbose(self,verbose=True):
+        return NmzSetVerbose( self.cone, verbose )
 
     # This one is not like the others!
     def IntegerHull(self, **kwargs ):
