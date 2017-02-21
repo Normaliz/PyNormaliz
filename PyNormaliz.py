@@ -60,7 +60,6 @@ class Cone:
         try:
             as_hsop = kwargs["HSOP"]
         except KeyError:
-            print( "bla" )
             as_hsop = 28
         input_list = self.__process_keyword_args( kwargs )
         input_list.append( "HilbertSeries")
