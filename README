@@ -43,7 +43,8 @@ All possible Normaliz input properties can be given as keyword arguments.
 
 To compute a property of the cone, use the provided getters, which corresponds to Normaliz compute
 goals.
-´´´
+
+```
 C.HilbertBasis()
 ```
 
