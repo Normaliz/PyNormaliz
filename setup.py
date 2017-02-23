@@ -10,11 +10,11 @@ else:
 
 setup(
     name = 'PyNormaliz',
-    version = '1.4',
+    version = '1.5',
     description = 'An interface to Normaliz',
-    author = 'Sebastian Gutsche',
+    author = 'Sebastian Gutsche, Richard Sieg',
     author_email = 'sebastian.gutsche@gmail.com',
-    url = 'https://github.com/sebasguts/PyNormaliz',
+    url = 'https://github.com/Normaliz/PyNormaliz',
     py_modules = [ "PyNormaliz" ],
     ext_modules = [ Extension( "PyNormaliz_cpp",
                               [ "NormalizModule.cpp" ],
