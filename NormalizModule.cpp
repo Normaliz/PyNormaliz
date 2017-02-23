@@ -541,6 +541,60 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* keywds)
 
 /***************************************************************************
  * 
+ * NmzHilbertSeries
+ * 
+ ***************************************************************************/
+
+template<typename Integer>
+PyObject* NmzHilbertSeries(Cone<Integer>* C, PyObject* args)
+{
+    FUNC_BEGIN
+    
+    const int arg_len = PyTuple_Size(args);
+    
+    if(arg_len==1){
+        bool is_HSOP = C->isComputed(libnormaliz::ConeProperty::HSOP);
+        return NmzHilbertSeriesToPyList(C->getHilbertSeries(),is_HSOP);
+    }
+    
+    PyObject* is_HSOP = PyTuple_GetItem( args, 1 );
+    
+    if( is_HSOP == Py_True ){
+        if (!C->isComputed(libnormaliz::ConeProperty::HSOP)) C->compute(libnormaliz::ConeProperty::HSOP);
+        return NmzHilbertSeriesToPyList(C->getHilbertSeries(),true);
+    }else{
+        return NmzHilbertSeriesToPyList(C->getHilbertSeries(),false);
+    }
+    
+    FUNC_END
+}
+
+
+PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args){
+  
+  FUNC_BEGIN
+  
+  PyObject* cone = PyTuple_GetItem( args, 0 );
+  
+  if( !is_cone(cone) ){
+      PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
+      return NULL;
+  }
+  
+  if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+      Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+      return NmzHilbertSeries(cone_ptr, args);
+  }else{
+      Cone<long long>* cone_ptr = get_cone_long(cone);
+      return NmzHilbertSeries(cone_ptr,args);
+  }
+  
+  FUNC_END
+  
+}
+
+/***************************************************************************
+ * 
  * NmzCompute
  * 
  ***************************************************************************/
@@ -984,6 +1038,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
       "Set verbosity of cone" },
     { "NmzListConeProperties", (PyCFunction)NmzListConeProperties,METH_NOARGS,
       "List all available properties" },
+    { "NmzHilbertSeries", (PyCFunction)NmzHilbertSeries_Outer, METH_VARARGS,
+      "Returns Hilbert series, either HSOP or not" },
     {NULL, }        /* Sentinel */
 };
 
