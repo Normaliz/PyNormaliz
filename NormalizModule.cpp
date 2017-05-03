@@ -43,9 +43,10 @@ typedef int py_size_t;
 
 #define FUNC_END \
     } catch (libnormaliz::InterruptException& e ) {\
-        PyErr_SetString( NormalizError, "Computation Interrupted" );\
         PyOS_setsig(SIGINT,current_interpreter_sigint_handler);\
-        libnormaliz::nmz_interrupted = false;
+        libnormaliz::nmz_interrupted = false; \
+        PyErr_SetInterrupt(); \
+        PyErr_CheckSignals(); \
         return NULL; \
     } catch (libnormaliz::NormalizException& e) { \
         PyErr_SetString( NormalizError, e.what() ); \
