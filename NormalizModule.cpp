@@ -157,7 +157,7 @@ inline PyObject* BoolToPyBool( bool in ){
 
 // Converting MPZ's to PyLong and back via strings. Worst possible solution ever.
 
-bool PyLongToNmz( PyObject * in, mpz_class& out ){
+bool PyLongToNmz( PyObject * in, mpq_class& out ){
   PyObject * in_as_string = PyObject_Str( in );
   const char* in_as_c_string = PyUnicodeToString( in_as_string ).c_str();
   out.set_str( in_as_c_string, 10 );
@@ -485,7 +485,7 @@ static PyObject* NmzListConeProperties(PyObject* args)
 template<typename Integer>
 static PyObject* _NmzConeIntern(PyObject * args)
 {
-    map <InputType, vector< vector<Integer> > > input;
+    map <InputType, vector< vector<mpq_class> > > input;
     
     PyObject* input_list;
     
@@ -515,7 +515,7 @@ static PyObject* _NmzConeIntern(PyObject * args)
         string type_str = PyUnicodeToString( type );
         
         PyObject* M = PyTuple_GetItem(input_list, i+1);
-        vector<vector<Integer> > Mat;
+        vector<vector<mpq_class> > Mat;
         bool okay = PyIntMatrixToNmz(Mat, M);
         if (!okay) {
             PyErr_SetString( PyNormaliz_cppError, "Even entries must be matrices" );

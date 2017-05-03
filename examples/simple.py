@@ -2,7 +2,7 @@ import PyNormaliz
 
 ineq = [ [ 0,0,1 ], [ 0,1,0 ],[1,0,0] ];
 
-cone = PyNormaliz.NmzCone(["integral_closure", ineq ])
+cone = PyNormaliz.NmzCone(["cone", ineq ])
 
 PyNormaliz.NmzResult( cone, "HilbertBasis" )
 
