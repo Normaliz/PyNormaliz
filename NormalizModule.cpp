@@ -29,6 +29,8 @@ using std::map;
 using std::vector;
 using std::pair;
 
+#include<csignal>
+
 typedef int py_size_t;
 
 /***************************************************************************
@@ -40,6 +42,11 @@ typedef int py_size_t;
 #define FUNC_BEGIN try {
 
 #define FUNC_END \
+    } catch (libnormaliz::InterruptException& e ) {\
+        PyErr_SetString( NormalizError, "Computation Interrupted" );\
+        PyOS_setsig(SIGINT,current_interpreter_sigint_handler);\
+        libnormaliz::nmz_interrupted = false;
+        return NULL; \
     } catch (libnormaliz::NormalizException& e) { \
         PyErr_SetString( NormalizError, e.what() ); \
         return NULL; \
@@ -50,9 +57,20 @@ typedef int py_size_t;
 
 /***************************************************************************
  * 
+ * Signal handling
+ * 
+ ***************************************************************************/
+
+void signal_handler( int signal ){
+    libnormaliz::nmz_interrupted = true;
+}
+
+/***************************************************************************
+ * 
  * Static objects
  * 
  ***************************************************************************/
+
 
 static PyObject * NormalizError;
 static PyObject * PyNormaliz_cppError;
@@ -60,6 +78,8 @@ static const char* cone_name = "Cone";
 static const char* cone_name_long = "Cone<long long>";
 static string cone_name_str( cone_name );
 static string cone_name_str_long( cone_name_long );
+
+static PyOS_sighandler_t current_interpreter_sigint_handler;
 
 /***************************************************************************
  * 
@@ -653,7 +673,11 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args){
   
   FUNC_BEGIN
   
+  current_interpreter_sigint_handler = PyOS_setsig(SIGINT,signal_handler);
+  
   PyObject* cone = PyTuple_GetItem( args, 0 );
+  
+  PyObject* result;
   
   if( !is_cone(cone) ){
       PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
@@ -662,11 +686,15 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args){
   
   if( cone_name_str == string(PyCapsule_GetName(cone)) ){
       Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
-      return _NmzCompute(cone_ptr, args);
+      result = _NmzCompute(cone_ptr, args);
   }else{
       Cone<long long>* cone_ptr = get_cone_long(cone);
-      return _NmzCompute(cone_ptr,args);
+      result = _NmzCompute(cone_ptr,args);
   }
+  
+  PyOS_setsig(SIGINT,current_interpreter_sigint_handler);
+  
+  return result;
   
   FUNC_END
   
