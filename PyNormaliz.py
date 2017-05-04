@@ -77,6 +77,16 @@ class Cone:
     def Polynomial(self, **kwargs ):
         return PyNormaliz_cpp.NmzGetPolynomial( self.cone )
 
+
+    def SymmetrizedCone(self, **kwargs ):
+        new_inner_cone = PyNormaliz_cpp.NmzSymmetrizedCone( self.cone )
+        if new_inner_cone == None:
+            return None
+        return_cone = Cone.__new__(Cone)
+        return_cone.cone = new_inner_cone
+        return return_cone
+
+
     # Auto generated stuff
 
     def Generators(self, **kwargs ):
