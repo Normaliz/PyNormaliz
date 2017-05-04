@@ -73,6 +73,10 @@ class Cone:
             return PyNormaliz_cpp.NmzHilbertSeries( self.cone, as_hsop )
         raise TypeError( "If HSOP is given, it must be True or False" )
 
+
+    def Polynomial(self, **kwargs ):
+        return PyNormaliz_cpp.NmzGetPolynomial( self.cone )
+
     # Auto generated stuff
 
     def Generators(self, **kwargs ):

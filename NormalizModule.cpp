@@ -1081,6 +1081,35 @@ PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
 
 /***************************************************************************
  * 
+ * Get Polynomial
+ * 
+ ***************************************************************************/
+
+PyObject* NmzGetPolynomial(PyObject* self, PyObject* args ){
+    
+    FUNC_BEGIN
+    
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    
+    if( !is_cone( cone ) ){
+        PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
+        return NULL;
+    }
+    
+    if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        return StringToPyUnicode( (cone_ptr->getIntData()).getPolynomial() );
+    }else{
+        Cone<long long>* cone_ptr = get_cone_long(cone);
+        return StringToPyUnicode( (cone_ptr->getIntData()).getPolynomial() );
+    }
+    
+    FUNC_END
+    
+}
+
+/***************************************************************************
+ * 
  * Python init stuff
  * 
  ***************************************************************************/
@@ -1120,6 +1149,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
       "List all available properties" },
     { "NmzHilbertSeries", (PyCFunction)NmzHilbertSeries_Outer, METH_VARARGS,
       "Returns Hilbert series, either HSOP or not" },
+    { "NmzGetPolynomial", (PyCFunction)NmzGetPolynomial, METH_VARARGS,
+      "Returns grading polynomial" },
     {NULL, }        /* Sentinel */
 };
 
