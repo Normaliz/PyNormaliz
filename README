@@ -10,7 +10,7 @@ see [this introduction](examples/PyNormaliz_Tutorial.ipynb) by Richard Sieg.
 ## Requirements
 
 * python 2.7 or higher or python 3.4 or higher
-* Normaliz 3.2.1 Oor higher (https://github.com/Normaliz/Normaliz/releases)
+* Normaliz 3.2.1 or higher (https://github.com/Normaliz/Normaliz/releases)
 
 ## Installation
 
