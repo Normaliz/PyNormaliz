@@ -319,7 +319,7 @@ PyObject* NmzHilbertSeriesToPyList(const libnormaliz::HilbertSeries& HS, bool is
 }
 
 template<typename Integer>
-PyObject* NmzWeightedEhrhardSeriesToPyList(const std::pair<libnormaliz::HilbertSeries,Integer>& HS)
+PyObject* NmzWeightedEhrhartSeriesToPyList(const std::pair<libnormaliz::HilbertSeries,Integer>& HS)
 {   
     PyObject* return_list = PyList_New( 4 );
     PyList_SetItem(return_list, 0, NmzVectorToPyList(HS.first.getNum()));
@@ -513,6 +513,9 @@ static PyObject* _NmzConeIntern(PyObject * args)
     
     PyObject* input_list;
     
+    bool grading_polynomial = false;
+    string polynomial;
+    
     if( PyTuple_Size(args)==1 ){
         input_list = PyTuple_GetItem( args, 0 );
         if( ! PyList_Check( input_list ) ){
@@ -538,6 +541,13 @@ static PyObject* _NmzConeIntern(PyObject * args)
         
         string type_str = PyUnicodeToString( type );
         
+        if( type_str.compare( "polynomial" ) == 0 ){
+            PyObject* M = PyTuple_GetItem(input_list, i+1);
+            polynomial =  PyUnicodeToString( M );
+            grading_polynomial = true;
+            continue;
+        }
+        
         PyObject* M = PyTuple_GetItem(input_list, i+1);
         vector<vector<mpq_class> > Mat;
         bool okay = PyIntMatrixToNmz(Mat, M);
@@ -550,6 +560,10 @@ static PyObject* _NmzConeIntern(PyObject * args)
     }
 
     Cone<Integer>* C = new Cone<Integer>(input);
+    
+    if( grading_polynomial ){
+        C->setPolynomial( polynomial );
+    }
     
     PyObject* return_container = pack_cone( C );
     
@@ -844,7 +858,7 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         }
 
     case libnormaliz::ConeProperty::WeightedEhrhartSeries:
-        return NmzWeightedEhrhardSeriesToPyList(C->getWeightedEhrhartSeries());
+        return NmzWeightedEhrhartSeriesToPyList(C->getWeightedEhrhartSeries());
         
 
     case libnormaliz::ConeProperty::Grading:

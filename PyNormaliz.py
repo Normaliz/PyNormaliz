@@ -383,3 +383,30 @@ class Cone:
         return PyNormaliz_cpp.NmzResult(self.cone, "IsTriangulationPartial")
 
 
+    def WeightedEhrhartQuasiPolynomial(self, **kwargs ):
+        input_list = self.__process_keyword_args( kwargs )
+        input_list.append( "WeightedEhrhartQuasiPolynomial")
+        PyNormaliz_cpp.NmzCompute( self.cone, input_list );
+        return PyNormaliz_cpp.NmzResult(self.cone, "WeightedEhrhartQuasiPolynomial")
+
+
+    def WeightedEhrhartSeries(self, **kwargs ):
+        input_list = self.__process_keyword_args( kwargs )
+        input_list.append( "WeightedEhrhartSeries")
+        PyNormaliz_cpp.NmzCompute( self.cone, input_list );
+        return PyNormaliz_cpp.NmzResult(self.cone, "WeightedEhrhartSeries")
+
+
+    def Integral(self, **kwargs ):
+        input_list = self.__process_keyword_args( kwargs )
+        input_list.append( "Integral")
+        PyNormaliz_cpp.NmzCompute( self.cone, input_list );
+        return PyNormaliz_cpp.NmzResult(self.cone, "Integral")
+
+
+    def VirtualMultiplicity(self, **kwargs ):
+        input_list = self.__process_keyword_args( kwargs )
+        input_list.append( "VirtualMultiplicity")
+        PyNormaliz_cpp.NmzCompute( self.cone, input_list );
+        return PyNormaliz_cpp.NmzResult(self.cone, "VirtualMultiplicity")
+
