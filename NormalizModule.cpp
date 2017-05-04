@@ -319,6 +319,17 @@ PyObject* NmzHilbertSeriesToPyList(const libnormaliz::HilbertSeries& HS, bool is
 }
 
 template<typename Integer>
+PyObject* NmzWeightedEhrhardSeriesToPyList(const std::pair<libnormaliz::HilbertSeries,Integer>& HS)
+{   
+    PyObject* return_list = PyList_New( 4 );
+    PyList_SetItem(return_list, 0, NmzVectorToPyList(HS.first.getNum()));
+    PyList_SetItem(return_list, 1, NmzVectorToPyList(libnormaliz::to_vector(HS.first.getDenom())));
+    PyList_SetItem(return_list, 2, NmzToPyLong(HS.first.getShift()));
+    PyList_SetItem(return_list, 3, NmzToPyLong(HS.second) );
+    return return_list;
+}
+
+template<typename Integer>
 PyObject* NmzHilbertQuasiPolynomialToPyList(const libnormaliz::HilbertSeries& HS)
 {
     vector< vector<Integer> > HQ = HS.getHilbertQuasiPolynomial();
@@ -328,6 +339,19 @@ PyObject* NmzHilbertQuasiPolynomialToPyList(const libnormaliz::HilbertSeries& HS
         PyList_SetItem(return_list, i, NmzVectorToPyList(HQ[i]));
     }
     PyList_SetItem(return_list, n, NmzToPyLong(HS.getHilbertQuasiPolynomialDenom()));
+    return return_list;
+}
+
+template<typename Integer>
+PyObject* NmzWeightedEhrhartQuasiPolynomialToPyList(const libnormaliz::IntegrationData& int_data)
+{
+    vector< vector<Integer> > ehrhart_qp = int_data.getWeightedEhrhartQuasiPolynomial();
+    const size_t n = ehrhart_qp.size();
+    PyObject* return_list = PyList_New(n+1);
+    for (size_t i = 0; i < n; ++i) {
+        PyList_SetItem(return_list, i, NmzVectorToPyList(ehrhart_qp[i]));
+    }
+    PyList_SetItem(return_list, n, NmzToPyLong(int_data.getWeightedEhrhartQuasiPolynomialDenom()));
     return return_list;
 }
 
@@ -785,6 +809,12 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
 
     case libnormaliz::ConeProperty::Multiplicity:
         return NmzToPyList(C->getMultiplicity());
+    
+    case libnormaliz::ConeProperty::Integral:
+        return NmzToPyList(C->getIntegral());
+    
+    case libnormaliz::ConeProperty::VirtualMultiplicity:
+        return NmzToPyList(C->getVirtualMultiplicity());
 
     case libnormaliz::ConeProperty::RecessionRank:
         return NmzToPyLong(C->getRecessionRank());
@@ -812,6 +842,10 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         bool is_HSOP = C->isComputed(libnormaliz::ConeProperty::HSOP);
         return NmzHilbertSeriesToPyList(C->getHilbertSeries(),is_HSOP);
         }
+
+    case libnormaliz::ConeProperty::WeightedEhrhartSeries:
+        return NmzWeightedEhrhardSeriesToPyList(C->getWeightedEhrhartSeries());
+        
 
     case libnormaliz::ConeProperty::Grading:
         {
@@ -905,7 +939,10 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     
     case libnormaliz::ConeProperty::HilbertQuasiPolynomial:
         return NmzHilbertQuasiPolynomialToPyList<mpz_class>(C->getHilbertSeries()); //FIXME: Why is this return value not parametrized, but mpz_class only?
-        
+    
+    case libnormaliz::ConeProperty::WeightedEhrhartQuasiPolynomial:
+        return NmzWeightedEhrhartQuasiPolynomialToPyList<mpz_class>(C->getIntData());
+    
     case libnormaliz::ConeProperty::IsTriangulationNested:
         return BoolToPyBool(C->isTriangulationNested());
         
