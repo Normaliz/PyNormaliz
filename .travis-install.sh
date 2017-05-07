@@ -1,7 +1,7 @@
 #! /bin/sh
 PYNORMALIZ_DIR=`pwd`
 set -e
-NORMALIZ_VERSION=3.1.4
+NORMALIZ_VERSION=3.3.0
 NORMALIZ_PREFIX=`pwd`/local
 wget https://github.com/Normaliz/Normaliz/releases/download/v$NORMALIZ_VERSION/Normaliz-$NORMALIZ_VERSION.tar.gz
 rm -Rf Normaliz-$NORMALIZ_VERSION
