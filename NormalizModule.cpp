@@ -642,12 +642,18 @@ PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args){
       return NULL;
   }
   
+  current_interpreter_sigint_handler = PyOS_setsig(SIGINT,signal_handler);
+  
   if( cone_name_str == string(PyCapsule_GetName(cone)) ){
       Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
-      return NmzHilbertSeries(cone_ptr, args);
+      PyObject* return_value = NmzHilbertSeries(cone_ptr, args);
+      PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
+      return return_value;
   }else{
       Cone<long long>* cone_ptr = get_cone_long(cone);
-      return NmzHilbertSeries(cone_ptr,args);
+      PyObject* return_value = NmzHilbertSeries(cone_ptr,args);
+      PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
+      return return_value;
   }
   
   FUNC_END
@@ -1136,9 +1142,12 @@ PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args ){
         return NULL;
     }
     
+    current_interpreter_sigint_handler = PyOS_setsig(SIGINT,signal_handler);
+    
     if( cone_name_str == string(PyCapsule_GetName(cone)) ){
         Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
         Cone<mpz_class>* symm_cone = &(cone_ptr->getSymmetrizedCone());
+        PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
         if( symm_cone==0 ){
             return Py_None;
         }
@@ -1147,6 +1156,7 @@ PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args ){
     }else{
         Cone<long long>* cone_ptr = get_cone_long(cone);
         Cone<long long>* symm_cone = &(cone_ptr->getSymmetrizedCone());
+        PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
         if( symm_cone==0 ){
             return Py_None;
         }
