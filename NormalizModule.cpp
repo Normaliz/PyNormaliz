@@ -793,8 +793,11 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     string prop = PyUnicodeToString( prop_obj );
 
     libnormaliz::ConeProperty::Enum p = libnormaliz::toConeProperty(prop);
-
+    
+    current_interpreter_sigint_handler = PyOS_setsig(SIGINT,signal_handler);
     ConeProperties notComputed = C->compute(ConeProperties(p));
+    PyOS_setsig(SIGINT, current_interpreter_sigint_handler );
+    
     if (notComputed.any()) {
         return Py_None;
     }
