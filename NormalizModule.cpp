@@ -49,9 +49,11 @@ typedef int py_size_t;
         PyErr_CheckSignals(); \
         return NULL; \
     } catch (libnormaliz::NormalizException& e) { \
+        PyOS_setsig(SIGINT,current_interpreter_sigint_handler);\
         PyErr_SetString( NormalizError, e.what() ); \
         return NULL; \
     } catch( exception& e ) { \
+        PyOS_setsig(SIGINT,current_interpreter_sigint_handler);\
         PyErr_SetString( PyNormaliz_cppError, e.what() ); \
         return NULL; \
     }
@@ -1099,12 +1101,18 @@ PyObject* NmzGetPolynomial(PyObject* self, PyObject* args ){
         return NULL;
     }
     
+    current_interpreter_sigint_handler = PyOS_setsig(SIGINT,signal_handler);
+    
     if( cone_name_str == string(PyCapsule_GetName(cone)) ){
         Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
-        return StringToPyUnicode( (cone_ptr->getIntData()).getPolynomial() );
+        PyObject* return_value = StringToPyUnicode( (cone_ptr->getIntData()).getPolynomial() );
+        PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
+        return return_value;
     }else{
         Cone<long long>* cone_ptr = get_cone_long(cone);
-        return StringToPyUnicode( (cone_ptr->getIntData()).getPolynomial() );
+        PyObject* return_value = StringToPyUnicode( (cone_ptr->getIntData()).getPolynomial() );
+        PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
+        return return_value;
     }
     
     FUNC_END
@@ -1257,6 +1265,8 @@ extern "C" void initPyNormaliz_cpp(void)
     
     PyModule_AddObject( module, "error", NormalizError );
     PyModule_AddObject( module, "error", PyNormaliz_cppError );
+    
+    current_interpreter_sigint_handler = PyOS_getsig( SIGINT );
 
 #if PY_MAJOR_VERSION >= 3
     return module;
