@@ -159,6 +159,39 @@ class Cone:
         prettyPolynomial = (num, den)
         return prettyPolynomial
 
+    def PrintPrettyPolynomial(self, numCoefficients, denCoefficients):
+        """
+        Print the polynomial of the Hilbert series.
+
+        Parameters
+        ----------
+        numCoefficients : list of ints
+            The coefficients for the numerator.
+        denCofficients : list of ints
+            The coefficients for the denominator where the value represents the exponent of 't' and the frequency indicates the outer coefficient.
+
+        Returns
+        -------
+        prettyPolynomial : string
+
+        Examples
+        --------
+
+        >>> numCoefficients = [3, 7, 4, -4, -6, 5]
+        >>> deCoefficients = [1, 1, 2, 2, 2, 4]
+        >>> PrintPrettyPolynomial(numCoefficients,deCoefficients)
+
+        (3 + 7t + 4t² - 4t³ - 6t⁴ + 5t⁵)
+        --------------------------------
+           (1 - t)² (1 - t²)³ (1 - t⁴)
+
+        """
+        num, den = PrettyPolynomial(numCoefficients, denCoefficients)
+        prettyPolynomial = '{:^}\n{:-^{width}}\n{:^{width}}'.format(
+            num, '', den, width=len(num))
+        print(prettyPolynomial)
+        return prettyPolynomial
+
     # Auto generated stuff
 
     def Generators(self, **kwargs):
