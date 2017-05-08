@@ -93,7 +93,8 @@ class Cone:
         numCoefficients : list
             The coefficients for the numerator.
         denCofficients : list
-            The coefficients for the denominator where the value represents the exponent of 't' and the frequency indicates the outer coefficient.
+            The coefficients for the denominator where the value represents the
+            exponent of 't' and the frequency indicates the outer coefficient.
 
         Returns
         -------
@@ -128,17 +129,22 @@ class Cone:
         def getNumerator(coefficients):
 
             numerator = ''
-            isPositive = lambda x: x > 0
+
+            def isPositive():
+                return x > 0
+
             firstNonZero = next(
                 (i for i, x in enumerate(coefficients) if x != 0), 0)
             print(firstNonZero)
             for exp, coefficient in enumerate(coefficients):
                 if coefficient is 0:
                     continue
+                # Exponent is 0 so keep only the coefficient
                 if exp is 0:
                     numerator += '({}{!s}'.format('-' if not isPositive(coefficient)
                                                   else '', abs(coefficient))
-                elif i is firstNonZero:  # Only include sign if `coefficient` is negative
+                # Only include sign if `coefficient` is negative
+                elif i is firstNonZero:
                     numerator += '{}{!s}t{}'.format('-' if not isPositive(
                         coefficient) else '', abs(coefficient), to_sup(exp))
                 else:
@@ -168,7 +174,9 @@ class Cone:
         numCoefficients : list of ints
             The coefficients for the numerator.
         denCofficients : list of ints
-            The coefficients for the denominator where the value represents the exponent of 't' and the frequency indicates the outer coefficient.
+            The coefficients for the denominator where the value represents
+            the exponent of 't' and the frequency indicates the outer
+            coefficient.
 
         Returns
         -------
