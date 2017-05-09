@@ -84,9 +84,9 @@ class Cone:
         return_cone.cone = new_inner_cone
         return return_cone
 
-    def PrettyPolynomial(self, numCoefficients, denCoefficients):
+    def PrettyPolynomialTuple(self, numCoefficients, denCoefficients):
         """
-        Get the polynomial of the Hilbert series.
+        Strings for numerator and denominator of the a hilbert series.
 
         Parameters
         ----------
@@ -98,14 +98,14 @@ class Cone:
 
         Returns
         -------
-        prettyPolynomial : tuple of strings
+        PrettyPolynomialTuple: tuple of strings
 
         Examples
         --------
 
         >>> numCoefficients = [3, 7, 4, -4, -6, 5]
-        >>> deCoefficients = [1, 1, 2, 2, 2, 4]
-        >>> PrettyPolynomial(numCoefficients,deCoefficients)
+        >>> denCoefficients = [1, 1, 2, 2, 2, 4]
+        >>> PrettyPolynomialTuple(numCoefficients,denCoefficients)
 
         ('(3 + 7t + 4t² - 4t³ - 6t⁴ + 5t⁵)', '(1 - t)² (1 - t²)³ (1 - t⁴)')
 
@@ -130,12 +130,11 @@ class Cone:
 
             numerator = ''
 
-            def isPositive():
+            def isPositive(x):
                 return x > 0
 
             firstNonZero = next(
                 (i for i, x in enumerate(coefficients) if x != 0), 0)
-            print(firstNonZero)
             for exp, coefficient in enumerate(coefficients):
                 if coefficient is 0:
                     continue
@@ -161,13 +160,13 @@ class Cone:
             return denominator
 
         num = getNumerator(numCoefficients)
-        den = getDenominator(deCoefficients)
+        den = getDenominator(denCoefficients)
         prettyPolynomial = (num, den)
         return prettyPolynomial
 
-    def PrintPrettyPolynomial(self, numCoefficients, denCoefficients):
+    def PrintPrettyHilbertSeries(self, numCoefficients, denCoefficients):
         """
-        Print the polynomial of the Hilbert series.
+        Make a pretty hilbert series string
 
         Parameters
         ----------
@@ -180,25 +179,33 @@ class Cone:
 
         Returns
         -------
-        prettyPolynomial : string
+        PrintPrettyHilbertSeries : string
 
         Examples
         --------
 
         >>> numCoefficients = [3, 7, 4, -4, -6, 5]
         >>> deCoefficients = [1, 1, 2, 2, 2, 4]
-        >>> PrintPrettyPolynomial(numCoefficients,deCoefficients)
+        >>> PrintPrettyHilbertSeries(numCoefficients,deCoefficients)
 
         (3 + 7t + 4t² - 4t³ - 6t⁴ + 5t⁵)
         --------------------------------
            (1 - t)² (1 - t²)³ (1 - t⁴)
 
         """
-        num, den = PrettyPolynomial(numCoefficients, denCoefficients)
+        num, den = self.PrettyPolynomialTuple(numCoefficients, denCoefficients)
         prettyPolynomial = '{:^}\n{:-^{width}}\n{:^{width}}'.format(
-            num, '', den, width=len(num))
-        print(prettyPolynomial)
+            num, '', den, width=max(len(den),len(num)))
         return prettyPolynomial
+
+    def PrintHilbertSeries(self):
+        hilbert_series=self.HilbertSeries()
+        shift=hilbert_series[2]
+        shift=[ 0 for x in range(1,shift) ]
+        numerator=shift+hilbert_series[0]
+        denominator=hilbert_series[1]
+        print(self.PrintPrettyHilbertSeries(numerator,denominator))
+        return None
 
     # Auto generated stuff
 
