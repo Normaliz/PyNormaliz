@@ -17,14 +17,14 @@ see [this introduction](examples/PyNormaliz_Tutorial.ipynb) by Richard Sieg.
 You need to have Normaliz properly installed and libNormaliz in your gcc's include path.
 On most systems, installing Normaliz via
 ```
-\> make install
+$ make install
 ```
 is enough. If you prefer or are not able to install it, you need to set CPATH and
 LD_LIBRARY_PATH accordingly.
 
 After that, you can install PyNormaliz via
 ```
-\> pip install PyNormaliz
+$ pip install PyNormaliz
 ```
 
 ## Usage
@@ -36,7 +36,7 @@ properties, see the Normaliz manual.
 To create a cone, use
 ```
 import PyNormaliz
-C := PyNormaliz.Cone( cone = [[1,0],[0,1]] )
+C = PyNormaliz.Cone(cone = [[1,0],[0,1]])
 ```
 
 All possible Normaliz input properties can be given as keyword arguments.
@@ -50,7 +50,7 @@ C.HilbertBasis()
 
 You can pass options to the compute functions
 ```
-C.HilbertSeries( HSOP = True )
+C.HilbertSeries(HSOP = True)
 ```
 
 ## Low level commands
@@ -59,11 +59,11 @@ There is also a low-level API, directly using C functions:
 
 To create a cone, use
 ```
-C := NmzCone( "cone", [[1,0],[0,1]] )
+C = NmzCone("cone", [[1,0],[0,1]])
 ```
 or, equivalently,
 ```
-C := NmzCone( [ "cone", [[1,0],[0,1]] ] )
+C = NmzCone(["cone", [[1,0],[0,1]]])
 ```
 NmzCone can take an arbitrary number of arguments, either as separated arguments or in a list.
 First is always a string, describing an input property for Normaliz, followed by a (possibly empty)
@@ -73,20 +73,20 @@ NmzCompute takes a cone as first argument, followed by arbitrary many strings, o
 describing Normaliz output properties. NmzCompute lets Normaliz compute the necessary values, and
 returns true if everything was computed properly, false otherwise.
 ```
-NmzCompute( C, "HilbertBasis" )
+NmzCompute(C, "HilbertBasis")
 ```
 or
 ```
-NmzCompute( C, [ "HilbertBasis" ] )
+NmzCompute(C, ["HilbertBasis"])
 ```
 
 NmzIsComputed takes a cone and a string representing an output property, and returns true if the
 property is already computed for the cone, false otherwise.
 ```
-NmzIsComputed( C, "HilbertBasis" )
+NmzIsComputed(C, "HilbertBasis")
 ```
 
 NmzResult takes a cone and a string representing an output property, and returns the computed
 value of this property as a matrix, a list, or as a bool.
 ```
-NmzResult( C, "HilbertBasis" )
+NmzResult(C, "HilbertBasis")
