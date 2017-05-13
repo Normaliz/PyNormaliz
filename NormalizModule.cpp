@@ -117,10 +117,10 @@ static PyOS_sighandler_t current_interpreter_sigint_handler;
 
 #ifndef NMZ_RELEASE
     static_assert(false,
-       "Your Normaliz version (unknown) is to old! Update to 3.0.0 or newer.");
+       "Your Normaliz version (unknown) is to old! Update to 3.2.0 or newer.");
 #endif
-#if NMZ_RELEASE < 30000
-    static_assert(false, "Your Normaliz version is to old! Update to 3.0.0 or newer.");
+#if NMZ_RELEASE < 30300
+    static_assert(false, "Your Normaliz version is to old! Update to 3.3.0 or newer.");
 #endif
 
 /***************************************************************************
