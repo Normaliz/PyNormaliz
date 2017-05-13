@@ -1,3 +1,5 @@
+# encoding=utf8
+
 import PyNormaliz_cpp
 from PyNormaliz_cpp import *
 
