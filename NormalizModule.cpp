@@ -119,8 +119,8 @@ static PyOS_sighandler_t current_interpreter_sigint_handler;
     static_assert(false,
        "Your Normaliz version (unknown) is to old! Update to 3.2.0 or newer.");
 #endif
-#if NMZ_RELEASE < 30300
-    static_assert(false, "Your Normaliz version is to old! Update to 3.3.0 or newer.");
+#if NMZ_RELEASE < 30301
+    static_assert(false, "Your Normaliz version is to old! Update to 3.3.1 or newer.");
 #endif
 
 /***************************************************************************
@@ -1170,6 +1170,33 @@ PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args ){
 
 /***************************************************************************
  * 
+ * Set number of threads
+ * 
+ ***************************************************************************/
+
+PyObject* NmzSetNumberOfNormalizThreads(PyObject* self, PyObject* args ){
+    
+    FUNC_BEGIN
+    
+    PyObject* num_treads = PyTuple_GetItem( args, 0 );
+    
+    if( !PyLong_Check( num_treads ) ){
+        PyErr_SetString( PyNormaliz_cppError, "First argument must be an integer" );
+        return NULL;
+    }
+    
+    long num_threads_long = PyLong_AsLong( num_treads );
+    
+    num_threads_long = libnormaliz::set_thread_limit( num_threads_long );
+    
+    return PyLong_FromLong( num_threads_long );
+    
+    FUNC_END
+    
+}
+
+/***************************************************************************
+ * 
  * Python init stuff
  * 
  ***************************************************************************/
@@ -1213,6 +1240,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
       "Returns grading polynomial" },
     { "NmzSymmetrizedCone", (PyCFunction)NmzSymmetrizedCone, METH_VARARGS,
       "Returns symmetrized cone" },
+    { "NmzSetNumberOfNormalizThreads", (PyCFunction)NmzSetNumberOfNormalizThreads, METH_VARARGS,
+      "Sets the Normaliz thread limit" },
     {NULL, }        /* Sentinel */
 };
 
