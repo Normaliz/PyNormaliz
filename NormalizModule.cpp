@@ -119,7 +119,7 @@ static PyOS_sighandler_t current_interpreter_sigint_handler;
     static_assert(false,
        "Your Normaliz version (unknown) is to old! Update to 3.2.0 or newer.");
 #endif
-#if NMZ_RELEASE < 30301
+#if NMZ_RELEASE < 30400
     static_assert(false, "Your Normaliz version is to old! Update to 3.3.1 or newer.");
 #endif
 
@@ -976,6 +976,12 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         
     case libnormaliz::ConeProperty::ConeDecomposition:
         return NmzBoolMatrixToPyList(C->getOpenFacets());
+    
+    case libnormaliz::ConeProperty::IsGorenstein:
+        return BoolToPyBool(C->isGorenstein());
+        
+    case libnormaliz::ConeProperty::GeneratorOfInterior:
+        return NmzVectorToPyList(C->getGeneratorOfInterior());
 
 //  the following properties are compute options and do not return anything
     case libnormaliz::ConeProperty::DualMode:
@@ -990,6 +996,11 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::BigInt:
     case libnormaliz::ConeProperty::NoNestedTri:
     case libnormaliz::ConeProperty::HSOP:
+    case libnormaliz::ConeProperty::Projection:
+    case libnormaliz::ConeProperty::NoProjection:
+    case libnormaliz::ConeProperty::ProjectionFloat:
+    case libnormaliz::ConeProperty::SCIP:
+    case libnormaliz::ConeProperty::NoPeriodBound:
         PyErr_SetString( PyNormaliz_cppError, "ConeProperty is input-only" );
         return NULL;
 #if NMZ_RELEASE >= 30200
@@ -1127,6 +1138,41 @@ PyObject* NmzGetPolynomial(PyObject* self, PyObject* args ){
 
 /***************************************************************************
  * 
+ * NrCoeffQuasiPol
+ * 
+ ***************************************************************************/
+
+PyObject* NmzSetNrCoeffQuasiPol( PyObject* self, PyObject* args ){
+    
+    FUNC_BEGIN
+    
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    
+    if( !is_cone( cone ) ){
+        PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
+        return NULL;
+    }
+    
+    PyObject* bound_py = PyTuple_GetItem( args, 1 );
+    
+    int overflow;
+    long bound = PyLong_AsLongLongAndOverflow( bound_py, &overflow );
+    if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        cone_ptr->setNrCoeffQuasiPol(bound);
+        return Py_True;
+    }else{
+        Cone<long long>* cone_ptr = get_cone_long(cone);
+        cone_ptr->setNrCoeffQuasiPol(bound);
+        return Py_True;
+    }
+    
+    FUNC_END
+    
+}
+
+/***************************************************************************
+ * 
  * Get Symmetrized cone
  * 
  ***************************************************************************/
@@ -1242,6 +1288,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
       "Returns symmetrized cone" },
     { "NmzSetNumberOfNormalizThreads", (PyCFunction)NmzSetNumberOfNormalizThreads, METH_VARARGS,
       "Sets the Normaliz thread limit" },
+    { "NmzSetNrCoeffQuasiPol", (PyCFunction)NmzSetNrCoeffQuasiPol, METH_VARARGS,
+      "Sets the period bound for the quasi-polynomial" },
     {NULL, }        /* Sentinel */
 };
 
