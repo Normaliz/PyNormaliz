@@ -159,7 +159,12 @@ inline PyObject* BoolToPyBool( bool in ){
 
 // Converting MPZ's to PyLong and back via strings. Worst possible solution ever.
 
-bool PyLongToNmz( PyObject * in, mpq_class& out ){
+bool PyNumberToNmz( PyObject * in, mpq_class& out ){
+  if( PyFloat_Check( in ) ){
+      mpq_class temp(PyFloat_AsDouble(in));
+      out.swap(temp);
+      return true;
+  }
   PyObject * in_as_string = PyObject_Str( in );
   const char* in_as_c_string = PyUnicodeToString( in_as_string ).c_str();
   out.set_str( in_as_c_string, 10 );
@@ -181,7 +186,7 @@ PyObject* NmzToPyList( mpq_class in ){
   return out_list;
 }
 
-bool PyLongToNmz( PyObject* in, long long & out ){
+bool PyNumberToNmz( PyObject* in, long long & out ){
   
   int overflow;
   out = PyLong_AsLongLongAndOverflow( in, &overflow );
@@ -224,7 +229,7 @@ PyObject* NmzToPyNumber( double in ){
 }
 
 template<typename Integer>
-bool PyLongToNmz(Integer& x, Integer &out){
+bool PyNumberToNmz(Integer& x, Integer &out){
   
   return Integer::unimplemented_function;
   
@@ -245,7 +250,7 @@ static bool PyListToNmz( vector<Integer>& out, PyObject* in ){
     out.resize(n);
     for (int i = 0; i < n; ++i) {
         PyObject* tmp = PyList_GetItem(in, i);
-        if (!PyLongToNmz(tmp, out[i]))
+        if (!PyNumberToNmz(tmp, out[i]))
             return false;
     }
     return true;
