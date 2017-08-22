@@ -217,6 +217,13 @@ PyObject* NmzToPyLong( long in ){
   
 }
 
+//FIXME: This should not be here
+PyObject* NmzToPyLong( double in ){
+  
+  return PyFloat_FromDouble( in );
+  
+}
+
 template<typename Integer>
 bool PyLongToNmz(Integer& x, Integer &out){
   
@@ -982,6 +989,9 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         
     case libnormaliz::ConeProperty::GeneratorOfInterior:
         return NmzVectorToPyList(C->getGeneratorOfInterior());
+        
+    case libnormaliz::ConeProperty::VerticesFloat:
+        return NmzMatrixToPyList(C->getVerticesFloat());
 
 //  the following properties are compute options and do not return anything
     case libnormaliz::ConeProperty::DualMode:

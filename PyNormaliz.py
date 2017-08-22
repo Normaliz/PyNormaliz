@@ -513,3 +513,9 @@ class Cone:
         input_list.append("GeneratorOfInterior")
         PyNormaliz_cpp.NmzCompute(self.cone, input_list)
         return PyNormaliz_cpp.NmzResult(self.cone, "GeneratorOfInterior")
+
+    def VerticesFloat(self, **kwargs):
+        input_list = self.__process_keyword_args(kwargs)
+        input_list.append("VerticesFloat")
+        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
+        return PyNormaliz_cpp.NmzResult(self.cone, "VerticesFloat")
