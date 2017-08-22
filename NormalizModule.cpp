@@ -166,7 +166,7 @@ bool PyLongToNmz( PyObject * in, mpq_class& out ){
   return true;
 }
 
-PyObject* NmzToPyLong( mpz_class in ){
+PyObject* NmzToPyNumber( mpz_class in ){
   string mpz_as_string = in.get_str();
   char* mpz_as_c_string = const_cast<char*>(mpz_as_string.c_str());
   char * pend;
@@ -176,8 +176,8 @@ PyObject* NmzToPyLong( mpz_class in ){
 
 PyObject* NmzToPyList( mpq_class in ){
   PyObject* out_list = PyList_New( 2 );
-  PyList_SetItem( out_list, 0, NmzToPyLong( in.get_num() ) );
-  PyList_SetItem( out_list, 1, NmzToPyLong( in.get_den() ) );
+  PyList_SetItem( out_list, 0, NmzToPyNumber( in.get_num() ) );
+  PyList_SetItem( out_list, 1, NmzToPyNumber( in.get_den() ) );
   return out_list;
 }
 
@@ -191,34 +191,33 @@ bool PyLongToNmz( PyObject* in, long long & out ){
   
 }
 
-PyObject* NmzToPyLong( long long in ){
+PyObject* NmzToPyNumber( long long in ){
   
   return PyLong_FromLongLong( in );
   
 }
 
-PyObject* NmzToPyLong( libnormaliz::key_t in ){
+PyObject* NmzToPyNumber( libnormaliz::key_t in ){
   
   return PyLong_FromLong( in );
   
 }
 
 #ifdef ENVIRONMENT64
-PyObject* NmzToPyLong( size_t in ){
+PyObject* NmzToPyNumber( size_t in ){
   
   return PyLong_FromLong( in );
   
 }
 #endif
 
-PyObject* NmzToPyLong( long in ){
+PyObject* NmzToPyNumber( long in ){
   
   return PyLong_FromLong( in );
   
 }
 
-//FIXME: This should not be here
-PyObject* NmzToPyLong( double in ){
+PyObject* NmzToPyNumber( double in ){
   
   return PyFloat_FromDouble( in );
   
@@ -232,7 +231,7 @@ bool PyLongToNmz(Integer& x, Integer &out){
 }
 
 template<typename Integer>
-PyObject* NmzToPyLong(Integer &in){
+PyObject* NmzToPyNumber(Integer &in){
   
   return Integer::unimplemented_function;
   
@@ -273,7 +272,7 @@ PyObject* NmzVectorToPyList(const vector<Integer>& in)
     const size_t n = in.size();
     vector = PyList_New(n);
     for (size_t i = 0; i < n; ++i) {
-        PyList_SetItem(vector, i, NmzToPyLong(in[i]));
+        PyList_SetItem(vector, i, NmzToPyNumber(in[i]));
     }
     return vector;
 }
@@ -318,11 +317,11 @@ PyObject* NmzHilbertSeriesToPyList(const libnormaliz::HilbertSeries& HS, bool is
     if(is_HSOP){
         PyList_SetItem(return_list, 0, NmzVectorToPyList(HS.getHSOPNum()));
         PyList_SetItem(return_list, 1, NmzVectorToPyList(libnormaliz::to_vector(HS.getHSOPDenom())));
-        PyList_SetItem(return_list, 2, NmzToPyLong(HS.getShift()));
+        PyList_SetItem(return_list, 2, NmzToPyNumber(HS.getShift()));
     }else{
         PyList_SetItem(return_list, 0, NmzVectorToPyList(HS.getNum()));
         PyList_SetItem(return_list, 1, NmzVectorToPyList(libnormaliz::to_vector(HS.getDenom())));
-        PyList_SetItem(return_list, 2, NmzToPyLong(HS.getShift()));
+        PyList_SetItem(return_list, 2, NmzToPyNumber(HS.getShift()));
     }
     return return_list;
 }
@@ -333,8 +332,8 @@ PyObject* NmzWeightedEhrhartSeriesToPyList(const std::pair<libnormaliz::HilbertS
     PyObject* return_list = PyList_New( 4 );
     PyList_SetItem(return_list, 0, NmzVectorToPyList(HS.first.getNum()));
     PyList_SetItem(return_list, 1, NmzVectorToPyList(libnormaliz::to_vector(HS.first.getDenom())));
-    PyList_SetItem(return_list, 2, NmzToPyLong(HS.first.getShift()));
-    PyList_SetItem(return_list, 3, NmzToPyLong(HS.second) );
+    PyList_SetItem(return_list, 2, NmzToPyNumber(HS.first.getShift()));
+    PyList_SetItem(return_list, 3, NmzToPyNumber(HS.second) );
     return return_list;
 }
 
@@ -347,7 +346,7 @@ PyObject* NmzHilbertQuasiPolynomialToPyList(const libnormaliz::HilbertSeries& HS
     for (size_t i = 0; i < n; ++i) {
         PyList_SetItem(return_list, i, NmzVectorToPyList(HQ[i]));
     }
-    PyList_SetItem(return_list, n, NmzToPyLong(HS.getHilbertQuasiPolynomialDenom()));
+    PyList_SetItem(return_list, n, NmzToPyNumber(HS.getHilbertQuasiPolynomialDenom()));
     return return_list;
 }
 
@@ -360,7 +359,7 @@ PyObject* NmzWeightedEhrhartQuasiPolynomialToPyList(const libnormaliz::Integrati
     for (size_t i = 0; i < n; ++i) {
         PyList_SetItem(return_list, i, NmzVectorToPyList(ehrhart_qp[i]));
     }
-    PyList_SetItem(return_list, n, NmzToPyLong(int_data.getWeightedEhrhartQuasiPolynomialDenom()));
+    PyList_SetItem(return_list, n, NmzToPyNumber(int_data.getWeightedEhrhartQuasiPolynomialDenom()));
     return return_list;
 }
 
@@ -373,7 +372,7 @@ PyObject* NmzTriangleListToPyList(const vector< pair<vector<libnormaliz::key_t>,
         // convert the pair
         PyObject* pair = PyList_New(2);
         PyList_SetItem(pair, 0, NmzVectorToPyList<libnormaliz::key_t>(in[i].first));
-        PyList_SetItem(pair, 1, NmzToPyLong(in[i].second));
+        PyList_SetItem(pair, 1, NmzToPyNumber(in[i].second));
         PyList_SetItem(M, i, pair);
     }
     return M;
@@ -409,7 +408,7 @@ static PyObject* _NmzBasisChangeIntern(Cone<Integer>* C)
     PyObject* res = PyList_New( 3 );
     PyList_SetItem(res, 0, NmzMatrixToPyList(bc.getEmbedding()));
     PyList_SetItem(res, 1, NmzMatrixToPyList(bc.getProjection()));
-    PyList_SetItem(res, 2, NmzToPyLong(bc.getAnnihilator()));
+    PyList_SetItem(res, 2, NmzToPyNumber(bc.getAnnihilator()));
     // Dim, Rank, Equations and Congruences are already covered by special functions
     // ditto ExternalIndex
     return res;
@@ -831,10 +830,10 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         return NmzMatrixToPyList(C->getSupportHyperplanes());
 
     case libnormaliz::ConeProperty::TriangulationSize:
-        return NmzToPyLong(C->getTriangulationSize());
+        return NmzToPyNumber(C->getTriangulationSize());
 
     case libnormaliz::ConeProperty::TriangulationDetSum:
-        return NmzToPyLong(C->getTriangulationDetSum());
+        return NmzToPyNumber(C->getTriangulationDetSum());
 
     case libnormaliz::ConeProperty::Triangulation:
         return NmzTriangleListToPyList<Integer>(C->getTriangulation());
@@ -849,13 +848,13 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         return NmzToPyList(C->getVirtualMultiplicity());
 
     case libnormaliz::ConeProperty::RecessionRank:
-        return NmzToPyLong(C->getRecessionRank());
+        return NmzToPyNumber(C->getRecessionRank());
 
     case libnormaliz::ConeProperty::AffineDim:
-        return NmzToPyLong(C->getAffineDim());
+        return NmzToPyNumber(C->getAffineDim());
 
     case libnormaliz::ConeProperty::ModuleRank:
-        return NmzToPyLong(C->getModuleRank());
+        return NmzToPyNumber(C->getModuleRank());
 
     case libnormaliz::ConeProperty::HilbertBasis:
         return NmzMatrixToPyList(C->getHilbertBasis());
@@ -905,7 +904,7 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         return BoolToPyBool(C->isReesPrimary());
 
     case libnormaliz::ConeProperty::ReesPrimaryMultiplicity:
-        return NmzToPyLong(C->getReesPrimaryMultiplicity());
+        return NmzToPyNumber(C->getReesPrimaryMultiplicity());
 
     case libnormaliz::ConeProperty::StanleyDec:
         return NmzStanleyDecToPyList(C->getStanleyDec());
@@ -934,19 +933,19 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         return NmzMatrixToPyList(C->getSublattice().getCongruences());
     
     case libnormaliz::ConeProperty::EmbeddingDim:
-        return NmzToPyLong(C->getEmbeddingDim());
+        return NmzToPyNumber(C->getEmbeddingDim());
     
     case libnormaliz::ConeProperty::Rank:
-        return NmzToPyLong(C->getRank());
+        return NmzToPyNumber(C->getRank());
     
     case libnormaliz::ConeProperty::Sublattice:
         return _NmzBasisChangeIntern(C);
     
     case libnormaliz::ConeProperty::ExternalIndex:
-        return NmzToPyLong(C->getSublattice().getExternalIndex());
+        return NmzToPyNumber(C->getSublattice().getExternalIndex());
     
     case libnormaliz::ConeProperty::InternalIndex:
-        return NmzToPyLong(C->getIndex());
+        return NmzToPyNumber(C->getIndex());
     
     case libnormaliz::ConeProperty::WitnessNotIntegrallyClosed:
         return NmzVectorToPyList(C->getWitnessNotIntegrallyClosed());
@@ -955,10 +954,10 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     /* New stuff */
     
     case libnormaliz::ConeProperty::GradingDenom:
-        return NmzToPyLong(C->getGradingDenom());
+        return NmzToPyNumber(C->getGradingDenom());
     
     case libnormaliz::ConeProperty::UnitGroupIndex:
-        return NmzToPyLong(C->getUnitGroupIndex());
+        return NmzToPyNumber(C->getUnitGroupIndex());
     
     case libnormaliz::ConeProperty::ModuleGeneratorsOverOriginalMonoid:
         return NmzMatrixToPyList(C->getModuleGeneratorsOverOriginalMonoid());
