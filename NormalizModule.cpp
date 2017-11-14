@@ -968,9 +968,15 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         return NmzMatrixToPyList(C->getModuleGeneratorsOverOriginalMonoid());
     
     case libnormaliz::ConeProperty::IntegerHull:
-    {   
+    {
         Cone<Integer>* hull = new Cone<Integer>( C->getIntegerHullCone() );
         return pack_cone( hull ); 
+    }
+    
+    case libnormaliz::ConeProperty::ProjectCone:
+    {
+        Cone<Integer>* projection = new Cone<Integer>(C->getProjectCone());
+        return pack_cone( projection );
     }
     
     case libnormaliz::ConeProperty::HilbertQuasiPolynomial:
@@ -996,6 +1002,9 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         
     case libnormaliz::ConeProperty::VerticesFloat:
         return NmzMatrixToPyList(C->getVerticesFloat());
+        
+    case libnormaliz::ConeProperty::Volume:
+        return NmzToPyList(C->getVolume());
 
 //  the following properties are compute options and do not return anything
     case libnormaliz::ConeProperty::DualMode:
@@ -1015,6 +1024,8 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::ProjectionFloat:
     case libnormaliz::ConeProperty::SCIP:
     case libnormaliz::ConeProperty::NoPeriodBound:
+    case libnormaliz::ConeProperty::NoLLL:
+    case libnormaliz::ConeProperty::NoRelax:
         PyErr_SetString( PyNormaliz_cppError, "ConeProperty is input-only" );
         return NULL;
 #if NMZ_RELEASE >= 30200
@@ -1230,6 +1241,86 @@ PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args ){
 
 /***************************************************************************
  * 
+ * Get euclidian volume
+ * 
+ ***************************************************************************/
+
+PyObject* NmzGetEuclideanVolume(PyObject* self, PyObject* args ){
+    
+    FUNC_BEGIN
+    
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    
+    if( !is_cone( cone ) ){
+        PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
+        return NULL;
+    }
+    
+    current_interpreter_sigint_handler = PyOS_setsig(SIGINT,signal_handler);
+    
+    if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        PyObject* return_value = NmzToPyNumber(cone_ptr->getEuclideanVolume());
+        PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
+        return return_value;
+    }else{
+        Cone<long long>* cone_ptr = get_cone_long(cone);
+        PyObject* return_value = NmzToPyNumber(cone_ptr->getEuclideanVolume());
+        PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
+        return return_value;
+    }
+    
+    FUNC_END
+    
+}
+
+/***************************************************************************
+ * 
+ * Get expanded hilbert series
+ * 
+ ***************************************************************************/
+
+PyObject* NmzGetHilbertSeriesExpansion(PyObject* self, PyObject* args ){
+    
+    FUNC_BEGIN
+    
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    PyObject* py_degree = PyTuple_GetItem( args, 1 );
+    
+    if( !is_cone( cone ) ){
+        PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
+        return NULL;
+    }
+    
+    if( !PyLong_Check( py_degree ) ){
+        PyErr_SetString( PyNormaliz_cppError, "Second argument must be a long" );
+        return NULL;
+    }
+    
+    long degree = PyLong_AsLong( py_degree );
+    libnormaliz::HilbertSeries HS;
+    current_interpreter_sigint_handler = PyOS_setsig(SIGINT,signal_handler);
+    
+    if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        HS = cone_ptr->getHilbertSeries();
+    }else{
+        Cone<long long>* cone_ptr = get_cone_long(cone);
+        HS = cone_ptr->getHilbertSeries();
+    }
+    
+    HS.set_expansion_degree(degree);
+    PyObject* result = NmzVectorToPyList( HS.getExpansion() );
+    PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
+    
+    return result;
+    
+    FUNC_END
+    
+}
+
+/***************************************************************************
+ * 
  * Set number of threads
  * 
  ***************************************************************************/
@@ -1304,6 +1395,10 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
       "Sets the Normaliz thread limit" },
     { "NmzSetNrCoeffQuasiPol", (PyCFunction)NmzSetNrCoeffQuasiPol, METH_VARARGS,
       "Sets the period bound for the quasi-polynomial" },
+    { "NmzGetEuclideanVolume", (PyCFunction)NmzGetEuclideanVolume, METH_VARARGS,
+      "Returns euclidean volume of cone as float" },
+    { "NmzGetHilbertSeriesExpansion", (PyCFunction)NmzGetHilbertSeriesExpansion, METH_VARARGS,
+      "Returns expansion of the hilbert series" },
     {NULL, }        /* Sentinel */
 };
 
