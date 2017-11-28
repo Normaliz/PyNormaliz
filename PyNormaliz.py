@@ -70,11 +70,11 @@ class Cone:
         return_cone.cone = new_inner_cone
         return return_cone
 
-    def EuclidianVolume(self, **kwargs):
+    def EuclideanVolume(self, **kwargs):
         input_list = self.__process_keyword_args(kwargs)
         input_list.append("Volume")
         PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzGetEuclidianVolume(self.cone)
+        return PyNormaliz_cpp.NmzGetEuclideanVolume(self.cone)
 
     def HilbertSeries(self, **kwargs):
         try:
@@ -103,6 +103,12 @@ class Cone:
         return_cone = Cone.__new__(Cone)
         return_cone.cone = new_inner_cone
         return return_cone
+
+    def HilbertSeriesExpansion(self,degree):
+        return NmzGetHilbertSeriesExpansion(self.cone,degree)
+
+    def WeightedEhrhartSeriesExpansion(self,degree):
+        return NmzGetWeightedEhrhartSeriesExpansion(self.cone,degree)
 
     def PrettyPolynomialTuple(self, numCoefficients, denCoefficients):
         """

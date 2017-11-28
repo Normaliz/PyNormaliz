@@ -1269,6 +1269,7 @@ PyObject* NmzGetEuclideanVolume(PyObject* self, PyObject* args ){
         PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
         return return_value;
     }
+    PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
     
     FUNC_END
     
@@ -1311,6 +1312,46 @@ PyObject* NmzGetHilbertSeriesExpansion(PyObject* self, PyObject* args ){
     
     HS.set_expansion_degree(degree);
     PyObject* result = NmzVectorToPyList( HS.getExpansion() );
+    PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
+    
+    return result;
+    
+    FUNC_END
+    
+}
+
+
+PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* args ){
+    
+    FUNC_BEGIN
+    
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    PyObject* py_degree = PyTuple_GetItem( args, 1 );
+    
+    if( !is_cone( cone ) ){
+        PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
+        return NULL;
+    }
+    
+    if( !PyLong_Check( py_degree ) ){
+        PyErr_SetString( PyNormaliz_cppError, "Second argument must be a long" );
+        return NULL;
+    }
+    
+    long degree = PyLong_AsLong( py_degree );
+    pair<libnormaliz::HilbertSeries,mpz_class> ES;
+    current_interpreter_sigint_handler = PyOS_setsig(SIGINT,signal_handler);
+    
+    if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        ES = cone_ptr->getWeightedEhrhartSeries();
+    }else{
+        Cone<long long>* cone_ptr = get_cone_long(cone);
+        ES = cone_ptr->getWeightedEhrhartSeries();
+    }
+    
+    ES.first.set_expansion_degree(degree);
+    PyObject* result = NmzVectorToPyList( ES.first.getExpansion() );
     PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
     
     return result;
@@ -1399,6 +1440,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
       "Returns euclidean volume of cone as float" },
     { "NmzGetHilbertSeriesExpansion", (PyCFunction)NmzGetHilbertSeriesExpansion, METH_VARARGS,
       "Returns expansion of the hilbert series" },
+    { "NmzGetWeightedEhrhartSeriesExpansion", (PyCFunction)NmzGetWeightedEhrhartSeriesExpansion, METH_VARARGS,
+      "Returns expansion of the weighted Ehrhart series" },
     {NULL, }        /* Sentinel */
 };
 
