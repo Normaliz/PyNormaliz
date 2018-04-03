@@ -520,7 +520,7 @@ static PyObject* NmzListConeProperties(PyObject* args)
  ***************************************************************************/
 
 template<typename Integer>
-static PyObject* _NmzConeIntern(PyObject * args)
+static PyObject* _NmzConeIntern(PyObject * args, PyObject* kwargs)
 {
     map <InputType, vector< vector<mpq_class> > > input;
     
@@ -572,6 +572,28 @@ static PyObject* _NmzConeIntern(PyObject * args)
         input[libnormaliz::to_type(type_str)] = Mat;
     }
 
+    if(kwargs!=NULL){
+        PyObject* keys = PyDict_Keys(kwargs);
+        PyObject* values = PyDict_Values(kwargs);
+        const int length = PyList_Size(keys);
+        for(int i = 0; i<length; i++ ){
+            string type_string = PyUnicodeToString( PyList_GetItem( keys, i ) );
+            PyObject* current_value = PyList_GetItem( values, i );
+            if( type_string.compare( "polynomial" ) == 0 ){
+                polynomial = PyUnicodeToString( current_value );
+                grading_polynomial = true;
+                continue;
+            }
+            vector<vector<mpq_class> > Mat;
+            bool okay = PyIntMatrixToNmz(Mat, current_value);
+            if (!okay) {
+                PyErr_SetString( PyNormaliz_cppError, "Even entries must be matrices" );
+                return NULL;
+            }
+            input[libnormaliz::to_type(type_string)] = Mat;
+        }
+    }
+
     Cone<Integer>* C = new Cone<Integer>(input);
     
     if( grading_polynomial ){
@@ -583,7 +605,7 @@ static PyObject* _NmzConeIntern(PyObject * args)
     return return_container;
 }
 
-PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* keywds)
+PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     FUNC_BEGIN
     
@@ -596,16 +618,17 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* keywds)
     PyObject* key = PyString_FromString( const_cast<char*>(string_for_keyword_argument) );
 #endif
     
-    if( keywds != NULL && PyDict_Contains( keywds, key ) == 1 ){
-        create_as_long_long = PyDict_GetItem( keywds, key );
+    if( kwargs != NULL && PyDict_Contains( kwargs, key ) == 1 ){
+        create_as_long_long = PyDict_GetItem( kwargs, key );
+        PyDict_DelItem( kwargs, key );
     }else{
         create_as_long_long = Py_False;
     }
     
     if( create_as_long_long!=Py_True ){
-        return _NmzConeIntern<mpz_class>(args);
+        return _NmzConeIntern<mpz_class>(args,kwargs);
     }else{
-        return _NmzConeIntern<long long>(args);
+        return _NmzConeIntern<long long>(args,kwargs);
     }
 
     FUNC_END
