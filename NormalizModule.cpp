@@ -1032,6 +1032,9 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::Volume:
         return NmzToPyList(C->getVolume());
 
+    case libnormaliz::ConeProperty::EuclideanVolume:
+        return NmzToPyNumber(C->getEuclideanVolume());
+
 //  the following properties are compute options and do not return anything
     case libnormaliz::ConeProperty::DualMode:
     case libnormaliz::ConeProperty::DefaultMode:
