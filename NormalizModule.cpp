@@ -271,6 +271,20 @@ static bool PyIntMatrixToNmz( vector<vector<Integer> >& out, PyObject* in ){
 }
 
 template<typename Integer>
+static bool PyInputToNmz( vector<vector<Integer> >& out, PyObject* in ){
+    bool check_input;
+    check_input = PyIntMatrixToNmz( out, in );
+    if(check_input)
+        return true;
+    out.resize(1);
+    check_input = PyListToNmz( out[0], in );
+    if(check_input){
+        return true;
+    }
+    return false;
+}
+
+template<typename Integer>
 PyObject* NmzVectorToPyList(const vector<Integer>& in)
 {
     PyObject* vector;
@@ -562,8 +576,10 @@ static PyObject* _NmzConeIntern(PyObject * args, PyObject* kwargs)
         }
         
         PyObject* M = PyTuple_GetItem(input_list, i+1);
+        if(M==Py_None)
+            continue;
         vector<vector<mpq_class> > Mat;
-        bool okay = PyIntMatrixToNmz(Mat, M);
+        bool okay = PyInputToNmz(Mat, M);
         if (!okay) {
             PyErr_SetString( PyNormaliz_cppError, "Even entries must be matrices" );
             return NULL;
@@ -579,13 +595,15 @@ static PyObject* _NmzConeIntern(PyObject * args, PyObject* kwargs)
         for(int i = 0; i<length; i++ ){
             string type_string = PyUnicodeToString( PyList_GetItem( keys, i ) );
             PyObject* current_value = PyList_GetItem( values, i );
+            if(current_value==Py_None)
+                continue;
             if( type_string.compare( "polynomial" ) == 0 ){
                 polynomial = PyUnicodeToString( current_value );
                 grading_polynomial = true;
                 continue;
             }
             vector<vector<mpq_class> > Mat;
-            bool okay = PyIntMatrixToNmz(Mat, current_value);
+            bool okay = PyInputToNmz(Mat, current_value);
             if (!okay) {
                 PyErr_SetString( PyNormaliz_cppError, "Even entries must be matrices" );
                 return NULL;
