@@ -912,8 +912,11 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     case libnormaliz::ConeProperty::Grading:
         {
         vector<Integer> grad = C->getGrading();
-        grad.push_back(C->getGradingDenom());
-        return NmzVectorToPyList(grad);
+        Integer denom = C->getGradingDenom();
+        PyObject * return_list = PyList_New(2);
+        PyList_SetItem( return_list, 0, NmzVectorToPyList(grad) );
+        PyList_SetItem( return_list, 1, NmzToPyNumber( denom ) );
+        return return_list;
         }
 
     case libnormaliz::ConeProperty::IsPointed:
