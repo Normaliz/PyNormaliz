@@ -189,6 +189,23 @@ bool PyNumberToNmz( PyObject * in, mpq_class& out ){
   return true;
 }
 
+bool PyNumberToNmz( PyObject * in, mpz_class& out ){
+  if( !PyLong_Check( in ) ){
+      return false;
+  }
+  int overflow;
+  long input_long = PyLong_AsLongAndOverflow( in, &overflow );
+  if( overflow != -1 ){
+      mpz_class temp(input_long);
+      out.swap(temp);
+      return true;
+  }
+  PyObject * in_as_string = PyObject_Str( in );
+  const char* in_as_c_string = PyUnicodeToString( in_as_string ).c_str();
+  out.set_str( in_as_c_string, 10 );
+  return true;
+}
+
 PyObject* NmzToPyNumber( mpz_class in ){
   string mpz_as_string = in.get_str();
   char* mpz_as_c_string = const_cast<char*>(mpz_as_string.c_str());
@@ -931,6 +948,44 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
 
 /***************************************************************************
  * 
+ * NmzSetGrading
+ * 
+ ***************************************************************************/
+
+template<typename Integer>
+PyObject* NmzSetGrading_inner(Cone<Integer>* cone, PyObject* list)
+{
+    vector<Integer> list_c;
+    bool result = PyListToNmz(list_c,list);
+    if(!result){
+        PyErr_SetString( PyNormaliz_cppError, "grading argument is not an integer list" );
+        return NULL;
+    }
+    cone->resetGrading(list_c);
+    return Py_None;
+}
+
+PyObject* NmzSetGrading(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    PyObject* grading_py = PyTuple_GetItem( args, 1 );
+    if( !is_cone(cone) ){
+        PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
+        return NULL;
+    }
+    if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        return NmzSetGrading_inner(cone_ptr, grading_py);
+    }else{
+        Cone<long long>* cone_ptr = get_cone_long(cone);
+        return NmzSetGrading_inner(cone_ptr,grading_py);
+    }
+    FUNC_END
+}
+
+/***************************************************************************
+ * 
  * NmzResult
  * 
  ***************************************************************************/
@@ -1598,6 +1653,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      "Compute some stuff"},
     {"NmzIsComputed", (PyCFunction)NmzIsComputed_Outer, METH_VARARGS,
      "Check if property is computed "},
+    {"NmzSetGrading", (PyCFunction)NmzSetGrading, METH_VARARGS,
+     "Reset the grading of a cone"},
     {"NmzResult", (PyCFunction)_NmzResult, METH_VARARGS|METH_KEYWORDS,
       "Return cone property" },
     { "NmzSetVerboseDefault", (PyCFunction)NmzSetVerboseDefault, METH_VARARGS,
