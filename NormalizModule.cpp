@@ -652,6 +652,27 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
     FUNC_END
 }
 
+PyObject* _NmzConeCopy( PyObject* self, PyObject* args )
+{
+    FUNC_BEGIN
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    if( !is_cone(cone) ){
+        PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
+        return NULL;
+    }
+
+    if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        Cone<mpz_class>* new_cone = new Cone<mpz_class>(*cone_ptr);
+        return pack_cone(new_cone);
+    }else{
+        Cone<long long>* cone_ptr = get_cone_long(cone);
+        Cone<long long>* new_cone = new Cone<long long>(*cone_ptr);
+        return pack_cone(new_cone);
+    }
+    FUNC_END
+}
+
 /***************************************************************************
  * 
  * NmzHilbertSeries
@@ -1464,6 +1485,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
     {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
     {"NmzCone",  (PyCFunction)_NmzCone, METH_VARARGS|METH_KEYWORDS,
      "Create a cone"},
+    {"NmzConeCopy",  (PyCFunction)_NmzConeCopy,METH_VARARGS,
+     "Copy an existing cone" },
     {"NmzCompute", (PyCFunction)_NmzCompute_Outer, METH_VARARGS,
      "Compute some stuff"},
     {"NmzIsComputed", (PyCFunction)NmzIsComputed_Outer, METH_VARARGS,
