@@ -480,6 +480,21 @@ bool is_cone( PyObject* cone ){
  * 
  ***************************************************************************/
 
+/*
+@Name NmzListConeProperties
+@Arguments none
+@Description
+Returns two lists of strings.
+The first list are all cone properties that define compute
+goals in Normaliz (see Normaliz manual for details)
+The second list are all cone properties that define internal
+control flow control in Normaliz, and which should not be used
+to get results of computations.
+All entries of the first list can be passed to NmzResult
+to get the result of a normaliz computation.
+All entries of the second list can be passed to NmzCompute
+to set different options for Normaliz computations.
+*/
 static PyObject* NmzListConeProperties(PyObject* args)
 {
     FUNC_BEGIN
@@ -623,6 +638,18 @@ static PyObject* _NmzConeIntern(PyObject * args, PyObject* kwargs)
     return return_container;
 }
 
+/*
+@Name NmzCone
+@Arguments <keywords>
+@Description
+Constructs a normaliz cone object. The keywords must be 
+Normaliz input types, and the values for the keys matrices
+(consisting of either Longs, Floats, or strings for rationals),
+lists for single vector input types, or bools for boolean input type.
+Special cases are a string describing a polynomial for the polynomial
+input type, and the CreateAsLongLong keyword to restrict normaliz computations
+to machine integers instead of arbitrary precision numbers.
+*/
 PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     FUNC_BEGIN
@@ -652,6 +679,12 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
     FUNC_END
 }
 
+/*
+@Name NmzConeCopy
+@Arguments Cone
+@Description
+Returns a copy of the cone.
+*/
 PyObject* _NmzConeCopy( PyObject* self, PyObject* args )
 {
     FUNC_BEGIN
@@ -739,6 +772,21 @@ PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args){
  * 
  ***************************************************************************/
 
+/*
+@Name NmzListConeProperties
+@Arguments none
+@Description
+Returns two lists of strings.
+The first list are all cone properties that define compute
+goals in Normaliz (see Normaliz manual for details)
+The second list are all cone properties that define internal
+control flow control in Normaliz, and which should not be used
+to get results of computations.
+All entries of the first list can be passed to NmzResult
+to get the result of a normaliz computation.
+All entries of the second list can be passed to NmzCompute
+to set different options for Normaliz computations.
+*/
 template<typename Integer>
 PyObject* _NmzCompute(Cone<Integer>* C, PyObject* args)
 {
@@ -867,6 +915,24 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
  * 
  ***************************************************************************/
 
+/*
+@Name NmzResult
+@Arguments <cone>,<cone property string>,<keys>
+@Description
+Returns the cone property belonging to the string <cone property string> of
+cone <cone>. Please see the Normaliz manual for details on which cone properties are available.
+Here are some special outputs that might differ from Normaliz:
+* HilbertSeries and WeightedErhartSeries
+  The returned object is a list with three entries: The first one describes the
+  numerator of the hilbert series, the second one the denominator, and the last one
+  is the shift. If you pass the HSOP option, output will be done in HSOP format.
+* Grading
+  Returns a list with two entries. First is the grading, second one is the grading denominator.
+* Sublattice
+  Returns a list with three entries. First is the embedding of the sublattice, second is the projection
+  third is the annihilator.
+* IntegerHull and ProjectCone return new cones.
+*/
 template<typename Integer>
 PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
 {
