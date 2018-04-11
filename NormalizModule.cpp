@@ -772,21 +772,7 @@ PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args){
  * 
  ***************************************************************************/
 
-/*
-@Name NmzListConeProperties
-@Arguments none
-@Description
-Returns two lists of strings.
-The first list are all cone properties that define compute
-goals in Normaliz (see Normaliz manual for details)
-The second list are all cone properties that define internal
-control flow control in Normaliz, and which should not be used
-to get results of computations.
-All entries of the first list can be passed to NmzResult
-to get the result of a normaliz computation.
-All entries of the second list can be passed to NmzCompute
-to set different options for Normaliz computations.
-*/
+
 template<typename Integer>
 PyObject* _NmzCompute(Cone<Integer>* C, PyObject* args)
 {
@@ -874,6 +860,12 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args){
  * 
  ***************************************************************************/
 
+/*
+@Name NmzIsComputed
+@Arguments <cone>, <property_string>
+@Desctiption
+Returns if the cone property <property_string> is computed in the cone <cone>.
+*/
 template<typename Integer>
 PyObject* NmzIsComputed(Cone<Integer>* C, PyObject* prop)
 {
@@ -932,6 +924,9 @@ Here are some special outputs that might differ from Normaliz:
   Returns a list with three entries. First is the embedding of the sublattice, second is the projection
   third is the annihilator.
 * IntegerHull and ProjectCone return new cones.
+* StanleyDec
+  Returns a list containing the Stanley decomposition. All entries are 2-tuples. First entry in the tuple is the
+  key, second the decomposition data.
 */
 template<typename Integer>
 PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
