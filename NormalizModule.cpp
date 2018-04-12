@@ -84,6 +84,24 @@ static string cone_name_str_long( cone_name_long );
 
 static PyOS_sighandler_t current_interpreter_sigint_handler;
 
+static PyObject * RationalHandler = NULL;
+static PyObject * VectorHandler = NULL;
+static PyObject * MatrixHandler = NULL;
+
+/***************************************************************************
+ * 
+ * Call func on one argument
+ * 
+ ***************************************************************************/
+
+PyObject* CallPythonFuncOnOneArg( PyObject* function, PyObject* single_arg ){
+    PyObject* single_arg_tuple = PyTuple_Pack(1,single_arg);
+    PyObject* return_obj = PyObject_CallObject(function,single_arg_tuple);
+    Py_DecRef(single_arg);
+    Py_DecRef(single_arg_tuple);
+    return return_obj;
+}
+
 /***************************************************************************
  * 
  * Compiler version control
@@ -180,10 +198,12 @@ PyObject* NmzToPyNumber( mpz_class in ){
 }
 
 PyObject* NmzToPyList( mpq_class in ){
-  PyObject* out_list = PyList_New( 2 );
-  PyList_SetItem( out_list, 0, NmzToPyNumber( in.get_num() ) );
-  PyList_SetItem( out_list, 1, NmzToPyNumber( in.get_den() ) );
-  return out_list;
+    PyObject* out_list = PyList_New( 2 );
+    PyList_SetItem( out_list, 0, NmzToPyNumber( in.get_num() ) );
+    PyList_SetItem( out_list, 1, NmzToPyNumber( in.get_den() ) );
+    if(RationalHandler!=NULL)
+        out_list = CallPythonFuncOnOneArg(RationalHandler,out_list);
+    return out_list;
 }
 
 bool PyNumberToNmz( PyObject* in, long long & out ){
@@ -293,6 +313,8 @@ PyObject* NmzVectorToPyList(const vector<Integer>& in)
     for (size_t i = 0; i < n; ++i) {
         PyList_SetItem(vector, i, NmzToPyNumber(in[i]));
     }
+    if(VectorHandler!=NULL)
+        vector = CallPythonFuncOnOneArg(VectorHandler,vector);
     return vector;
 }
 
@@ -304,6 +326,8 @@ PyObject* NmzBoolVectorToPyList(const vector<bool>& in)
     for (size_t i = 0; i < n; ++i) {
         PyList_SetItem(vector, i, BoolToPyBool(in[i]));
     }
+    if(VectorHandler!=NULL)
+        vector = CallPythonFuncOnOneArg(VectorHandler,vector);
     return vector;
 }
 
@@ -315,6 +339,8 @@ PyObject* NmzBoolMatrixToPyList(const vector< vector<bool> >& in)
     for (size_t i = 0; i < n; ++i) {
         PyList_SetItem(matrix, i, NmzBoolVectorToPyList(in[i]));
     }
+    if(MatrixHandler!=NULL)
+        matrix = CallPythonFuncOnOneArg(MatrixHandler,matrix);
     return matrix;
 }
 
@@ -327,6 +353,8 @@ PyObject* NmzMatrixToPyList(const vector< vector<Integer> >& in)
     for (size_t i = 0; i < n; ++i) {
         PyList_SetItem(matrix, i, NmzVectorToPyList(in[i]));
     }
+    if(MatrixHandler!=NULL)
+        matrix = CallPythonFuncOnOneArg(MatrixHandler,matrix);
     return matrix;
 }
 
@@ -1175,31 +1203,48 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     return Py_None;
 }
 
-PyObject* _NmzResult( PyObject* self, PyObject* args ){
-  
-  FUNC_BEGIN
-  PyObject* cone = PyTuple_GetItem( args, 0 );
-  PyObject* prop = PyTuple_GetItem( args, 1 );
-  
-  if( !is_cone( cone ) ){
-    PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
-    return NULL;
-  }
-  
-  if( !string_check( prop ) ){
-    PyErr_SetString( PyNormaliz_cppError, "Second argument must be a unicode string" );
-    return NULL;
-  }
-  
-  if( cone_name_str == string(PyCapsule_GetName(cone)) ){
-    Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
-    return _NmzResultImpl(cone_ptr, prop);
-  }else{
-    Cone<long long>* cone_ptr = get_cone_long(cone);
-    return _NmzResultImpl(cone_ptr, prop);
-  }
-  
-  FUNC_END
+PyObject* _NmzResult( PyObject* self, PyObject* args, PyObject* kwargs ){
+    
+    FUNC_BEGIN
+
+    PyObject* cone = PyTuple_GetItem( args, 0 );
+    PyObject* prop = PyTuple_GetItem( args, 1 );
+    
+    if( !is_cone( cone ) ){
+        PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
+        return NULL;
+    }
+    
+    if( !string_check( prop ) ){
+        PyErr_SetString( PyNormaliz_cppError, "Second argument must be a unicode string" );
+        return NULL;
+    }
+    
+    if(kwargs){
+        RationalHandler = PyDict_GetItemString(kwargs,"RationalHandler");
+        VectorHandler = PyDict_GetItemString(kwargs,"VectorHandler");
+        MatrixHandler = PyDict_GetItemString(kwargs,"MatrixHandler");
+    }
+
+    PyObject* result;
+
+    if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        result = _NmzResultImpl(cone_ptr, prop);
+    }else{
+        Cone<long long>* cone_ptr = get_cone_long(cone);
+        result = _NmzResultImpl(cone_ptr, prop);
+    }
+
+    RationalHandler = NULL;
+    VectorHandler = NULL;
+    MatrixHandler = NULL;
+
+    return result;
+
+
+    
+    FUNC_END
 }
 
 /***************************************************************************
