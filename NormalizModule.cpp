@@ -117,10 +117,10 @@ static PyOS_sighandler_t current_interpreter_sigint_handler;
 
 #ifndef NMZ_RELEASE
     static_assert(false,
-       "Your Normaliz version (unknown) is to old! Update to 3.5.2 or newer.");
+       "Your Normaliz version (unknown) is to old! Update to 3.5.4 or newer.");
 #endif
-#if NMZ_RELEASE < 30502
-    static_assert(false, "Your Normaliz version is to old! Update to 3.5.2 or newer.");
+#if NMZ_RELEASE < 30504
+    static_assert(false, "Your Normaliz version is to old! Update to 3.5.4 or newer.");
 #endif
 
 /***************************************************************************
@@ -914,7 +914,7 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
 Returns the cone property belonging to the string <cone property string> of
 cone <cone>. Please see the Normaliz manual for details on which cone properties are available.
 Here are some special outputs that might differ from Normaliz:
-* HilbertSeries and WeightedErhartSeries
+* HilbertSeries and WeightedEhrhartSeries
   The returned object is a list with three entries: The first one describes the
   numerator of the hilbert series, the second one the denominator, and the last one
   is the shift. If you pass the HSOP option, output will be done in HSOP format.
@@ -1000,6 +1000,7 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
         return NmzMatrixToPyList(C->getDeg1Elements());
 
     case libnormaliz::ConeProperty::HilbertSeries:
+    case libnormaliz::ConeProperty::EhrhartSeries:
         {
         bool is_HSOP = C->isComputed(libnormaliz::ConeProperty::HSOP);
         return NmzHilbertSeriesToPyList(C->getHilbertSeries(),is_HSOP);
