@@ -1598,7 +1598,7 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      "Compute some stuff"},
     {"NmzIsComputed", (PyCFunction)NmzIsComputed_Outer, METH_VARARGS,
      "Check if property is computed "},
-    {"NmzResult", (PyCFunction)_NmzResult, METH_VARARGS,
+    {"NmzResult", (PyCFunction)_NmzResult, METH_VARARGS|METH_KEYWORDS,
       "Return cone property" },
     { "NmzSetVerboseDefault", (PyCFunction)NmzSetVerboseDefault, METH_VARARGS,
       "Set verbosity" },

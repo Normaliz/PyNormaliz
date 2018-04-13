@@ -16,12 +16,7 @@ class Cone:
                 kwargs[i] = current_input = [[]]
             elif type(current_input) == bool and current_input == False:
                 kwargs.pop(i)
-
-        for i in kwargs:
-            input_list.append(i)
-            input_list.append(kwargs[i])
-
-        self.cone = PyNormaliz_cpp.NmzCone(input_list)
+        self.cone = PyNormaliz_cpp.NmzCone(input_list,**kwargs)
 
     def __process_keyword_args(self, keywords):
         input_list = []
