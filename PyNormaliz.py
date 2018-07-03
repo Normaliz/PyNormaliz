@@ -567,3 +567,15 @@ class Cone:
         input_list.append("SuppHypsFloat")
         PyNormaliz_cpp.NmzCompute(self.cone, input_list)
         return PyNormaliz_cpp.NmzResult(self.cone, "SuppHypsFloat")
+
+    def LatticePoints(self, **kwargs):
+        input_list = self.__process_keyword_args(kwargs)
+        input_list.append("LatticePoints")
+        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
+        return PyNormaliz_cpp.NmzResult(self.cone, "LatticePoints")
+
+    def EuclideanIntegral(self, **kwargs):
+        input_list = self.__process_keyword_args(kwargs)
+        input_list.append("EuclideanIntegral")
+        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
+        return PyNormaliz_cpp.NmzResult(self.cone, "EuclideanIntegral")

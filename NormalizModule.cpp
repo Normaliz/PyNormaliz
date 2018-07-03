@@ -135,10 +135,10 @@ PyObject* CallPythonFuncOnOneArg( PyObject* function, PyObject* single_arg ){
 
 #ifndef NMZ_RELEASE
     static_assert(false,
-       "Your Normaliz version (unknown) is to old! Update to 3.5.4 or newer.");
+       "Your Normaliz version (unknown) is to old! Update to 3.6.1 or newer.");
 #endif
-#if NMZ_RELEASE < 30504
-    static_assert(false, "Your Normaliz version is to old! Update to 3.5.4 or newer.");
+#if NMZ_RELEASE < 30601
+    static_assert(false, "Your Normaliz version is to old! Update to 3.6.1 or newer.");
 #endif
 
 /***************************************************************************
@@ -1221,6 +1221,14 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
 
     case libnormaliz::ConeProperty::EuclideanVolume:
         return NmzToPyNumber(C->getEuclideanVolume());
+    
+    case libnormaliz::ConeProperty::LatticePoints:
+        return NmzMatrixToPyList(C->getLatticePoints());
+    
+    case libnormaliz::ConeProperty::EuclideanIntegral:
+        return NmzToPyNumber(C->getEuclideanIntegral());
+    
+
 
 //  the following properties are compute options and do not return anything
     case libnormaliz::ConeProperty::DualMode:
