@@ -10,7 +10,7 @@ else:
 
 setup(
     name = 'PyNormaliz',
-    version = '1.18',
+    version = '1.19',
     description = 'An interface to Normaliz',
     author = 'Sebastian Gutsche, Richard Sieg',
     author_email = 'sebastian.gutsche@gmail.com',

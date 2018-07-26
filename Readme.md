@@ -3,29 +3,29 @@
 
 ## What is PyNormaliz
 
-PyNormaliz provides an interface to Normaliz (https://www.normaliz.uni-osnabrueck.de) via libNormaliz.
-It offers the complete functionality of Normaliz, and can be used interactively from python. For a first example,
-see [this introduction](examples/PyNormaliz_Tutorial.ipynb) by Richard Sieg.
+PyNormaliz provides an interface to Normaliz (https://www.normaliz.uni-osnabrueck.de) via libNormaliz. It offers the complete functionality of Normaliz, and can be used interactively from python. For a first example, see [this introduction](doc/PyNormaliz_Tutorial.ipynb) by Richard Sieg.
+
+Its sibling [PyQNormaliz](https://github.com/Normaliz/PyQNormaliz) is a python interface to QNormaliz.
 
 ## Requirements
 
 * python 2.7 or higher or python 3.4 or higher
 * Normaliz 3.2.1 Oor higher (https://github.com/Normaliz/Normaliz/releases)
 
+The source packages of the Normaliz realeases contain PyNormaliz and PyQNormaliz.
+
 ## Installation
 
-You need to have Normaliz properly installed and libNormaliz in your gcc's include path.
-On most systems, installing Normaliz via
+The PyNormaliz install script assumes that you have executed the
 ```
-$ make install
+install_normaliz_with_qnormaliz_eantic.sh
 ```
-is enough. If you prefer or are not able to install it, you need to set CPATH and
-LD_LIBRARY_PATH accordingly.
+script. To install PyNormaliz and PyQNormaliz navigate to the Normaliz directory and type
+```
+./install_pynormaliz.sh --user
+```
 
-After that, you can install PyNormaliz via
-```
-$ pip install PyNormaliz
-```
+The script can be customized by some options. See Appendix E of the [Normaliz manual](https://github.com/Normaliz/Normaliz/blob/master/doc/Normaliz.pdf).
 
 ## Usage
 
@@ -39,10 +39,9 @@ import PyNormaliz
 C = PyNormaliz.Cone(cone = [[1,0],[0,1]])
 ```
 
-All possible Normaliz input properties can be given as keyword arguments.
+All possible Normaliz input types can be given as keyword arguments.
 
-To compute a property of the cone, use the provided getters, which corresponds to Normaliz compute
-goals.
+To compute a property of the cone, use the provided getters, which correspond to Normaliz computation goals.
 
 ```
 C.HilbertBasis()
@@ -65,13 +64,9 @@ or, equivalently,
 ```
 C = NmzCone(["cone", [[1,0],[0,1]]])
 ```
-NmzCone can take an arbitrary number of arguments, either as separated arguments or in a list.
-First is always a string, describing an input property for Normaliz, followed by a (possibly empty)
-matrix.
+NmzCone can take an arbitrary number of arguments, either as separated arguments or in a list. First is always a string, describing an input property for Normaliz, followed by a (possibly empty) matrix.
 
-NmzCompute takes a cone as first argument, followed by arbitrary many strings, or a list of strings,
-describing Normaliz output properties. NmzCompute lets Normaliz compute the necessary values, and
-returns true if everything was computed properly, false otherwise.
+NmzCompute takes a cone as first argument, followed by arbitrary many strings, or a list of strings, describing Normaliz output types. NmzCompute lets Normaliz compute the necessary values, and returns true if everything was computed properly, false otherwise.
 ```
 NmzCompute(C, "HilbertBasis")
 ```
@@ -80,13 +75,11 @@ or
 NmzCompute(C, ["HilbertBasis"])
 ```
 
-NmzIsComputed takes a cone and a string representing an output property, and returns true if the
-property is already computed for the cone, false otherwise.
+NmzIsComputed takes a cone and a string representing an output property, and returns true if the property is already computed for the cone, false otherwise. (In contrast to NmzCompute it does not start a computation.)
 ```
 NmzIsComputed(C, "HilbertBasis")
 ```
 
-NmzResult takes a cone and a string representing an output property, and returns the computed
-value of this property as a matrix, a list, or as a bool.
+NmzResult takes a cone and a string representing an output property, and returns the computed value of this property as a matrix, a list, or as a bool.
 ```
 NmzResult(C, "HilbertBasis")
