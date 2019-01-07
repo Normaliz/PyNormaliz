@@ -7,6 +7,8 @@
 #include <Python.h>
 using namespace std;
 
+#include <e-antic/renfxx.h>
+
 #include <iostream>
 using std::cout;
 using std::cerr;
@@ -175,22 +177,48 @@ inline PyObject* BoolToPyBool( bool in ){
   return in ? Py_True : Py_False;
 }
 
+// Do conversion for number field poly elements
+bool PyPolyStringToNmz( PyObject* in, vector<mpq_class>& out ){
+    string c_string = PyUnicodeToString(in);
+    vector<mpq_class> temp = poly_components(c_string);
+    out.swap(temp);
+    return true;
+}
+
 // Converting MPZ's to PyLong and back via strings. Worst possible solution ever.
+bool PyNumberToNmz( PyObject *, mpz_class& );
 
 bool PyNumberToNmz( PyObject * in, mpq_class& out ){
-  if( PyFloat_Check( in ) ){
-      mpq_class temp(PyFloat_AsDouble(in));
-      out.swap(temp);
-      return true;
-  }
-  PyObject * in_as_string = PyObject_Str( in );
-  const char* in_as_c_string = PyUnicodeToString( in_as_string ).c_str();
-  out.set_str( in_as_c_string, 10 );
-  return true;
+    if( PyFloat_Check( in ) ){
+        mpq_class temp(PyFloat_AsDouble(in));
+        out.swap(temp);
+        return true;
+    }
+    if( PyList_Check( in ) ){
+        PyObject* py_num = PyList_GetItem(in,0);
+        PyObject* py_denom = PyList_GetItem(in,1);
+        mpz_class num;
+        if(!PyNumberToNmz(py_num,num)){
+            return false;
+        }
+        mpz_class denom;
+        if(!PyNumberToNmz(py_denom,denom)){
+            return false;
+        }
+        mpq_class temp(num,denom);
+        out.swap(temp);
+        return true;
+    }
+    PyObject * in_as_string = PyObject_Str( in );
+    string s = PyUnicodeToString( in_as_string );
+    const char* in_as_c_string = s.c_str();
+    out.set_str( in_as_c_string, 10 );
+    return true;
 }
 
 bool PyNumberToNmz( PyObject * in, mpz_class& out ){
   if( !PyLong_Check( in ) ){
+      cerr << "here1" << endl;
       return false;
   }
   int overflow;
@@ -201,7 +229,8 @@ bool PyNumberToNmz( PyObject * in, mpz_class& out ){
       return true;
   }
   PyObject * in_as_string = PyObject_Str( in );
-  const char* in_as_c_string = PyUnicodeToString( in_as_string ).c_str();
+  string s = PyUnicodeToString( in_as_string );
+  const char* in_as_c_string = s.c_str();
   out.set_str( in_as_c_string, 10 );
   return true;
 }
@@ -224,7 +253,6 @@ PyObject* NmzToPyList( mpq_class in ){
 }
 
 bool PyNumberToNmz( PyObject* in, long long & out ){
-  
   int overflow;
   out = PyLong_AsLongLongAndOverflow( in, &overflow );
   if( overflow == -1 )
@@ -234,49 +262,35 @@ bool PyNumberToNmz( PyObject* in, long long & out ){
 }
 
 PyObject* NmzToPyNumber( long long in ){
-  
   return PyLong_FromLongLong( in );
-  
 }
 
 PyObject* NmzToPyNumber( libnormaliz::key_t in ){
-  
   return PyLong_FromLong( in );
-  
 }
 
 #ifdef ENVIRONMENT64
 PyObject* NmzToPyNumber( size_t in ){
-  
   return PyLong_FromLong( in );
-  
 }
 #endif
 
 PyObject* NmzToPyNumber( long in ){
-  
   return PyLong_FromLong( in );
-  
 }
 
 PyObject* NmzToPyNumber( double in ){
-  
   return PyFloat_FromDouble( in );
-  
 }
 
 template<typename Integer>
 bool PyNumberToNmz(Integer& x, Integer &out){
-  
   return Integer::unimplemented_function;
-  
 }
 
 template<typename Integer>
 PyObject* NmzToPyNumber(Integer &in){
-  
   return Integer::unimplemented_function;
-  
 }
 
 template<typename Integer>
@@ -303,6 +317,42 @@ static bool PyIntMatrixToNmz( vector<vector<Integer> >& out, PyObject* in ){
         bool okay = PyListToNmz(out[i], PyList_GetItem(in, i));
         if (!okay)
             return false;
+    }
+    return true;
+}
+
+template<typename NumberField, typename NumberFieldElem>
+bool prepare_nf_input( vector< vector<NumberFieldElem> >& out, PyObject* in, NumberField* nf ){
+    if (!PyList_Check( in ) )
+        return false;
+    const int nr = PyList_Size( in );
+    out.resize(nr);
+    for (int i = 0; i < nr; ++i) {
+        PyObject * current_row = PyList_GetItem(in,i);
+        int current_length = PyList_Size(current_row);
+        for(int j=0; j < current_length;j++){
+            PyObject * current_element = PyList_GetItem(current_row,j);
+            vector<mpq_class> current_vector;
+            bool current_res;
+            if(PyList_Check(current_element)){
+                current_res = PyListToNmz(current_vector,current_element);
+            }
+            else if(string_check(current_element)) {
+                current_res = PyPolyStringToNmz(current_element,current_vector);
+            } else {
+                mpq_class temp;
+                current_res = PyNumberToNmz(current_element,temp);
+                current_vector.push_back(temp);
+            }
+            if(!current_res)
+                return false;
+            fmpq_poly_t current_poly;
+            fmpq_poly_init(current_poly);
+            vector2fmpq_poly(current_poly,current_vector);
+            NumberFieldElem current_elem(nf->get_renf());
+            current_elem = current_poly;
+            out[i].push_back(current_elem);
+        }
     }
     return true;
 }
