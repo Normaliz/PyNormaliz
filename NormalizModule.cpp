@@ -81,12 +81,16 @@ static PyObject * NormalizError;
 static PyObject * PyNormaliz_cppError;
 static const char* cone_name = "Cone";
 static const char* cone_name_long = "Cone<long long>";
+static const char* cone_name_renf = "Cone<renf_elem>"
 static string cone_name_str( cone_name );
 static string cone_name_str_long( cone_name_long );
+static string cone_name_str_renf( cone_name_long );
+
 
 static PyOS_sighandler_t current_interpreter_sigint_handler;
 
 static PyObject * RationalHandler = NULL;
+static PyObject * NumberfieldElementHandler = NULL;
 static PyObject * VectorHandler = NULL;
 static PyObject * MatrixHandler = NULL;
 
@@ -218,7 +222,6 @@ bool PyNumberToNmz( PyObject * in, mpq_class& out ){
 
 bool PyNumberToNmz( PyObject * in, mpz_class& out ){
   if( !PyLong_Check( in ) ){
-      cerr << "here1" << endl;
       return false;
   }
   int overflow;
@@ -385,6 +388,18 @@ PyObject* NmzVectorToPyList(const vector<Integer>& in)
     return vector;
 }
 
+PyObject* NmzToPyNumber( renf_elem_class in ){
+    fmpq_poly_t current;
+    fmpq_poly_init(current);
+    in.get_fmpq_poly(current);
+    vector<mpq_class> output;
+    fmpq_poly2vector(output,current); // is this the correct length??
+    PyObject * out_list = NmzVectorToPyList(output,false);
+    if(NumberfieldElementHandler!=NULL)
+        out_list = CallPythonFuncOnOneArg(NumberfieldElementHandler,out_list);
+    return out_list;
+}
+
 PyObject* NmzBoolVectorToPyList(const vector<bool>& in)
 {
     PyObject* vector;
@@ -534,6 +549,11 @@ static PyObject* _NmzBasisChangeIntern(Cone<Integer>* C)
  * 
  ***************************************************************************/
 
+struct NumberFieldCone{
+    renf_class* nf;
+    Cone<renf_elem_class>* cone;
+};
+
 void delete_cone_mpz( PyObject* cone ){
   Cone<mpz_class> * cone_ptr = reinterpret_cast<Cone<mpz_class>* >( PyCapsule_GetPointer( cone, cone_name ) );
   delete cone_ptr;
@@ -544,6 +564,12 @@ void delete_cone_long( PyObject* cone ){
   delete cone_ptr;
 }
 
+void delete_cone_renf( PyObject* cone ){
+  NumberFieldCone * cone_ptr = reinterpret_cast<NumberFieldCone*>( PyCapsule_GetPointer( cone, cone_name_renf ) );
+  delete cone_ptr->cone;
+  //delete cone_ptr->nf;
+}
+
 Cone<long long>* get_cone_long( PyObject* cone ){
   return reinterpret_cast<Cone<long long>*>( PyCapsule_GetPointer( cone, cone_name_long ) );
 }
@@ -552,6 +578,10 @@ Cone<mpz_class>* get_cone_mpz( PyObject* cone ){
   return reinterpret_cast<Cone<mpz_class>*>( PyCapsule_GetPointer( cone, cone_name ) );
 }
 
+Cone<renf_elem_class>* get_cone_renf( PyObject* cone ){
+  NumberFieldCone* cone_ptr = reinterpret_cast<NumberFieldCone*>( PyCapsule_GetPointer( cone, cone_name_renf ) );
+  return cone_ptr->cone;
+}
 
 PyObject* pack_cone( Cone<mpz_class>* C ){
   return PyCapsule_New( reinterpret_cast<void*>( C ), cone_name, &delete_cone_mpz );
@@ -561,10 +591,17 @@ PyObject* pack_cone( Cone<long long>* C ){
   return PyCapsule_New( reinterpret_cast<void*>( C ), cone_name_long, &delete_cone_long );
 }
 
+PyObject* pack_cone( Cone<renf_elem_class>* C, renf_class* nf ){
+  NumberFieldCone* cone_ptr = new NumberFieldCone();
+  cone_ptr->nf = nf;
+  cone_ptr->cone = C;
+  return PyCapsule_New( reinterpret_cast<void*>( cone_ptr ), cone_name_renf, &delete_cone_renf );
+}
+
 bool is_cone( PyObject* cone ){
   if( PyCapsule_CheckExact( cone ) ){
-    // compare as string
-    return cone_name_str == string(PyCapsule_GetName( cone )) || cone_name_str_long == string(PyCapsule_GetName( cone ));
+    string current = string(PyCapsule_GetName( cone ));
+    return cone_name_str == current || cone_name_str_long == current || cone_name_str_renf == current;
   }
   return false;
 }
@@ -733,6 +770,56 @@ static PyObject* _NmzConeIntern(PyObject * args, PyObject* kwargs)
     return return_container;
 }
 
+template<typename NumberField, typename NumberFieldElem>
+static PyObject* _NmzConeIntern_renf(PyObject * args, PyObject* kwargs)
+{
+
+    NumberField * renf = new NumberField();
+
+    PyObject* number_field_data = PyDict_GetItemString(kwargs,"number_field");
+    if(number_field_data == NULL){
+        PyErr_SetString( PyQNormaliz_cppError, "no number field data given" );
+        return NULL;
+    }
+    istringstream number_field_data_stream(PyUnicodeToString(number_field_data));
+    number_field_data_stream >> *renf;
+    // Error handling
+    // number_field_data_stream >> set_renf(renf);
+    // Error handling
+
+    map <InputType, vector< vector<NumberFieldElem> > > input;
+    
+    /* Do not delete entry of kwargs dict, as it might not
+       be owned by the cone constructor */
+    // PyDict_DelItemString(kwargs,"number_field");
+    if(kwargs!=NULL){
+        PyObject* keys = PyDict_Keys(kwargs);
+        PyObject* values = PyDict_Values(kwargs);
+        const int length = PyList_Size(keys);
+        for(int i = 0; i<length; i++ ){
+            string type_string = PyUnicodeToString( PyList_GetItem( keys, i ) );
+            if( type_string == "number_field" )
+                continue;
+            PyObject* current_value = PyList_GetItem( values, i );
+            if(current_value==Py_None)
+                continue;
+            vector<vector<NumberFieldElem> > Mat;
+            bool okay = prepare_nf_input(Mat, current_value,renf);
+            if (!okay) {
+                PyErr_SetString( PyQNormaliz_cppError, "Could not read matrix" );
+                return NULL;
+            }
+            input[libQnormaliz::to_type(type_string)] = Mat;
+        }
+    }
+
+    Cone<NumberFieldElem>* C = new Cone<NumberFieldElem>(input);
+    
+    PyObject* return_container = pack_cone( C, renf );
+    
+    return return_container;
+}
+
 /*
 @Name NmzCone
 @Arguments <keywords>
@@ -749,28 +836,33 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     FUNC_BEGIN
     
-    static const char* string_for_keyword_argument = "CreateAsLongLong";
+    static const char* string_for_long = "CreateAsLongLong";
     PyObject* create_as_long_long;
+    static const char* string_for_renf = "number_field";
+    PyObject* create_as_renf;
     
 #if PY_MAJOR_VERSION >= 3
-    PyObject* key = PyUnicode_FromString( string_for_keyword_argument );
+    create_as_long_long = PyUnicode_FromString( string_for_long );
 #else
-    PyObject* key = PyString_FromString( const_cast<char*>(string_for_keyword_argument) );
+    create_as_long_long = PyString_FromString( const_cast<char*>(string_for_long) );
+#endif
+
+#if PY_MAJOR_VERSION >= 3
+    create_as_renf = PyUnicode_FromString( string_for_renf );
+#else
+    create_as_renf = PyString_FromString( const_cast<char*>(string_for_renf) );
 #endif
     
-    if( kwargs != NULL && PyDict_Contains( kwargs, key ) == 1 ){
+    if( kwargs != NULL && PyDict_Contains( kwargs, create_as_long_long ) == 1 ){
         create_as_long_long = PyDict_GetItem( kwargs, key );
         PyDict_DelItem( kwargs, key );
-    }else{
-        create_as_long_long = Py_False;
+        if(create_as_long_long == Py_True){
+            return _NmzConeIntern<long long>(args,kwargs)
+        }
+    }else if(kwargs != NULL && PyDict_Contains( kwargs, create_as_renf ) == 1 ){
+        return _NmzQCone_internal<renf_class,renf_elem_class>(args,kwargs);
     }
-    
-    if( create_as_long_long!=Py_True ){
-        return _NmzConeIntern<mpz_class>(args,kwargs);
-    }else{
-        return _NmzConeIntern<long long>(args,kwargs);
-    }
-
+    return _NmzConeIntern<mpz_class>(args,kwargs);
     FUNC_END
 }
 
