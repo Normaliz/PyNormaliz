@@ -81,7 +81,7 @@ static PyObject * NormalizError;
 static PyObject * PyNormaliz_cppError;
 static const char* cone_name = "Cone";
 static const char* cone_name_long = "Cone<long long>";
-static const char* cone_name_renf = "Cone<renf_elem>"
+static const char* cone_name_renf = "Cone<renf_elem>";
 static string cone_name_str( cone_name );
 static string cone_name_str_long( cone_name_long );
 static string cone_name_str_renf( cone_name_long );
@@ -375,7 +375,7 @@ static bool PyInputToNmz( vector<vector<Integer> >& out, PyObject* in ){
 }
 
 template<typename Integer>
-PyObject* NmzVectorToPyList(const vector<Integer>& in)
+PyObject* NmzVectorToPyList(const vector<Integer>& in, bool do_callback=true)
 {
     PyObject* vector;
     const size_t n = in.size();
@@ -383,7 +383,7 @@ PyObject* NmzVectorToPyList(const vector<Integer>& in)
     for (size_t i = 0; i < n; ++i) {
         PyList_SetItem(vector, i, NmzToPyNumber(in[i]));
     }
-    if(VectorHandler!=NULL)
+    if(do_callback&&VectorHandler!=NULL)
         vector = CallPythonFuncOnOneArg(VectorHandler,vector);
     return vector;
 }
@@ -783,7 +783,7 @@ static PyObject* _NmzConeIntern_renf(PyObject * args, PyObject* kwargs)
 
     PyObject* number_field_data = PyDict_GetItemString(kwargs,"number_field");
     if(number_field_data == NULL){
-        PyErr_SetString( PyQNormaliz_cppError, "no number field data given" );
+        PyErr_SetString( PyNormaliz_cppError, "no number field data given" );
         return NULL;
     }
     istringstream number_field_data_stream(PyUnicodeToString(number_field_data));
@@ -811,10 +811,10 @@ static PyObject* _NmzConeIntern_renf(PyObject * args, PyObject* kwargs)
             vector<vector<NumberFieldElem> > Mat;
             bool okay = prepare_nf_input(Mat, current_value,renf);
             if (!okay) {
-                PyErr_SetString( PyQNormaliz_cppError, "Could not read matrix" );
+                PyErr_SetString( PyNormaliz_cppError, "Could not read matrix" );
                 return NULL;
             }
-            input[libQnormaliz::to_type(type_string)] = Mat;
+            input[libnormaliz::to_type(type_string)] = Mat;
         }
     }
 
@@ -865,7 +865,7 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
             return _NmzConeIntern<long long>(args,kwargs)
         }
     }else if(kwargs != NULL && PyDict_Contains( kwargs, create_as_renf ) == 1 ){
-        return _NmzQCone_internal<renf_class,renf_elem_class>(args,kwargs);
+        return _NzmConeIntern_renf<renf_class,renf_elem_class>(args,kwargs);
     }
     return _NmzConeIntern<mpz_class>(args,kwargs);
     FUNC_END
@@ -886,7 +886,7 @@ PyObject* _NmzConeCopy( PyObject* self, PyObject* args )
         return NULL;
     }
 
-    sting current_name = string(PyCapsule_GetName(cone));
+    string current_name = string(PyCapsule_GetName(cone));
 
     if( cone_name_str == current_name ){
         Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
@@ -1097,11 +1097,11 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
         return NmzIsComputed(cone_ptr, to_compute);
     }else if( cone_name_str_long == string(PyCapsule_GetName(cone)) ){
         Cone<long long>* cone_ptr = get_cone_long(cone);
-        result = NmzIsComputed(cone_ptr, to_compute);
+        return NmzIsComputed(cone_ptr, to_compute);
     }else{
         Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
-        result = NmzIsComputed(cone_ptr, to_compute);
-  }
+        return NmzIsComputed(cone_ptr, to_compute);
+    }
     
     FUNC_END
 }
@@ -1831,8 +1831,6 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
       "Sets the Normaliz thread limit" },
     { "NmzSetNrCoeffQuasiPol", (PyCFunction)NmzSetNrCoeffQuasiPol, METH_VARARGS,
       "Sets the period bound for the quasi-polynomial" },
-    { "NmzGetEuclideanVolume", (PyCFunction)NmzGetEuclideanVolume, METH_VARARGS,
-      "Returns euclidean volume of cone as float" },
     { "NmzGetHilbertSeriesExpansion", (PyCFunction)NmzGetHilbertSeriesExpansion, METH_VARARGS,
       "Returns expansion of the hilbert series" },
     { "NmzGetWeightedEhrhartSeriesExpansion", (PyCFunction)NmzGetWeightedEhrhartSeriesExpansion, METH_VARARGS,
