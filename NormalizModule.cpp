@@ -583,6 +583,11 @@ Cone<renf_elem_class>* get_cone_renf( PyObject* cone ){
   return cone_ptr->cone;
 }
 
+renf_class* get_cone_renf_renf( PyObject* cone ){
+  NumberFieldCone* cone_ptr = reinterpret_cast<NumberFieldCone*>( PyCapsule_GetPointer( cone, cone_name_renf ) );
+  return cone_ptr->nf;
+}
+
 PyObject* pack_cone( Cone<mpz_class>* C ){
   return PyCapsule_New( reinterpret_cast<void*>( C ), cone_name, &delete_cone_mpz );
 }
@@ -881,14 +886,20 @@ PyObject* _NmzConeCopy( PyObject* self, PyObject* args )
         return NULL;
     }
 
-    if( cone_name_str == string(PyCapsule_GetName(cone)) ){
+    sting current_name = string(PyCapsule_GetName(cone));
+
+    if( cone_name_str == current_name ){
         Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
         Cone<mpz_class>* new_cone = new Cone<mpz_class>(*cone_ptr);
         return pack_cone(new_cone);
-    }else{
+    }else if( cone_name_str_long == current_name ){
         Cone<long long>* cone_ptr = get_cone_long(cone);
         Cone<long long>* new_cone = new Cone<long long>(*cone_ptr);
         return pack_cone(new_cone);
+    } else {
+        Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
+        Cone<renf_elem_class>* new_cone = new Cone<renf_elem_class>(*cone_ptr);
+        return pack_cone(new_cone,get_cone_renf_renf(cone));
     }
     FUNC_END
 }
@@ -919,7 +930,6 @@ PyObject* NmzHilbertSeries(Cone<Integer>* C, PyObject* args)
     }else{
         return NmzHilbertSeriesToPyList(C->getHilbertSeries(),false);
     }
-    
     FUNC_END
 }
 
@@ -942,15 +952,17 @@ PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args){
       PyObject* return_value = NmzHilbertSeries(cone_ptr, args);
       PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
       return return_value;
-  }else{
+  }else if( cone_name_str_long == current_name ){
       Cone<long long>* cone_ptr = get_cone_long(cone);
       PyObject* return_value = NmzHilbertSeries(cone_ptr,args);
       PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
       return return_value;
+  } else {
+      PyOS_setsig(SIGINT,current_interpreter_sigint_handler);
+      PyErr_SetString( PyNormaliz_cppError, "Hilbert series not available for renf cone" );
+      return NULL;
   }
-  
   FUNC_END
-  
 }
 
 /***************************************************************************
@@ -1028,8 +1040,11 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args){
   if( cone_name_str == string(PyCapsule_GetName(cone)) ){
       Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
       result = _NmzCompute(cone_ptr, args);
-  }else{
+  }else if( cone_name_str_long == string(PyCapsule_GetName(cone)) ){
       Cone<long long>* cone_ptr = get_cone_long(cone);
+      result = _NmzCompute(cone_ptr,args);
+  }else{
+      Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
       result = _NmzCompute(cone_ptr,args);
   }
   
@@ -1080,10 +1095,13 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
     if( cone_name_str == string(PyCapsule_GetName(cone)) ){
         Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
         return NmzIsComputed(cone_ptr, to_compute);
-    }else{
+    }else if( cone_name_str_long == string(PyCapsule_GetName(cone)) ){
         Cone<long long>* cone_ptr = get_cone_long(cone);
-        return NmzIsComputed(cone_ptr,to_compute);
-    }
+        result = NmzIsComputed(cone_ptr, to_compute);
+    }else{
+        Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
+        result = NmzIsComputed(cone_ptr, to_compute);
+  }
     
     FUNC_END
 }
@@ -1427,6 +1445,7 @@ PyObject* _NmzResult( PyObject* self, PyObject* args, PyObject* kwargs ){
     
     if(kwargs){
         RationalHandler = PyDict_GetItemString(kwargs,"RationalHandler");
+        NumberfieldElementHandler = PyDict_GetItemString(kwargs,"NumberfieldElementHandler");
         VectorHandler = PyDict_GetItemString(kwargs,"VectorHandler");
         MatrixHandler = PyDict_GetItemString(kwargs,"MatrixHandler");
     }
@@ -1436,19 +1455,21 @@ PyObject* _NmzResult( PyObject* self, PyObject* args, PyObject* kwargs ){
     if( cone_name_str == string(PyCapsule_GetName(cone)) ){
         Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
         result = _NmzResultImpl(cone_ptr, prop);
-    }else{
+    }else if( cone_name_str_long == string(PyCapsule_GetName(cone)) ){
         Cone<long long>* cone_ptr = get_cone_long(cone);
+        result = _NmzResultImpl(cone_ptr, prop);
+    }else{
+        Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
         result = _NmzResultImpl(cone_ptr, prop);
     }
 
     RationalHandler = NULL;
+    NumberfieldElementHandler = NULL;
     VectorHandler = NULL;
     MatrixHandler = NULL;
 
     return result;
 
-
-    
     FUNC_END
 }
 
@@ -1500,8 +1521,11 @@ PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
     if( cone_name_str == string(PyCapsule_GetName(cone)) ){
         Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
         return NmzSetVerbose(cone_ptr, value);
-    }else{
+    }else if( cone_name_str_long == string(PyCapsule_GetName(cone)) ){
         Cone<long long>* cone_ptr = get_cone_long(cone);
+        return NmzSetVerbose(cone_ptr, value);
+    }else{
+        Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
         return NmzSetVerbose(cone_ptr, value);
     }
     
@@ -1533,12 +1557,16 @@ PyObject* NmzGetPolynomial(PyObject* self, PyObject* args ){
         PyObject* return_value = StringToPyUnicode( (cone_ptr->getIntData()).getPolynomial() );
         PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
         return return_value;
-    }else{
+    }else if( cone_name_str_long == string(PyCapsule_GetName(cone)) ){
         Cone<long long>* cone_ptr = get_cone_long(cone);
         PyObject* return_value = StringToPyUnicode( (cone_ptr->getIntData()).getPolynomial() );
         PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
         return return_value;
-    }
+    } else {
+      PyOS_setsig(SIGINT,current_interpreter_sigint_handler);
+      PyErr_SetString( PyNormaliz_cppError, "Polynomial not available for renf cone" );
+      return NULL;
+  }
     
     FUNC_END
     
@@ -1569,11 +1597,15 @@ PyObject* NmzSetNrCoeffQuasiPol( PyObject* self, PyObject* args ){
         Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
         cone_ptr->setNrCoeffQuasiPol(bound);
         return Py_True;
-    }else{
+    }else if( cone_name_str_long == string(PyCapsule_GetName(cone)) ){
         Cone<long long>* cone_ptr = get_cone_long(cone);
         cone_ptr->setNrCoeffQuasiPol(bound);
         return Py_True;
-    }
+    } else {
+      PyOS_setsig(SIGINT,current_interpreter_sigint_handler);
+      PyErr_SetString( PyNormaliz_cppError, "Cannot set quasi polynomial coeffs for renf cone" );
+      return NULL;
+  }
     
     FUNC_END
     
@@ -1607,7 +1639,7 @@ PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args ){
         }
         symm_cone = new Cone<mpz_class>( *symm_cone );
         return pack_cone( symm_cone );
-    }else{
+    }else if(cone_name_str_long == string(PyCapsule_GetName(cone)) ){
         Cone<long long>* cone_ptr = get_cone_long(cone);
         Cone<long long>* symm_cone = &(cone_ptr->getSymmetrizedCone());
         PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
@@ -1616,43 +1648,11 @@ PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args ){
         }
         symm_cone = new Cone<long long>( *symm_cone );
         return pack_cone( symm_cone );
-    }
-    
-    FUNC_END
-    
-}
-
-/***************************************************************************
- * 
- * Get euclidian volume
- * 
- ***************************************************************************/
-
-PyObject* NmzGetEuclideanVolume(PyObject* self, PyObject* args ){
-    
-    FUNC_BEGIN
-    
-    PyObject* cone = PyTuple_GetItem( args, 0 );
-    
-    if( !is_cone( cone ) ){
-        PyErr_SetString( PyNormaliz_cppError, "First argument must be a cone" );
-        return NULL;
-    }
-    
-    current_interpreter_sigint_handler = PyOS_setsig(SIGINT,signal_handler);
-    
-    if( cone_name_str == string(PyCapsule_GetName(cone)) ){
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
-        PyObject* return_value = NmzToPyNumber(cone_ptr->getEuclideanVolume());
-        PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
-        return return_value;
-    }else{
-        Cone<long long>* cone_ptr = get_cone_long(cone);
-        PyObject* return_value = NmzToPyNumber(cone_ptr->getEuclideanVolume());
-        PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
-        return return_value;
-    }
-    PyOS_setsig( SIGINT, current_interpreter_sigint_handler );
+    } else {
+      PyOS_setsig(SIGINT,current_interpreter_sigint_handler);
+      PyErr_SetString( PyNormaliz_cppError, "Symmetrized cone not available for renf cone" );
+      return NULL;
+  }
     
     FUNC_END
     
@@ -1688,9 +1688,13 @@ PyObject* NmzGetHilbertSeriesExpansion(PyObject* self, PyObject* args ){
     if( cone_name_str == string(PyCapsule_GetName(cone)) ){
         Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
         HS = cone_ptr->getHilbertSeries();
-    }else{
+    }else if(cone_name_str_long == string(PyCapsule_GetName(cone)) ){
         Cone<long long>* cone_ptr = get_cone_long(cone);
         HS = cone_ptr->getHilbertSeries();
+    } else {
+      PyOS_setsig(SIGINT,current_interpreter_sigint_handler);
+      PyErr_SetString( PyNormaliz_cppError, "Hilbert series expansion not available for renf cone" );
+      return NULL;
     }
     
     HS.set_expansion_degree(degree);
@@ -1728,10 +1732,14 @@ PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* args ){
     if( cone_name_str == string(PyCapsule_GetName(cone)) ){
         Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
         ES = cone_ptr->getWeightedEhrhartSeries();
-    }else{
+    }else if( cone_name_str_long == string(PyCapsule_GetName(cone)) ){
         Cone<long long>* cone_ptr = get_cone_long(cone);
         ES = cone_ptr->getWeightedEhrhartSeries();
-    }
+    } else {
+      PyOS_setsig(SIGINT,current_interpreter_sigint_handler);
+      PyErr_SetString( PyNormaliz_cppError, "Ehrhart series expansion not available for renf cone" );
+      return NULL;
+     }
     
     ES.first.set_expansion_degree(degree);
     PyObject* result = NmzVectorToPyList( ES.first.getExpansion() );
