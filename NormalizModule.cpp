@@ -310,6 +310,22 @@ PyObject* NmzToPyNumber(double in)
     return PyFloat_FromDouble(in);
 }
 
+PyObject* NmzVectorToPyList(vector<mpq_class>, bool);
+
+PyObject* NmzToPyNumber(renf_elem_class in)
+{
+    fmpq_poly_t current;
+    fmpq_poly_init(current);
+    in.get_fmpq_poly(current);
+    vector<mpq_class> output;
+    fmpq_poly2vector(output, current);    // is this the correct length??
+    PyObject* out_list = NmzVectorToPyList(output, false);
+    if (NumberfieldElementHandler != NULL)
+        out_list =
+            CallPythonFuncOnOneArg(NumberfieldElementHandler, out_list);
+    return out_list;
+}
+
 template <typename Integer> bool PyNumberToNmz(Integer& x, Integer& out)
 {
     return Integer::unimplemented_function;
@@ -419,20 +435,6 @@ PyObject* NmzVectorToPyList(const vector<Integer>& in,
     if (do_callback && VectorHandler != NULL)
         vector = CallPythonFuncOnOneArg(VectorHandler, vector);
     return vector;
-}
-
-PyObject* NmzToPyNumber(renf_elem_class in)
-{
-    fmpq_poly_t current;
-    fmpq_poly_init(current);
-    in.get_fmpq_poly(current);
-    vector<mpq_class> output;
-    fmpq_poly2vector(output, current);    // is this the correct length??
-    PyObject* out_list = NmzVectorToPyList(output, false);
-    if (NumberfieldElementHandler != NULL)
-        out_list =
-            CallPythonFuncOnOneArg(NumberfieldElementHandler, out_list);
-    return out_list;
 }
 
 PyObject* NmzBoolVectorToPyList(const vector<bool>& in)
@@ -678,6 +680,13 @@ PyObject* pack_cone(Cone<renf_elem_class>* C, renf_class* nf)
     cone_ptr->cone = C;
     return PyCapsule_New(reinterpret_cast<void*>(cone_ptr), cone_name_renf,
                          &delete_cone_renf);
+}
+
+PyObject* pack_cone(Cone<renf_elem_class>* C)
+{
+    PyErr_SetString(PyNormaliz_cppError,
+                    "Trying to pack renf cone without number field");
+    return NULL;
 }
 
 bool is_cone(PyObject* cone)
@@ -931,32 +940,19 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
     FUNC_BEGIN
 
     static const char* string_for_long = "CreateAsLongLong";
-    PyObject*          create_as_long_long;
+    PyObject* create_as_long_long = StringToPyUnicode(string_for_long);
     static const char* string_for_renf = "number_field";
-    PyObject*          create_as_renf;
-
-#if PY_MAJOR_VERSION >= 3
-    create_as_long_long = PyUnicode_FromString(string_for_long);
-#else
-    create_as_long_long =
-        PyString_FromString(const_cast<char*>(string_for_long));
-#endif
-
-#if PY_MAJOR_VERSION >= 3
-    create_as_renf = PyUnicode_FromString(string_for_renf);
-#else
-    create_as_renf = PyString_FromString(const_cast<char*>(string_for_renf));
-#endif
+    PyObject*          create_as_renf = StringToPyUnicode(string_for_renf);
 
     if (kwargs != NULL && PyDict_Contains(kwargs, create_as_long_long) == 1) {
-        create_as_long_long = PyDict_GetItem(kwargs, key);
-        PyDict_DelItem(kwargs, key);
+        create_as_long_long = PyDict_GetItem(kwargs, create_as_long_long);
+        PyDict_DelItem(kwargs, create_as_long_long);
         if (create_as_long_long == Py_True) {
-            return _NmzConeIntern<long long>(args, kwargs)
+            return _NmzConeIntern<long long>(args, kwargs);
         }
     }
     else if (kwargs != NULL && PyDict_Contains(kwargs, create_as_renf) == 1) {
-        return _NzmConeIntern_renf<renf_class, renf_elem_class>(args, kwargs);
+        return _NmzConeIntern_renf<renf_class, renf_elem_class>(args, kwargs);
     }
     return _NmzConeIntern<mpz_class>(args, kwargs);
     FUNC_END
@@ -1043,8 +1039,8 @@ PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args)
     }
 
     current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
-
-    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+    string current_name = string(PyCapsule_GetName(cone));
+    if (cone_name_str == current_name) {
         Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
         PyObject*        return_value = NmzHilbertSeries(cone_ptr, args);
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
