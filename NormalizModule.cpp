@@ -310,7 +310,7 @@ PyObject* NmzToPyNumber(double in)
     return PyFloat_FromDouble(in);
 }
 
-PyObject* NmzVectorToPyList(vector<mpq_class>, bool);
+// PyObject* NmzVectorToPyList(const vector<mpq_class>&, bool);
 
 PyObject* NmzToPyNumber(renf_elem_class in)
 {
@@ -436,6 +436,8 @@ PyObject* NmzVectorToPyList(const vector<Integer>& in,
         vector = CallPythonFuncOnOneArg(VectorHandler, vector);
     return vector;
 }
+
+template <> PyObject* NmzVectorToPyList(const vector<mpq_class>& in, bool do_callback );
 
 PyObject* NmzBoolVectorToPyList(const vector<bool>& in)
 {
@@ -1281,6 +1283,93 @@ second is the projection third is the annihilator.
   Returns a list containing the Stanley decomposition. All entries are
 2-tuples. First entry in the tuple is the key, second the decomposition data.
 */
+
+PyObject* _NmzResultImpl(Cone<renf_elem_class>* C, PyObject* prop_obj)
+{
+    
+    FUNC_BEGIN
+
+    string prop = PyUnicodeToString( prop_obj );
+
+    libnormaliz::ConeProperty::Enum p = libnormaliz::toConeProperty(prop);
+    current_interpreter_sigint_handler = PyOS_setsig(SIGINT,signal_handler);
+    ConeProperties notComputed = C->compute(ConeProperties(p));
+    PyOS_setsig(SIGINT,current_interpreter_sigint_handler);
+    
+    if (notComputed.any()) {
+        return Py_None;
+    }
+
+    switch (p) {
+    case libnormaliz::ConeProperty::Generators:
+        return NmzMatrixToPyList(C->getGenerators());
+
+    case libnormaliz::ConeProperty::ExtremeRays:
+        return NmzMatrixToPyList(C->getExtremeRays());
+
+    case libnormaliz::ConeProperty::VerticesOfPolyhedron:
+        return NmzMatrixToPyList(C->getVerticesOfPolyhedron());
+
+    case libnormaliz::ConeProperty::SupportHyperplanes:
+        return NmzMatrixToPyList(C->getSupportHyperplanes());
+    
+    case libnormaliz::ConeProperty::Triangulation:
+        return NmzTriangleListToPyList<renf_elem_class>(C->getTriangulation());
+    
+    case libnormaliz::ConeProperty::AffineDim:
+        return NmzToPyNumber(C->getAffineDim());
+    
+    case libnormaliz::ConeProperty::MaximalSubspace:
+        return NmzMatrixToPyList(C->getMaximalSubspace());
+    
+    case libnormaliz::ConeProperty::IsPointed:
+        return BoolToPyBool(C->isPointed());
+    
+    case libnormaliz::ConeProperty::Dehomogenization:
+        return NmzVectorToPyList(C->getDehomogenization());
+    
+    case libnormaliz::ConeProperty::IsInhomogeneous:
+        return BoolToPyBool(C->isInhomogeneous());
+    
+//     /* Sublattice properties */
+    
+    case libnormaliz::ConeProperty::Equations:
+        return NmzMatrixToPyList(C->getSublattice().getEquations());
+    
+    case libnormaliz::ConeProperty::EmbeddingDim:
+        return NmzToPyNumber(C->getEmbeddingDim());
+    
+    case libnormaliz::ConeProperty::Rank:
+        return NmzToPyNumber(C->getRank());
+    
+    case libnormaliz::ConeProperty::ConeDecomposition:
+        return NmzBoolMatrixToPyList(C->getOpenFacets());
+
+//  the following properties are compute options and do not return anything
+    case libnormaliz::ConeProperty::DualMode:
+    case libnormaliz::ConeProperty::DefaultMode:
+    case libnormaliz::ConeProperty::Approximate:
+    case libnormaliz::ConeProperty::BottomDecomposition:
+    case libnormaliz::ConeProperty::KeepOrder:
+    case libnormaliz::ConeProperty::NoBottomDec:
+    case libnormaliz::ConeProperty::PrimalMode:
+    case libnormaliz::ConeProperty::Symmetrize:
+    case libnormaliz::ConeProperty::NoSymmetrization:
+    case libnormaliz::ConeProperty::BigInt:
+    case libnormaliz::ConeProperty::HSOP:
+        PyErr_SetString( PyNormaliz_cppError, "ConeProperty is input-only" );
+        return NULL;
+    default:
+        PyErr_SetString( PyNormaliz_cppError, "Unknown cone property" );
+        return NULL;
+        break;
+    }
+
+    return Py_None;
+
+    FUNC_END
+}
+
 template <typename Integer>
 PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
 {
@@ -1501,6 +1590,8 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
 
         case libnormaliz::ConeProperty::EuclideanIntegral:
             return NmzToPyNumber(C->getEuclideanIntegral());
+
+        // Some cases only make sense for  
 
 
             //  the following properties are compute options and do not return
