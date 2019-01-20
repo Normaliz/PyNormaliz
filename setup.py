@@ -4,9 +4,9 @@ from distutils.core import setup, Extension
 import sys
 
 if sys.version_info < (3,5):
-    macro_list = [ ( "PYTHON_VERSION_OLDER_THREE_FIVE", "1" ) ]
+    macro_list = [ ( "PYTHON_VERSION_OLDER_THREE_FIVE", "1" ), ( "ENFNORMALIZ", "1" ) ]
 else:
-    macro_list = [ ]
+    macro_list = [ ( "ENFNORMALIZ", "1" ) ]
 
 setup(
     name = 'PyNormaliz',
@@ -18,7 +18,9 @@ setup(
     py_modules = [ "PyNormaliz" ],
     ext_modules = [ Extension( "PyNormaliz_cpp",
                               [ "NormalizModule.cpp" ],
-                              extra_link_args=['-lnormaliz', '-lgmp' ],
+                              runtime_library_dirs=['/home/sebastian/Dokumente/projects/Normaliz/local/lib'],
+                              library_dirs=['/home/sebastian/Dokumente/projects/Normaliz/local/lib'],
+                              extra_link_args=['-Wl,-rpath=/home/sebastian/Dokumente/projects/Normaliz/local/lib', '-lnormaliz', '-lgmp', '-lflint' ],
                               define_macros = macro_list ) ],
     
     package_data = {'': [ "COPYING", "GPLv2", "Readme.md" ] },

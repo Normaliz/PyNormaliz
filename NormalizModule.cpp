@@ -91,7 +91,7 @@ static const char* cone_name_long = "Cone<long long>";
 static const char* cone_name_renf = "Cone<renf_elem>";
 static string      cone_name_str(cone_name);
 static string      cone_name_str_long(cone_name_long);
-static string      cone_name_str_renf(cone_name_long);
+static string      cone_name_str_renf(cone_name_renf);
 
 
 static PyOS_sighandler_t current_interpreter_sigint_handler;
@@ -255,7 +255,7 @@ bool PyNumberToNmz(PyObject* in, mpz_class& out)
     return true;
 }
 
-PyObject* NmzToPyNumber(mpz_class in)
+PyObject* NmzToPyNumber(const mpz_class in)
 {
     string    mpz_as_string = in.get_str();
     char*     mpz_as_c_string = const_cast<char*>(mpz_as_string.c_str());
@@ -264,7 +264,7 @@ PyObject* NmzToPyNumber(mpz_class in)
     return ret_val;
 }
 
-PyObject* NmzToPyList(mpq_class in)
+PyObject* NmzToPyList(const mpq_class in)
 {
     PyObject* out_list = PyList_New(2);
     PyList_SetItem(out_list, 0, NmzToPyNumber(in.get_num()));
@@ -310,7 +310,8 @@ PyObject* NmzToPyNumber(double in)
     return PyFloat_FromDouble(in);
 }
 
-// PyObject* NmzVectorToPyList(const vector<mpq_class>&, bool);
+template <typename Integer>
+PyObject* NmzVectorToPyList(const vector<Integer>& in, bool do_callback = true );
 
 PyObject* NmzToPyNumber(renf_elem_class in)
 {
@@ -319,6 +320,7 @@ PyObject* NmzToPyNumber(renf_elem_class in)
     in.get_fmpq_poly(current);
     vector<mpq_class> output;
     fmpq_poly2vector(output, current);    // is this the correct length??
+    // PyObject* out_list = NULL;
     PyObject* out_list = NmzVectorToPyList(output, false);
     if (NumberfieldElementHandler != NULL)
         out_list =
@@ -326,15 +328,15 @@ PyObject* NmzToPyNumber(renf_elem_class in)
     return out_list;
 }
 
-template <typename Integer> bool PyNumberToNmz(Integer& x, Integer& out)
-{
-    return Integer::unimplemented_function;
-}
+// template <typename Integer> bool PyNumberToNmz(Integer& x, Integer& out)
+// {
+//     return Integer::unimplemented_function;
+// }
 
-template <typename Integer> PyObject* NmzToPyNumber(Integer& in)
-{
-    return Integer::unimplemented_function;
-}
+// template <typename Integer> PyObject* NmzToPyNumber(Integer& in)
+// {
+//     return Integer::unimplemented_function;
+// }
 
 template <typename Integer>
 static bool PyListToNmz(vector<Integer>& out, PyObject* in)
@@ -424,7 +426,7 @@ static bool PyInputToNmz(vector<vector<Integer>>& out, PyObject* in)
 
 template <typename Integer>
 PyObject* NmzVectorToPyList(const vector<Integer>& in,
-                            bool                   do_callback = true)
+                            bool                   do_callback)
 {
     PyObject*    vector;
     const size_t n = in.size();
@@ -437,7 +439,7 @@ PyObject* NmzVectorToPyList(const vector<Integer>& in,
     return vector;
 }
 
-template <> PyObject* NmzVectorToPyList(const vector<mpq_class>& in, bool do_callback );
+template PyObject* NmzVectorToPyList(const vector<mpq_class>& in, bool do_callback );
 
 PyObject* NmzBoolVectorToPyList(const vector<bool>& in)
 {
