@@ -18,6 +18,7 @@ setup(
     py_modules = [ "PyNormaliz" ],
     ext_modules = [ Extension( "PyNormaliz_cpp",
                               [ "NormalizModule.cpp" ],
+                              include_dirs=['/home/sebastian/Dokumente/projects/Normaliz/local/include'],
                               runtime_library_dirs=['/home/sebastian/Dokumente/projects/Normaliz/local/lib'],
                               library_dirs=['/home/sebastian/Dokumente/projects/Normaliz/local/lib'],
                               extra_link_args=['-Wl,-rpath=/home/sebastian/Dokumente/projects/Normaliz/local/lib', '-lnormaliz', '-lgmp', '-lflint' ],

@@ -19,6 +19,7 @@ using std::string;
 
 #include <libnormaliz/cone.h>
 #include <libnormaliz/map_operations.h>
+#include <libnormaliz/vector_operations.h>
 
 using libnormaliz::Cone;
 // using libnormaliz::ConeProperty;
@@ -195,13 +196,13 @@ inline PyObject* BoolToPyBool(bool in)
 }
 
 // Do conversion for number field poly elements
-bool PyPolyStringToNmz(PyObject* in, vector<mpq_class>& out)
-{
-    string            c_string = PyUnicodeToString(in);
-    vector<mpq_class> temp = poly_components(c_string);
-    out.swap(temp);
-    return true;
-}
+// bool PyPolyStringToNmz(PyObject* in, vector<mpq_class>& out)
+// {
+//     string            c_string = PyUnicodeToString(in);
+//     vector<mpq_class> temp = poly_components(c_string);
+//     out.swap(temp);
+//     return true;
+// }
 
 // Converting MPZ's to PyLong and back via strings. Worst possible solution
 // ever.
@@ -315,13 +316,16 @@ PyObject* NmzVectorToPyList(const vector<Integer>& in, bool do_callback = true )
 
 PyObject* NmzToPyNumber(renf_elem_class in)
 {
-    fmpq_poly_t current;
-    fmpq_poly_init(current);
-    in.get_fmpq_poly(current);
-    vector<mpq_class> output;
-    fmpq_poly2vector(output, current);    // is this the correct length??
-    // PyObject* out_list = NULL;
-    PyObject* out_list = NmzVectorToPyList(output, false);
+    vector<mpz_class> output_nums = in.get_num_vector();
+    mpz_class output_den = in.get_den();
+    PyObject* out_list = NmzVectorToPyList(output_nums, false);
+    PyObject* denom_py = NmzToPyNumber(output_den);
+    for(int i = 0; i < PyList_Size(out_list); i++){
+        PyObject* current = PyList_New(2);
+        PyList_SetItem(current,0,PyList_GetItem(out_list,i));
+        PyList_SetItem(current,1,denom_py);
+        PyList_SetItem(out_list,i,current);
+    }
     if (NumberfieldElementHandler != NULL)
         out_list =
             CallPythonFuncOnOneArg(NumberfieldElementHandler, out_list);
@@ -382,27 +386,27 @@ bool prepare_nf_input(vector<vector<NumberFieldElem>>& out,
         int       current_length = PyList_Size(current_row);
         for (int j = 0; j < current_length; j++) {
             PyObject* current_element = PyList_GetItem(current_row, j);
-            vector<mpq_class> current_vector;
             bool              current_res;
+            NumberFieldElem current_elem;
             if (PyList_Check(current_element)) {
+                vector<mpq_class> current_vector;
                 current_res = PyListToNmz(current_vector, current_element);
+                fmpq_poly_t current_poly;
+                fmpq_poly_init(current_poly);
+                libnormaliz::vector2fmpq_poly(current_poly, current_vector);
+                current_elem = NumberFieldElem(nf->get_renf());
+                current_elem = current_poly;
             }
             else if (string_check(current_element)) {
-                current_res =
-                    PyPolyStringToNmz(current_element, current_vector);
+                current_elem = NumberFieldElem(nf,PyUnicodeToString(current_element));
             }
-            else {
-                mpq_class temp;
-                current_res = PyNumberToNmz(current_element, temp);
-                current_vector.push_back(temp);
-            }
+            // else {
+            //     mpq_class temp;
+            //     current_res = PyNumberToNmz(current_element, temp);
+            //     current_vector.push_back(temp);
+            // }
             if (!current_res)
                 return false;
-            fmpq_poly_t current_poly;
-            fmpq_poly_init(current_poly);
-            vector2fmpq_poly(current_poly, current_vector);
-            NumberFieldElem current_elem(nf->get_renf());
-            current_elem = current_poly;
             out[i].push_back(current_elem);
         }
     }
@@ -879,7 +883,6 @@ template <typename NumberField, typename NumberFieldElem>
 static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
 {
 
-    NumberField* renf = new NumberField();
 
     PyObject* number_field_data =
         PyDict_GetItemString(kwargs, "number_field");
@@ -887,13 +890,16 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
         PyErr_SetString(PyNormaliz_cppError, "no number field data given");
         return NULL;
     }
-    istringstream number_field_data_stream(
-        PyUnicodeToString(number_field_data));
-    number_field_data_stream >> *renf;
-    // Error handling
-    // number_field_data_stream >> set_renf(renf);
-    // Error handling
 
+    // number_field_data contains 4 entries: poly, var, emb, prec
+    // First three are strings, last an integer (small)
+
+    string poly = PyUnicodeToString(PyList_GetItem(number_field_data,0));
+    string var = PyUnicodeToString(PyList_GetItem(number_field_data,1));
+    string emb = PyUnicodeToString(PyList_GetItem(number_field_data,2));
+    long prec = PyLong_AsLong(PyList_GetItem(number_field_data,3));
+
+    NumberField* renf = new NumberField(poly.c_str(),var.c_str(),emb.c_str(),prec);
     map<InputType, vector<vector<NumberFieldElem>>> input;
 
     /* Do not delete entry of kwargs dict, as it might not

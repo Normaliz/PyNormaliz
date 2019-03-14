@@ -1,11 +1,11 @@
-import PyNormaliz
+import PyNormaliz_cpp
 
 ineq = [ [ 0,0,1 ], [ 0,1,0 ],[1,0,0] ];
 
-cone = PyNormaliz.NmzCone(["cone", ineq ])
+cone = PyNormaliz_cpp.NmzCone(["cone", ineq ])
 
-PyNormaliz.NmzResult( cone, "HilbertBasis" )
+PyNormaliz_cpp.NmzResult( cone, "HilbertBasis" )
 
-cone2 = PyNormaliz.NmzResult( cone, "IntegerHull" )
+cone2 = PyNormaliz_cpp.NmzResult( cone, "IntegerHull" )
 
-PyNormaliz.NmzResult( cone2, "HilbertBasis" )
+PyNormaliz_cpp.NmzResult( cone2, "HilbertBasis" )
