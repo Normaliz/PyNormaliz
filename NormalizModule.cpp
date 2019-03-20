@@ -332,16 +332,6 @@ PyObject* NmzToPyNumber(renf_elem_class in)
     return out_list;
 }
 
-// template <typename Integer> bool PyNumberToNmz(Integer& x, Integer& out)
-// {
-//     return Integer::unimplemented_function;
-// }
-
-// template <typename Integer> PyObject* NmzToPyNumber(Integer& in)
-// {
-//     return Integer::unimplemented_function;
-// }
-
 template <typename Integer>
 static bool PyListToNmz(vector<Integer>& out, PyObject* in)
 {
@@ -391,22 +381,15 @@ bool prepare_nf_input(vector<vector<NumberFieldElem>>& out,
             if (PyList_Check(current_element)) {
                 vector<mpq_class> current_vector;
                 current_res = PyListToNmz(current_vector, current_element);
-                fmpq_poly_t current_poly;
-                fmpq_poly_init(current_poly);
-                libnormaliz::vector2fmpq_poly(current_poly, current_vector);
-                current_elem = NumberFieldElem(nf->get_renf());
-                current_elem = current_poly;
+                if(!current_res){
+                    return false;
+                }
+                std::cerr << nf->degree() << " " << current_vector.size() << std::endl;
+                current_elem = NumberFieldElem(*nf, current_vector);
             }
-            else if (string_check(current_element)) {
-                current_elem = NumberFieldElem(nf,PyUnicodeToString(current_element));
+            if (string_check(current_element)) {
+                current_elem = NumberFieldElem(*nf,PyUnicodeToString(current_element));
             }
-            // else {
-            //     mpq_class temp;
-            //     current_res = PyNumberToNmz(current_element, temp);
-            //     current_vector.push_back(temp);
-            // }
-            if (!current_res)
-                return false;
             out[i].push_back(current_elem);
         }
     }
@@ -879,11 +862,10 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
     return return_container;
 }
 
-template <typename NumberField, typename NumberFieldElem>
 static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
 {
 
-
+    FUNC_BEGIN
     PyObject* number_field_data =
         PyDict_GetItemString(kwargs, "number_field");
     if (number_field_data == NULL) {
@@ -891,16 +873,16 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
         return NULL;
     }
 
-    // number_field_data contains 4 entries: poly, var, emb, prec
-    // First three are strings, last an integer (small)
-
+    renf_class* renf;
+    // number_field_data contains 4 entries: poly, var, emb
+    // All are strings
     string poly = PyUnicodeToString(PyList_GetItem(number_field_data,0));
     string var = PyUnicodeToString(PyList_GetItem(number_field_data,1));
     string emb = PyUnicodeToString(PyList_GetItem(number_field_data,2));
-    long prec = PyLong_AsLong(PyList_GetItem(number_field_data,3));
+    renf = new renf_class(poly.c_str(),var.c_str(),emb.c_str());
 
-    NumberField* renf = new NumberField(poly.c_str(),var.c_str(),emb.c_str(),prec);
-    map<InputType, vector<vector<NumberFieldElem>>> input;
+    map<InputType, vector<vector<renf_elem_class>>> input;
+
 
     /* Do not delete entry of kwargs dict, as it might not
        be owned by the cone constructor */
@@ -916,7 +898,7 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
             PyObject* current_value = PyList_GetItem(values, i);
             if (current_value == Py_None)
                 continue;
-            vector<vector<NumberFieldElem>> Mat;
+            vector<vector<renf_elem_class>> Mat;
             bool okay = prepare_nf_input(Mat, current_value, renf);
             if (!okay) {
                 PyErr_SetString(PyNormaliz_cppError, "Could not read matrix");
@@ -926,11 +908,12 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
         }
     }
 
-    Cone<NumberFieldElem>* C = new Cone<NumberFieldElem>(input);
+    Cone<renf_elem_class>* C = new Cone<renf_elem_class>(input);
 
     PyObject* return_container = pack_cone(C, renf);
 
     return return_container;
+    FUNC_END
 }
 
 /*
@@ -962,7 +945,7 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
         }
     }
     else if (kwargs != NULL && PyDict_Contains(kwargs, create_as_renf) == 1) {
-        return _NmzConeIntern_renf<renf_class, renf_elem_class>(args, kwargs);
+        return _NmzConeIntern_renf(args, kwargs);
     }
     return _NmzConeIntern<mpz_class>(args, kwargs);
     FUNC_END
