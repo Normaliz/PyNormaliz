@@ -2,6 +2,9 @@
 
 from distutils.core import setup, Extension
 import sys
+import os
+
+normaliz_dir = os.environ["NORMALIZ_LOCAL_DIR"]
 
 if sys.version_info < (3,5):
     macro_list = [ ( "PYTHON_VERSION_OLDER_THREE_FIVE", "1" ), ( "ENFNORMALIZ", "1" ) ]
@@ -18,10 +21,11 @@ setup(
     py_modules = [ "PyNormaliz" ],
     ext_modules = [ Extension( "PyNormaliz_cpp",
                               [ "NormalizModule.cpp" ],
-                              include_dirs=['/home/sebastian/Dokumente/projects/Normaliz/normaliz-eantic/local/include'],
-                              runtime_library_dirs=['/home/sebastian/Dokumente/projects/Normaliz/normaliz-eantic/local/lib'],
-                              library_dirs=['/home/sebastian/Dokumente/projects/Normaliz/normaliz-eantic/local/lib'],
-                              extra_link_args=['-Wl,-rpath=/home/sebastian/Dokumente/projects/Normaliz/normaliz-eantic/local/lib', '-lnormaliz', '-lgmp', '-lflint' ],
+                              include_dirs=[ normaliz_dir + '/include'],
+                              library_dirs=[ normaliz_dir + '/lib'],
+                              libraries=[ 'arb', 'normaliz', 'gmp', 'flint', 'eanticxx' ],
+                              runtime_library_dirs=[ normaliz_dir + '/lib'],
+                              extra_link_args=['-Wl,-R' + normaliz_dir + '/lib' ],
                               define_macros = macro_list ) ],
     
     package_data = {'': [ "COPYING", "GPLv2", "Readme.md" ] },
