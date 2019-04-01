@@ -384,7 +384,6 @@ bool prepare_nf_input(vector<vector<NumberFieldElem>>& out,
                 if(!current_res){
                     return false;
                 }
-                std::cerr << nf->degree() << " " << current_vector.size() << std::endl;
                 current_elem = NumberFieldElem(*nf, current_vector);
             }
             if (string_check(current_element)) {
