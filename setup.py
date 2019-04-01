@@ -4,7 +4,11 @@ from distutils.core import setup, Extension
 import sys
 import os
 
-normaliz_dir = os.environ["NORMALIZ_LOCAL_DIR"]
+try:
+    normaliz_dir = os.environ["NORMALIZ_LOCAL_DIR"]
+except KeyError:
+    normaliz_dir = "/usr/local"
+
 
 if sys.version_info < (3,5):
     macro_list = [ ( "PYTHON_VERSION_OLDER_THREE_FIVE", "1" ), ( "ENFNORMALIZ", "1" ) ]

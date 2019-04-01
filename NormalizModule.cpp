@@ -1466,8 +1466,8 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
                     return NmzToPyNumber(C->getRationalConeProperty(p));
                 case libnormaliz::OutputType::FieldElem:
                     return NmzToPyNumber(C->getFieldElemConeProperty(p));
-                // case libnormaliz::OutputType::Float:
-                //     return NmzToPyNumber(C->getFloatConeProperty(p));
+                case libnormaliz::OutputType::Float:
+                    return NmzToPyNumber(C->getFloatConeProperty(p));
                 case libnormaliz::OutputType::MachineInteger:
                     return NmzToPyNumber(C->getMachineIntegerConeProperty(p));
                 case libnormaliz::OutputType::Bool:
