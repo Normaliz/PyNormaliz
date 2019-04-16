@@ -387,11 +387,13 @@ bool prepare_nf_input(vector<vector<NumberFieldElem>>& out,
                 current_elem = NumberFieldElem(*nf, current_vector);
             }
             if (string_check(current_element)) {
-                current_elem = NumberFieldElem(*nf,PyUnicodeToString(current_element));
+                current_elem = NumberFieldElem(*nf);
+                current_elem = PyUnicodeToString(current_element);
             }
             out[i].push_back(current_elem);
         }
     }
+    
     return true;
 }
 
