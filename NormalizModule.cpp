@@ -1288,7 +1288,7 @@ PyObject* _NmzResultImpl(Cone<renf_elem_class>* C, PyObject* prop_obj)
     ConeProperties notComputed = C->compute(ConeProperties(p));
     PyOS_setsig(SIGINT,current_interpreter_sigint_handler);
     
-    if (notComputed.any()) {
+    if (notComputed.goals().any()) {
         return Py_None;
     }
 
@@ -1374,7 +1374,7 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
     ConeProperties notComputed = C->compute(ConeProperties(p));
     PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
 
-    if (notComputed.any()) {
+    if (notComputed.goals().any()) {
         return Py_None;
     }
 
