@@ -30,6 +30,7 @@ setup(
                               libraries=[ 'arb', 'normaliz', 'gmp', 'flint', 'eanticxx' ],
                               runtime_library_dirs=[ normaliz_dir + '/lib'],
                               extra_link_args=['-Wl,-R' + normaliz_dir + '/lib' ],
+                              extra_compile_args=['-std=c++11'],
                               define_macros = macro_list ) ],
     
     package_data = {'': [ "COPYING", "GPLv2", "Readme.md" ] },

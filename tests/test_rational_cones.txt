@@ -1,0 +1,100 @@
+Test rational cone
+==================
+
+The cube
+
+>>> from PyNormaliz import Cone, NmzCone, NmzResult
+>>> from itertools import product
+>>> V = list(list(p+(1,)) for p in product([-1,0,1],repeat=2))
+>>> cube1 = Cone(vertices=V)
+>>> cube2 = NmzCone(vertices=V)
+>>> verts = cube1.VerticesOfPolyhedron()
+>>> verts == NmzResult(cube2, "VerticesOfPolyhedron")
+True
+>>> verts == [[-1, -1, 1], [-1, 1, 1], [1, -1, 1], [1, 1, 1]]
+True
+>>> rays = cube1.ExtremeRays()
+>>> rays == NmzResult(cube2, "ExtremeRays") == []
+True
+>>> cube1.MaximalSubspace() == NmzResult(cube2, "MaximalSubspace") == []
+True
+>>> hyperplanes = cube1.SupportHyperplanes()
+>>> hyperplanes == NmzResult(cube2, "SupportHyperplanes")
+True
+>>> hyperplanes == [[-1, 0, 1], [0, -1, 1], [0, 1, 1], [1, 0, 1]]
+True
+>>> cube1.Equations() == NmzResult(cube2, "Equations") == []
+True
+>>> cube1.Congruences() == NmzResult(cube2, "Congruences") == []
+True
+>>> cube1.AffineDim() == NmzResult(cube2, "AffineDim") == 2
+True
+>>> cube1.Volume() == NmzResult(cube2, "Volume") == [[8, 1]]
+True
+>>> abs(cube1.EuclideanVolume() - 4) < 0.000001
+True
+>>> abs(NmzResult(cube2, "EuclideanVolume") - 4) < 0.000001
+True
+>>> cube1.Triangulation()
+
+A cube in a subspace
+
+>>> import PyNormaliz
+>>> from itertools import product
+>>> cube = PyNormaliz.NmzCone(vertices=list(list((2,) + p+(-2,1,)) for p in product([-1,0,1],repeat=2)))
+>>> verts = PyNormaliz.NmzResult(cube, "VerticesOfPolyhedron")
+>>> verts == [[2,-1,-1,-2,1], [2,-1,1,-2,1], [2,1,-1,-2,1], [2,1,1,-2,1]]
+True
+>>> PyNormaliz.NmzResult(cube, "ExtremeRays") == []
+True
+>>> PyNormaliz.NmzResult(cube, "MaximalSubspace") == []
+True
+>>> hyperplanes = PyNormaliz.NmzResult(cube, "SupportHyperplanes")
+>>> hyperplanes == [[0,-1,0,0,1],[0,0,-1,0,1],[0,0,1,0,1],[0,1,0,0,1]]
+True
+>>> eqns = PyNormaliz.NmzResult(cube, "Equations")
+>>> eqns == [[1,0,0,0,-2],[0,0,0,1,2]]
+True
+>>> abs(PyNormaliz.NmzResult(cube, "EuclideanVolume") - 4) < 0.000001
+True
+
+A linear subspace
+
+>>> import PyNormaliz
+>>> lin = PyNormaliz.NmzCone(vertices=[[1,2,3,5]], cone=[[1,0,-1],[-1,0,1]])
+>>> PyNormaliz.NmzResult(lin, "VerticesOfPolyhedron") == [[0,2,4,5]]
+True
+>>> PyNormaliz.NmzResult(lin, "ExtremeRays") == []
+True
+>>> PyNormaliz.NmzResult(lin, "MaximalSubspace") == [[1,0,-1,0]]
+True
+>>> PyNormaliz.NmzResult(lin, "Equations") == [[1,-2,1,0],[0,5,0,-2]]
+True
+>>> PyNormaliz.NmzResult(lin, "EuclideanVolume")
+Traceback (most recent call last):
+...
+error: Could not compute: ...
+
+An examples with rays and vertices
+
+>>> import PyNormaliz
+>>> cone = PyNormaliz.NmzCone(vertices=[[0,0,1],[1,0,1],[0,1,1]], cone=[[1, 1]])
+>>> verts = PyNormaliz.NmzResult(cone, "VerticesOfPolyhedron")
+>>> verts == [[0,0,1],[0,1,1],[1,0,1]]
+True
+>>> rays = PyNormaliz.NmzResult(cone, "ExtremeRays")
+>>> rays == [[1,1,0]]
+True
+>>> PyNormaliz.NmzResult(cone, "MaximalSubspace") == []
+True
+>>> hyperplanes = PyNormaliz.NmzResult(cone, "SupportHyperplanes")
+>>> hyperplanes.sort()
+>>> hyperplanes == [[-1,1,1], [0,1,0], [1,-1,1], [1,0,0]]
+True
+>>> PyNormaliz.NmzResult(cone, "Equations") == []
+True
+>>> PyNormaliz.NmzResult(cone, "EuclideanVolume")
+Traceback (most recent call last):
+...
+error: Could not compute: ...
+
