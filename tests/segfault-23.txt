@@ -1,0 +1,14 @@
+Test segfault 23
+================
+
+Segfault reported in https://github.com/Normaliz/PyNormaliz/issues/23
+
+>>> from PyNormaliz import Cone, NmzCone, NmzResult
+>>> V = [[-1, -1, 1], [-1, 0, 1], [-1, 1, 1], [0, -1, 1], [0, 0, 1], [0, 1, 1], [1, -1, 1], [1, 0, 1], [1, 1, 1]]
+>>> cube1 = Cone(vertices=V)
+>>> cube2 = NmzCone(vertices=V)
+>>> NmzResult(cube2, "SupportHyperplanes") == [[-1, 0, 1], [0, -1, 1], [0, 1, 1], [1, 0, 1]]
+True
+>>> NmzResult(cube2, "Volume") == [[8, 1]]
+True
+>>> cube1.Triangulation()

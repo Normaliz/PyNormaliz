@@ -1,25 +1,58 @@
-language: python
-
+dist: xenial
+language: c
 cache: ccache
-
-python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-
-install:
-  - ./.travis-install.sh
-
-script:
-  - ./.travis-test.sh
-
 addons:
+  apt:
+    update: true
   apt_packages:
       - libgmp-dev
+      - libmpfr-dev
+      - libflint-dev
       - libboost-dev
       - autoconf
       - automake
       - libtool
-      - time
-
+env:
+  - PYTHON="python2"
+    PIP="pip2"
+  - PYTHON="python3"
+    PIP="pip3"
+install:
+  - export MAKE="make -j2"
+  - which gcc
+  # install arb
+  - wget https://github.com/fredrik-johansson/arb/archive/2.16.0.tar.gz
+  - tar xf 2.16.0.tar.gz
+  - cd arb-2.16.0/
+  - ./configure --prefix=/usr
+  - make
+  - sudo make install
+  - cd ..
+  # install e-antic
+  - wget http://www.labri.fr/perso/vdelecro/e-antic/e-antic-0.1.2.tar.gz
+  - tar xf e-antic-0.1.2.tar.gz 
+  - cd e-antic-0.1.2/
+  - ./configure --prefix=/usr
+  - make
+  - sudo make install
+  - cd ..
+  # install normaliz
+  - wget https://github.com/Normaliz/Normaliz/releases/download/v3.7.0/normaliz-3.7.0.tar.gz
+  - tar xf normaliz-3.7.0.tar.gz
+  - cd normaliz-3.7.0
+  - ./configure --disable-scip --disable-nmzintegrate --enable-flint --enable-enfnormaliz --prefix=/usr
+  - make
+  - sudo make install
+  - cd ..
+  # install pynormaliz
+  - sudo $PIP install -v .
+script:
+  - export OMP_NUM_THREADS=4
+  # run examples
+  - cd examples
+  - sh runexamples.sh
+  - cd ..
+  # run doctests
+  - cd tests
+  - $PYTHON runtests.py
+  - cd ..
