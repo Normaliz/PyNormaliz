@@ -258,10 +258,12 @@ bool PyNumberToNmz(PyObject* in, mpz_class& out)
 
 PyObject* NmzToPyNumber(const mpz_class in)
 {
+    if (in.fits_slong_p()) {
+        return PyLong_FromLong(in.get_si());
+    }
     string    mpz_as_string = in.get_str();
     char*     mpz_as_c_string = const_cast< char* >(mpz_as_string.c_str());
-    char*     pend;
-    PyObject* ret_val = PyLong_FromString(mpz_as_c_string, &pend, 10);
+    PyObject* ret_val = PyLong_FromString(mpz_as_c_string, NULL, 10);
     return ret_val;
 }
 
@@ -319,14 +321,16 @@ PyObject* NmzToPyNumber(renf_elem_class in)
 {
     vector< mpz_class > output_nums = in.get_num_vector();
     mpz_class           output_den = in.get_den();
-    PyObject*           out_list = NmzVectorToPyList(output_nums, false);
     PyObject*           denom_py = NmzToPyNumber(output_den);
-    for (int i = 0; i < PyList_Size(out_list); i++) {
+    PyObject*           out_list = PyList_New(output_nums.size());
+    for (int i = 0; i < output_nums.size(); i++) {
         PyObject* current = PyList_New(2);
-        PyList_SetItem(current, 0, PyList_GetItem(out_list, i));
+        PyList_SetItem(current, 0, NmzToPyNumber(output_nums[i]));
+        Py_IncRef(denom_py);
         PyList_SetItem(current, 1, denom_py);
         PyList_SetItem(out_list, i, current);
     }
+    Py_DecRef(denom_py);
     if (NumberfieldElementHandler != NULL)
         out_list =
             CallPythonFuncOnOneArg(NumberfieldElementHandler, out_list);
