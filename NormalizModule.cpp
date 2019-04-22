@@ -117,11 +117,11 @@ PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg)
     return return_obj;
 }
 
-    /***************************************************************************
-     *
-     * Compiler version control
-     *
-     ***************************************************************************/
+/***************************************************************************
+ *
+ * Compiler version control
+ *
+ ***************************************************************************/
 
 #if PY_MAJOR_VERSION >= 3
 #define string_check PyUnicode_Check
@@ -259,7 +259,7 @@ bool PyNumberToNmz(PyObject* in, mpz_class& out)
 PyObject* NmzToPyNumber(const mpz_class in)
 {
     string    mpz_as_string = in.get_str();
-    char*     mpz_as_c_string = const_cast<char*>(mpz_as_string.c_str());
+    char*     mpz_as_c_string = const_cast< char* >(mpz_as_string.c_str());
     char*     pend;
     PyObject* ret_val = PyLong_FromString(mpz_as_c_string, &pend, 10);
     return ret_val;
@@ -311,20 +311,21 @@ PyObject* NmzToPyNumber(double in)
     return PyFloat_FromDouble(in);
 }
 
-template <typename Integer>
-PyObject* NmzVectorToPyList(const vector<Integer>& in, bool do_callback = true );
+template < typename Integer >
+PyObject* NmzVectorToPyList(const vector< Integer >& in,
+                            bool                     do_callback = true);
 
 PyObject* NmzToPyNumber(renf_elem_class in)
 {
-    vector<mpz_class> output_nums = in.get_num_vector();
-    mpz_class output_den = in.get_den();
-    PyObject* out_list = NmzVectorToPyList(output_nums, false);
-    PyObject* denom_py = NmzToPyNumber(output_den);
-    for(int i = 0; i < PyList_Size(out_list); i++){
+    vector< mpz_class > output_nums = in.get_num_vector();
+    mpz_class           output_den = in.get_den();
+    PyObject*           out_list = NmzVectorToPyList(output_nums, false);
+    PyObject*           denom_py = NmzToPyNumber(output_den);
+    for (int i = 0; i < PyList_Size(out_list); i++) {
         PyObject* current = PyList_New(2);
-        PyList_SetItem(current,0,PyList_GetItem(out_list,i));
-        PyList_SetItem(current,1,denom_py);
-        PyList_SetItem(out_list,i,current);
+        PyList_SetItem(current, 0, PyList_GetItem(out_list, i));
+        PyList_SetItem(current, 1, denom_py);
+        PyList_SetItem(out_list, i, current);
     }
     if (NumberfieldElementHandler != NULL)
         out_list =
@@ -332,8 +333,8 @@ PyObject* NmzToPyNumber(renf_elem_class in)
     return out_list;
 }
 
-template <typename Integer>
-static bool PyListToNmz(vector<Integer>& out, PyObject* in)
+template < typename Integer >
+static bool PyListToNmz(vector< Integer >& out, PyObject* in)
 {
     if (!PyList_Check(in))
         return false;
@@ -347,8 +348,8 @@ static bool PyListToNmz(vector<Integer>& out, PyObject* in)
     return true;
 }
 
-template <typename Integer>
-static bool PyIntMatrixToNmz(vector<vector<Integer>>& out, PyObject* in)
+template < typename Integer >
+static bool PyIntMatrixToNmz(vector< vector< Integer > >& out, PyObject* in)
 {
     if (!PyList_Check(in))
         return false;
@@ -362,10 +363,10 @@ static bool PyIntMatrixToNmz(vector<vector<Integer>>& out, PyObject* in)
     return true;
 }
 
-template <typename NumberField, typename NumberFieldElem>
-bool prepare_nf_input(vector<vector<NumberFieldElem>>& out,
-                      PyObject*                        in,
-                      NumberField*                     nf)
+template < typename NumberField, typename NumberFieldElem >
+bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
+                      PyObject*                            in,
+                      NumberField*                         nf)
 {
     if (!PyList_Check(in))
         return false;
@@ -375,13 +376,13 @@ bool prepare_nf_input(vector<vector<NumberFieldElem>>& out,
         PyObject* current_row = PyList_GetItem(in, i);
         int       current_length = PyList_Size(current_row);
         for (int j = 0; j < current_length; j++) {
-            PyObject* current_element = PyList_GetItem(current_row, j);
-            bool              current_res;
+            PyObject*       current_element = PyList_GetItem(current_row, j);
+            bool            current_res;
             NumberFieldElem current_elem;
             if (PyList_Check(current_element)) {
-                vector<mpq_class> current_vector;
+                vector< mpq_class > current_vector;
                 current_res = PyListToNmz(current_vector, current_element);
-                if(!current_res){
+                if (!current_res) {
                     return false;
                 }
                 current_elem = NumberFieldElem(*nf, current_vector);
@@ -393,12 +394,12 @@ bool prepare_nf_input(vector<vector<NumberFieldElem>>& out,
             out[i].push_back(current_elem);
         }
     }
-    
+
     return true;
 }
 
-template <typename Integer>
-static bool PyInputToNmz(vector<vector<Integer>>& out, PyObject* in)
+template < typename Integer >
+static bool PyInputToNmz(vector< vector< Integer > >& out, PyObject* in)
 {
     bool check_input;
     check_input = PyIntMatrixToNmz(out, in);
@@ -412,9 +413,8 @@ static bool PyInputToNmz(vector<vector<Integer>>& out, PyObject* in)
     return false;
 }
 
-template <typename Integer>
-PyObject* NmzVectorToPyList(const vector<Integer>& in,
-                            bool                   do_callback)
+template < typename Integer >
+PyObject* NmzVectorToPyList(const vector< Integer >& in, bool do_callback)
 {
     PyObject*    vector;
     const size_t n = in.size();
@@ -427,9 +427,10 @@ PyObject* NmzVectorToPyList(const vector<Integer>& in,
     return vector;
 }
 
-template PyObject* NmzVectorToPyList(const vector<mpq_class>& in, bool do_callback );
+template PyObject* NmzVectorToPyList(const vector< mpq_class >& in,
+                                     bool                       do_callback);
 
-PyObject* NmzBoolVectorToPyList(const vector<bool>& in)
+PyObject* NmzBoolVectorToPyList(const vector< bool >& in)
 {
     PyObject*    vector;
     const size_t n = in.size();
@@ -442,7 +443,7 @@ PyObject* NmzBoolVectorToPyList(const vector<bool>& in)
     return vector;
 }
 
-PyObject* NmzBoolMatrixToPyList(const vector<vector<bool>>& in)
+PyObject* NmzBoolMatrixToPyList(const vector< vector< bool > >& in)
 {
     PyObject*    matrix;
     const size_t n = in.size();
@@ -455,8 +456,8 @@ PyObject* NmzBoolMatrixToPyList(const vector<vector<bool>>& in)
     return matrix;
 }
 
-template <typename Integer>
-PyObject* NmzMatrixToPyList(const vector<vector<Integer>>& in)
+template < typename Integer >
+PyObject* NmzMatrixToPyList(const vector< vector< Integer > >& in)
 {
     PyObject*    matrix;
     const size_t n = in.size();
@@ -490,9 +491,9 @@ PyObject* NmzHilbertSeriesToPyList(const libnormaliz::HilbertSeries& HS,
     return return_list;
 }
 
-template <typename Integer>
+template < typename Integer >
 PyObject* NmzWeightedEhrhartSeriesToPyList(
-    const std::pair<libnormaliz::HilbertSeries, Integer>& HS)
+    const std::pair< libnormaliz::HilbertSeries, Integer >& HS)
 {
     PyObject* return_list = PyList_New(4);
     PyList_SetItem(return_list, 0, NmzVectorToPyList(HS.first.getNum()));
@@ -504,13 +505,13 @@ PyObject* NmzWeightedEhrhartSeriesToPyList(
     return return_list;
 }
 
-template <typename Integer>
+template < typename Integer >
 PyObject*
 NmzHilbertQuasiPolynomialToPyList(const libnormaliz::HilbertSeries& HS)
 {
-    vector<vector<Integer>> HQ = HS.getHilbertQuasiPolynomial();
-    const size_t            n = HS.getPeriod();
-    PyObject*               return_list = PyList_New(n + 1);
+    vector< vector< Integer > > HQ = HS.getHilbertQuasiPolynomial();
+    const size_t                n = HS.getPeriod();
+    PyObject*                   return_list = PyList_New(n + 1);
     for (size_t i = 0; i < n; ++i) {
         PyList_SetItem(return_list, i, NmzVectorToPyList(HQ[i]));
     }
@@ -519,11 +520,11 @@ NmzHilbertQuasiPolynomialToPyList(const libnormaliz::HilbertSeries& HS)
     return return_list;
 }
 
-template <typename Integer>
+template < typename Integer >
 PyObject* NmzWeightedEhrhartQuasiPolynomialToPyList(
     const libnormaliz::IntegrationData& int_data)
 {
-    vector<vector<Integer>> ehrhart_qp =
+    vector< vector< Integer > > ehrhart_qp =
         int_data.getWeightedEhrhartQuasiPolynomial();
     const size_t n = ehrhart_qp.size();
     PyObject*    return_list = PyList_New(n + 1);
@@ -536,9 +537,9 @@ PyObject* NmzWeightedEhrhartQuasiPolynomialToPyList(
     return return_list;
 }
 
-template <typename Integer>
+template < typename Integer >
 PyObject* NmzTriangleListToPyList(
-    const vector<pair<vector<libnormaliz::key_t>, Integer>>& in)
+    const vector< pair< vector< libnormaliz::key_t >, Integer > >& in)
 {
     const size_t n = in.size();
     PyObject*    M = PyList_New(n);
@@ -546,32 +547,32 @@ PyObject* NmzTriangleListToPyList(
         // convert the pair
         PyObject* pair = PyList_New(2);
         PyList_SetItem(pair, 0,
-                       NmzVectorToPyList<libnormaliz::key_t>(in[i].first));
+                       NmzVectorToPyList< libnormaliz::key_t >(in[i].first));
         PyList_SetItem(pair, 1, NmzToPyNumber(in[i].second));
         PyList_SetItem(M, i, pair);
     }
     return M;
 }
 
-template <typename Integer>
+template < typename Integer >
 PyObject*
-NmzStanleyDataToPyList(const libnormaliz::STANLEYDATA<Integer>& StanleyData)
+NmzStanleyDataToPyList(const libnormaliz::STANLEYDATA< Integer >& StanleyData)
 {
     PyObject* pair = PyList_New(2);
     PyList_SetItem(pair, 0,
-                   NmzVectorToPyList<libnormaliz::key_t>(StanleyData.key));
+                   NmzVectorToPyList< libnormaliz::key_t >(StanleyData.key));
     PyList_SetItem(pair, 1,
                    NmzMatrixToPyList(StanleyData.offsets.get_elements()));
     return pair;
 }
 
-template <typename Integer>
+template < typename Integer >
 PyObject* NmzStanleyDecToPyList(
-    const list<libnormaliz::STANLEYDATA<Integer>>& StanleyDec)
+    const list< libnormaliz::STANLEYDATA< Integer > >& StanleyDec)
 {
     const size_t n = StanleyDec.size();
     PyObject*    M = PyList_New(n);
-    typename list<libnormaliz::STANLEYDATA<Integer>>::const_iterator S =
+    typename list< libnormaliz::STANLEYDATA< Integer > >::const_iterator S =
         StanleyDec.begin();
     for (size_t i = 0; i < n; ++i) {
         PyList_SetItem(M, i, NmzStanleyDataToPyList(*S));
@@ -580,10 +581,10 @@ PyObject* NmzStanleyDecToPyList(
     return M;
 }
 
-template <typename Integer>
-static PyObject* _NmzBasisChangeIntern(Cone<Integer>* C)
+template < typename Integer >
+static PyObject* _NmzBasisChangeIntern(Cone< Integer >* C)
 {
-    Sublattice_Representation<Integer> bc = C->getSublattice();
+    Sublattice_Representation< Integer > bc = C->getSublattice();
 
     PyObject* res = PyList_New(3);
     PyList_SetItem(res, 0, NmzMatrixToPyList(bc.getEmbedding()));
@@ -601,80 +602,80 @@ static PyObject* _NmzBasisChangeIntern(Cone<Integer>* C)
  ***************************************************************************/
 
 struct NumberFieldCone {
-    renf_class*            nf;
-    Cone<renf_elem_class>* cone;
+    renf_class*              nf;
+    Cone< renf_elem_class >* cone;
 };
 
 void delete_cone_mpz(PyObject* cone)
 {
-    Cone<mpz_class>* cone_ptr = reinterpret_cast<Cone<mpz_class>*>(
+    Cone< mpz_class >* cone_ptr = reinterpret_cast< Cone< mpz_class >* >(
         PyCapsule_GetPointer(cone, cone_name));
     delete cone_ptr;
 }
 
 void delete_cone_long(PyObject* cone)
 {
-    Cone<long long>* cone_ptr = reinterpret_cast<Cone<long long>*>(
+    Cone< long long >* cone_ptr = reinterpret_cast< Cone< long long >* >(
         PyCapsule_GetPointer(cone, cone_name_long));
     delete cone_ptr;
 }
 
 void delete_cone_renf(PyObject* cone)
 {
-    NumberFieldCone* cone_ptr = reinterpret_cast<NumberFieldCone*>(
+    NumberFieldCone* cone_ptr = reinterpret_cast< NumberFieldCone* >(
         PyCapsule_GetPointer(cone, cone_name_renf));
     delete cone_ptr->cone;
     // delete cone_ptr->nf;
 }
 
-Cone<long long>* get_cone_long(PyObject* cone)
+Cone< long long >* get_cone_long(PyObject* cone)
 {
-    return reinterpret_cast<Cone<long long>*>(
+    return reinterpret_cast< Cone< long long >* >(
         PyCapsule_GetPointer(cone, cone_name_long));
 }
 
-Cone<mpz_class>* get_cone_mpz(PyObject* cone)
+Cone< mpz_class >* get_cone_mpz(PyObject* cone)
 {
-    return reinterpret_cast<Cone<mpz_class>*>(
+    return reinterpret_cast< Cone< mpz_class >* >(
         PyCapsule_GetPointer(cone, cone_name));
 }
 
-Cone<renf_elem_class>* get_cone_renf(PyObject* cone)
+Cone< renf_elem_class >* get_cone_renf(PyObject* cone)
 {
-    NumberFieldCone* cone_ptr = reinterpret_cast<NumberFieldCone*>(
+    NumberFieldCone* cone_ptr = reinterpret_cast< NumberFieldCone* >(
         PyCapsule_GetPointer(cone, cone_name_renf));
     return cone_ptr->cone;
 }
 
 renf_class* get_cone_renf_renf(PyObject* cone)
 {
-    NumberFieldCone* cone_ptr = reinterpret_cast<NumberFieldCone*>(
+    NumberFieldCone* cone_ptr = reinterpret_cast< NumberFieldCone* >(
         PyCapsule_GetPointer(cone, cone_name_renf));
     return cone_ptr->nf;
 }
 
-PyObject* pack_cone(Cone<mpz_class>* C)
+PyObject* pack_cone(Cone< mpz_class >* C)
 {
-    return PyCapsule_New(reinterpret_cast<void*>(C), cone_name,
+    return PyCapsule_New(reinterpret_cast< void* >(C), cone_name,
                          &delete_cone_mpz);
 }
 
-PyObject* pack_cone(Cone<long long>* C)
+PyObject* pack_cone(Cone< long long >* C)
 {
-    return PyCapsule_New(reinterpret_cast<void*>(C), cone_name_long,
+    return PyCapsule_New(reinterpret_cast< void* >(C), cone_name_long,
                          &delete_cone_long);
 }
 
-PyObject* pack_cone(Cone<renf_elem_class>* C, renf_class* nf)
+PyObject* pack_cone(Cone< renf_elem_class >* C, renf_class* nf)
 {
     NumberFieldCone* cone_ptr = new NumberFieldCone();
     cone_ptr->nf = nf;
     cone_ptr->cone = C;
-    return PyCapsule_New(reinterpret_cast<void*>(cone_ptr), cone_name_renf,
+    return PyCapsule_New(reinterpret_cast< void* >(cone_ptr), cone_name_renf,
                          &delete_cone_renf);
 }
 
-PyObject* pack_cone(Cone<renf_elem_class>* C)
+PyObject* pack_cone(Cone< renf_elem_class >* C)
 {
     PyErr_SetString(PyNormaliz_cppError,
                     "Trying to pack renf cone without number field");
@@ -720,7 +721,7 @@ static PyObject* NmzListConeProperties(PyObject* args)
 
     ConeProperties props;
     for (int i = 0; i < libnormaliz::ConeProperty::EnumSize; i++) {
-        props.set(static_cast<libnormaliz::ConeProperty::Enum>(i));
+        props.set(static_cast< libnormaliz::ConeProperty::Enum >(i));
     }
 
     ConeProperties goals = props.goals();
@@ -737,9 +738,9 @@ static PyObject* NmzListConeProperties(PyObject* args)
 
     int list_position = 0;
     for (int i = 0; i < libnormaliz::ConeProperty::EnumSize; i++) {
-        if (goals.test(static_cast<libnormaliz::ConeProperty::Enum>(i))) {
+        if (goals.test(static_cast< libnormaliz::ConeProperty::Enum >(i))) {
             string name = libnormaliz::toString(
-                static_cast<libnormaliz::ConeProperty::Enum>(i));
+                static_cast< libnormaliz::ConeProperty::Enum >(i));
             PyList_SetItem(goal_list, list_position, StringToPyUnicode(name));
             list_position++;
         }
@@ -747,9 +748,9 @@ static PyObject* NmzListConeProperties(PyObject* args)
 
     list_position = 0;
     for (int i = 0; i < libnormaliz::ConeProperty::EnumSize; i++) {
-        if (options.test(static_cast<libnormaliz::ConeProperty::Enum>(i))) {
+        if (options.test(static_cast< libnormaliz::ConeProperty::Enum >(i))) {
             string name = libnormaliz::toString(
-                static_cast<libnormaliz::ConeProperty::Enum>(i));
+                static_cast< libnormaliz::ConeProperty::Enum >(i));
             PyList_SetItem(option_list, list_position,
                            StringToPyUnicode(name));
             list_position++;
@@ -767,10 +768,10 @@ static PyObject* NmzListConeProperties(PyObject* args)
  *
  ***************************************************************************/
 
-template <typename Integer>
+template < typename Integer >
 static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
 {
-    map<InputType, vector<vector<mpq_class>>> input;
+    map< InputType, vector< vector< mpq_class > > > input;
 
     PyObject* input_list;
 
@@ -816,8 +817,8 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
         PyObject* M = PyTuple_GetItem(input_list, i + 1);
         if (M == Py_None)
             continue;
-        vector<vector<mpq_class>> Mat;
-        bool                      okay = PyInputToNmz(Mat, M);
+        vector< vector< mpq_class > > Mat;
+        bool                          okay = PyInputToNmz(Mat, M);
         if (!okay) {
             PyErr_SetString(PyNormaliz_cppError,
                             "Even entries must be matrices");
@@ -841,8 +842,8 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
                 grading_polynomial = true;
                 continue;
             }
-            vector<vector<mpq_class>> Mat;
-            bool                      okay = PyInputToNmz(Mat, current_value);
+            vector< vector< mpq_class > > Mat;
+            bool okay = PyInputToNmz(Mat, current_value);
             if (!okay) {
                 PyErr_SetString(PyNormaliz_cppError,
                                 "Even entries must be matrices");
@@ -852,7 +853,7 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
         }
     }
 
-    Cone<Integer>* C = new Cone<Integer>(input);
+    Cone< Integer >* C = new Cone< Integer >(input);
 
     if (grading_polynomial) {
         C->setPolynomial(polynomial);
@@ -877,12 +878,12 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
     renf_class* renf;
     // number_field_data contains 4 entries: poly, var, emb
     // All are strings
-    string poly = PyUnicodeToString(PyList_GetItem(number_field_data,0));
-    string var = PyUnicodeToString(PyList_GetItem(number_field_data,1));
-    string emb = PyUnicodeToString(PyList_GetItem(number_field_data,2));
-    renf = new renf_class(poly.c_str(),var.c_str(),emb.c_str());
+    string poly = PyUnicodeToString(PyList_GetItem(number_field_data, 0));
+    string var = PyUnicodeToString(PyList_GetItem(number_field_data, 1));
+    string emb = PyUnicodeToString(PyList_GetItem(number_field_data, 2));
+    renf = new renf_class(poly.c_str(), var.c_str(), emb.c_str());
 
-    map<InputType, vector<vector<renf_elem_class>>> input;
+    map< InputType, vector< vector< renf_elem_class > > > input;
 
 
     /* Do not delete entry of kwargs dict, as it might not
@@ -899,7 +900,7 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
             PyObject* current_value = PyList_GetItem(values, i);
             if (current_value == Py_None)
                 continue;
-            vector<vector<renf_elem_class>> Mat;
+            vector< vector< renf_elem_class > > Mat;
             bool okay = prepare_nf_input(Mat, current_value, renf);
             if (!okay) {
                 PyErr_SetString(PyNormaliz_cppError, "Could not read matrix");
@@ -909,7 +910,7 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
         }
     }
 
-    Cone<renf_elem_class>* C = new Cone<renf_elem_class>(input);
+    Cone< renf_elem_class >* C = new Cone< renf_elem_class >(input);
 
     PyObject* return_container = pack_cone(C, renf);
 
@@ -942,13 +943,13 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
         create_as_long_long = PyDict_GetItem(kwargs, create_as_long_long);
         PyDict_DelItem(kwargs, create_as_long_long);
         if (create_as_long_long == Py_True) {
-            return _NmzConeIntern<long long>(args, kwargs);
+            return _NmzConeIntern< long long >(args, kwargs);
         }
     }
     else if (kwargs != NULL && PyDict_Contains(kwargs, create_as_renf) == 1) {
         return _NmzConeIntern_renf(args, kwargs);
     }
-    return _NmzConeIntern<mpz_class>(args, kwargs);
+    return _NmzConeIntern< mpz_class >(args, kwargs);
     FUNC_END
 }
 
@@ -970,19 +971,19 @@ PyObject* _NmzConeCopy(PyObject* self, PyObject* args)
     string current_name = string(PyCapsule_GetName(cone));
 
     if (cone_name_str == current_name) {
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
-        Cone<mpz_class>* new_cone = new Cone<mpz_class>(*cone_ptr);
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        Cone< mpz_class >* new_cone = new Cone< mpz_class >(*cone_ptr);
         return pack_cone(new_cone);
     }
     else if (cone_name_str_long == current_name) {
-        Cone<long long>* cone_ptr = get_cone_long(cone);
-        Cone<long long>* new_cone = new Cone<long long>(*cone_ptr);
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        Cone< long long >* new_cone = new Cone< long long >(*cone_ptr);
         return pack_cone(new_cone);
     }
     else {
-        Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
-        Cone<renf_elem_class>* new_cone =
-            new Cone<renf_elem_class>(*cone_ptr);
+        Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
+        Cone< renf_elem_class >* new_cone =
+            new Cone< renf_elem_class >(*cone_ptr);
         return pack_cone(new_cone, get_cone_renf_renf(cone));
     }
     FUNC_END
@@ -994,8 +995,8 @@ PyObject* _NmzConeCopy(PyObject* self, PyObject* args)
  *
  ***************************************************************************/
 
-template <typename Integer>
-PyObject* NmzHilbertSeries(Cone<Integer>* C, PyObject* args)
+template < typename Integer >
+PyObject* NmzHilbertSeries(Cone< Integer >* C, PyObject* args)
 {
     FUNC_BEGIN
 
@@ -1035,14 +1036,14 @@ PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args)
     current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
     string current_name = string(PyCapsule_GetName(cone));
     if (cone_name_str == current_name) {
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
-        PyObject*        return_value = NmzHilbertSeries(cone_ptr, args);
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        PyObject*          return_value = NmzHilbertSeries(cone_ptr, args);
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         return return_value;
     }
     else if (cone_name_str_long == current_name) {
-        Cone<long long>* cone_ptr = get_cone_long(cone);
-        PyObject*        return_value = NmzHilbertSeries(cone_ptr, args);
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        PyObject*          return_value = NmzHilbertSeries(cone_ptr, args);
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         return return_value;
     }
@@ -1062,8 +1063,8 @@ PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args)
  ***************************************************************************/
 
 
-template <typename Integer>
-PyObject* _NmzCompute(Cone<Integer>* C, PyObject* args)
+template < typename Integer >
+PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
 {
     FUNC_BEGIN
 
@@ -1133,15 +1134,15 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
     }
 
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         result = _NmzCompute(cone_ptr, args);
     }
     else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
-        Cone<long long>* cone_ptr = get_cone_long(cone);
+        Cone< long long >* cone_ptr = get_cone_long(cone);
         result = _NmzCompute(cone_ptr, args);
     }
     else {
-        Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
+        Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         result = _NmzCompute(cone_ptr, args);
     }
 
@@ -1164,8 +1165,8 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
 @Desctiption
 Returns if the cone property <property_string> is computed in the cone <cone>.
 */
-template <typename Integer>
-PyObject* NmzIsComputed(Cone<Integer>* C, PyObject* prop)
+template < typename Integer >
+PyObject* NmzIsComputed(Cone< Integer >* C, PyObject* prop)
 {
     FUNC_BEGIN
 
@@ -1190,15 +1191,15 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
     }
 
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         return NmzIsComputed(cone_ptr, to_compute);
     }
     else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
-        Cone<long long>* cone_ptr = get_cone_long(cone);
+        Cone< long long >* cone_ptr = get_cone_long(cone);
         return NmzIsComputed(cone_ptr, to_compute);
     }
     else {
-        Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
+        Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         return NmzIsComputed(cone_ptr, to_compute);
     }
 
@@ -1211,11 +1212,11 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
  *
  ***************************************************************************/
 
-template <typename Integer>
-PyObject* NmzSetGrading_inner(Cone<Integer>* cone, PyObject* list)
+template < typename Integer >
+PyObject* NmzSetGrading_inner(Cone< Integer >* cone, PyObject* list)
 {
-    vector<Integer> list_c;
-    bool            result = PyListToNmz(list_c, list);
+    vector< Integer > list_c;
+    bool              result = PyListToNmz(list_c, list);
     if (!result) {
         PyErr_SetString(PyNormaliz_cppError,
                         "grading argument is not an integer list");
@@ -1235,11 +1236,11 @@ PyObject* NmzSetGrading(PyObject* self, PyObject* args)
         return NULL;
     }
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         return NmzSetGrading_inner(cone_ptr, grading_py);
     }
     else {
-        Cone<long long>* cone_ptr = get_cone_long(cone);
+        Cone< long long >* cone_ptr = get_cone_long(cone);
         return NmzSetGrading_inner(cone_ptr, grading_py);
     }
     FUNC_END
@@ -1276,85 +1277,88 @@ second is the projection third is the annihilator.
 2-tuples. First entry in the tuple is the key, second the decomposition data.
 */
 
-PyObject* _NmzResultImpl(Cone<renf_elem_class>* C, PyObject* prop_obj)
+PyObject* _NmzResultImpl(Cone< renf_elem_class >* C, PyObject* prop_obj)
 {
-    
+
     FUNC_BEGIN
 
-    string prop = PyUnicodeToString( prop_obj );
+    string prop = PyUnicodeToString(prop_obj);
 
     libnormaliz::ConeProperty::Enum p = libnormaliz::toConeProperty(prop);
-    current_interpreter_sigint_handler = PyOS_setsig(SIGINT,signal_handler);
+    current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
     ConeProperties notComputed = C->compute(ConeProperties(p));
-    PyOS_setsig(SIGINT,current_interpreter_sigint_handler);
-    
+    PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
+
     if (notComputed.goals().any()) {
         return Py_None;
     }
 
     switch (p) {
-    case libnormaliz::ConeProperty::Generators:
-        return NmzMatrixToPyList(C->getGenerators());
+        case libnormaliz::ConeProperty::Generators:
+            return NmzMatrixToPyList(C->getGenerators());
 
-    case libnormaliz::ConeProperty::ExtremeRays:
-        return NmzMatrixToPyList(C->getExtremeRays());
+        case libnormaliz::ConeProperty::ExtremeRays:
+            return NmzMatrixToPyList(C->getExtremeRays());
 
-    case libnormaliz::ConeProperty::VerticesOfPolyhedron:
-        return NmzMatrixToPyList(C->getVerticesOfPolyhedron());
+        case libnormaliz::ConeProperty::VerticesOfPolyhedron:
+            return NmzMatrixToPyList(C->getVerticesOfPolyhedron());
 
-    case libnormaliz::ConeProperty::SupportHyperplanes:
-        return NmzMatrixToPyList(C->getSupportHyperplanes());
-    
-    case libnormaliz::ConeProperty::Triangulation:
-        return NmzTriangleListToPyList<renf_elem_class>(C->getTriangulation());
-    
-    case libnormaliz::ConeProperty::AffineDim:
-        return NmzToPyNumber(C->getAffineDim());
-    
-    case libnormaliz::ConeProperty::MaximalSubspace:
-        return NmzMatrixToPyList(C->getMaximalSubspace());
-    
-    case libnormaliz::ConeProperty::IsPointed:
-        return BoolToPyBool(C->isPointed());
-    
-    case libnormaliz::ConeProperty::Dehomogenization:
-        return NmzVectorToPyList(C->getDehomogenization());
-    
-    case libnormaliz::ConeProperty::IsInhomogeneous:
-        return BoolToPyBool(C->isInhomogeneous());
-    
-//     /* Sublattice properties */
-    
-    case libnormaliz::ConeProperty::Equations:
-        return NmzMatrixToPyList(C->getSublattice().getEquations());
-    
-    case libnormaliz::ConeProperty::EmbeddingDim:
-        return NmzToPyNumber(C->getEmbeddingDim());
-    
-    case libnormaliz::ConeProperty::Rank:
-        return NmzToPyNumber(C->getRank());
-    
-    case libnormaliz::ConeProperty::ConeDecomposition:
-        return NmzBoolMatrixToPyList(C->getOpenFacets());
+        case libnormaliz::ConeProperty::SupportHyperplanes:
+            return NmzMatrixToPyList(C->getSupportHyperplanes());
 
-//  the following properties are compute options and do not return anything
-    case libnormaliz::ConeProperty::DualMode:
-    case libnormaliz::ConeProperty::DefaultMode:
-    case libnormaliz::ConeProperty::Approximate:
-    case libnormaliz::ConeProperty::BottomDecomposition:
-    case libnormaliz::ConeProperty::KeepOrder:
-    case libnormaliz::ConeProperty::NoBottomDec:
-    case libnormaliz::ConeProperty::PrimalMode:
-    case libnormaliz::ConeProperty::Symmetrize:
-    case libnormaliz::ConeProperty::NoSymmetrization:
-    case libnormaliz::ConeProperty::BigInt:
-    case libnormaliz::ConeProperty::HSOP:
-        PyErr_SetString( PyNormaliz_cppError, "ConeProperty is input-only" );
-        return NULL;
-    default:
-        PyErr_SetString( PyNormaliz_cppError, "Unknown cone property" );
-        return NULL;
-        break;
+        case libnormaliz::ConeProperty::Triangulation:
+            return NmzTriangleListToPyList< renf_elem_class >(
+                C->getTriangulation());
+
+        case libnormaliz::ConeProperty::AffineDim:
+            return NmzToPyNumber(C->getAffineDim());
+
+        case libnormaliz::ConeProperty::MaximalSubspace:
+            return NmzMatrixToPyList(C->getMaximalSubspace());
+
+        case libnormaliz::ConeProperty::IsPointed:
+            return BoolToPyBool(C->isPointed());
+
+        case libnormaliz::ConeProperty::Dehomogenization:
+            return NmzVectorToPyList(C->getDehomogenization());
+
+        case libnormaliz::ConeProperty::IsInhomogeneous:
+            return BoolToPyBool(C->isInhomogeneous());
+
+            //     /* Sublattice properties */
+
+        case libnormaliz::ConeProperty::Equations:
+            return NmzMatrixToPyList(C->getSublattice().getEquations());
+
+        case libnormaliz::ConeProperty::EmbeddingDim:
+            return NmzToPyNumber(C->getEmbeddingDim());
+
+        case libnormaliz::ConeProperty::Rank:
+            return NmzToPyNumber(C->getRank());
+
+        case libnormaliz::ConeProperty::ConeDecomposition:
+            return NmzBoolMatrixToPyList(C->getOpenFacets());
+
+            //  the following properties are compute options and do not return
+            //  anything
+        case libnormaliz::ConeProperty::DualMode:
+        case libnormaliz::ConeProperty::DefaultMode:
+        case libnormaliz::ConeProperty::Approximate:
+        case libnormaliz::ConeProperty::BottomDecomposition:
+        case libnormaliz::ConeProperty::KeepOrder:
+        case libnormaliz::ConeProperty::NoBottomDec:
+        case libnormaliz::ConeProperty::PrimalMode:
+        case libnormaliz::ConeProperty::Symmetrize:
+        case libnormaliz::ConeProperty::NoSymmetrization:
+        case libnormaliz::ConeProperty::BigInt:
+        case libnormaliz::ConeProperty::HSOP:
+            PyErr_SetString(PyNormaliz_cppError,
+                            "ConeProperty is input-only");
+            return NULL;
+        default:
+            PyErr_SetString(PyNormaliz_cppError, "Unknown cone property");
+            return NULL;
+            break;
     }
 
     return Py_None;
@@ -1362,8 +1366,8 @@ PyObject* _NmzResultImpl(Cone<renf_elem_class>* C, PyObject* prop_obj)
     FUNC_END
 }
 
-template <typename Integer>
-PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
+template < typename Integer >
+PyObject* _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj)
 {
 
     string prop = PyUnicodeToString(prop_obj);
@@ -1384,7 +1388,7 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
 
     switch (p) {
         case libnormaliz::ConeProperty::Triangulation:
-            return NmzTriangleListToPyList<Integer>(C->getTriangulation());
+            return NmzTriangleListToPyList< Integer >(C->getTriangulation());
 
         case libnormaliz::ConeProperty::HilbertSeries: {
             bool is_HSOP = C->isComputed(libnormaliz::ConeProperty::HSOP);
@@ -1402,9 +1406,9 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
 
 
         case libnormaliz::ConeProperty::Grading: {
-            vector<Integer> grad = C->getGrading();
-            Integer         denom = C->getGradingDenom();
-            PyObject*       return_list = PyList_New(2);
+            vector< Integer > grad = C->getGrading();
+            Integer           denom = C->getGradingDenom();
+            PyObject*         return_list = PyList_New(2);
             PyList_SetItem(return_list, 0, NmzVectorToPyList(grad));
             PyList_SetItem(return_list, 1, NmzToPyNumber(denom));
             return return_list;
@@ -1414,7 +1418,7 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
             return NmzStanleyDecToPyList(C->getStanleyDec());
 
         case libnormaliz::ConeProperty::InclusionExclusionData:
-            return NmzTriangleListToPyList<long>(
+            return NmzTriangleListToPyList< long >(
                 C->getInclusionExclusionData());
 
         case libnormaliz::ConeProperty::Equations:
@@ -1430,24 +1434,25 @@ PyObject* _NmzResultImpl(Cone<Integer>* C, PyObject* prop_obj)
             return NmzToPyNumber(C->getSublattice().getExternalIndex());
 
         case libnormaliz::ConeProperty::IntegerHull: {
-            Cone<Integer>* hull = new Cone<Integer>(C->getIntegerHullCone());
+            Cone< Integer >* hull =
+                new Cone< Integer >(C->getIntegerHullCone());
             return pack_cone(hull);
         }
 
         case libnormaliz::ConeProperty::ProjectCone: {
-            Cone<Integer>* projection =
-                new Cone<Integer>(C->getProjectCone());
+            Cone< Integer >* projection =
+                new Cone< Integer >(C->getProjectCone());
             return pack_cone(projection);
         }
 
         case libnormaliz::ConeProperty::HilbertQuasiPolynomial:
-            return NmzHilbertQuasiPolynomialToPyList<mpz_class>(
+            return NmzHilbertQuasiPolynomialToPyList< mpz_class >(
                 C->getHilbertSeries());    // FIXME: Why is this return value
                                            // not parametrized, but mpz_class
                                            // only?
 
         case libnormaliz::ConeProperty::WeightedEhrhartQuasiPolynomial:
-            return NmzWeightedEhrhartQuasiPolynomialToPyList<mpz_class>(
+            return NmzWeightedEhrhartQuasiPolynomialToPyList< mpz_class >(
                 C->getIntData());
 
         default: {
@@ -1519,15 +1524,15 @@ PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* result;
 
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         result = _NmzResultImpl(cone_ptr, prop);
     }
     else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
-        Cone<long long>* cone_ptr = get_cone_long(cone);
+        Cone< long long >* cone_ptr = get_cone_long(cone);
         result = _NmzResultImpl(cone_ptr, prop);
     }
     else {
-        Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
+        Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         result = _NmzResultImpl(cone_ptr, prop);
     }
 
@@ -1560,8 +1565,8 @@ PyObject* NmzSetVerboseDefault(PyObject* self, PyObject* args)
     FUNC_END
 }
 
-template <typename Integer>
-PyObject* NmzSetVerbose(Cone<Integer>* C, PyObject* value)
+template < typename Integer >
+PyObject* NmzSetVerbose(Cone< Integer >* C, PyObject* value)
 {
     FUNC_BEGIN
     bool old_value;
@@ -1589,15 +1594,15 @@ PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
     }
 
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         return NmzSetVerbose(cone_ptr, value);
     }
     else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
-        Cone<long long>* cone_ptr = get_cone_long(cone);
+        Cone< long long >* cone_ptr = get_cone_long(cone);
         return NmzSetVerbose(cone_ptr, value);
     }
     else {
-        Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
+        Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         return NmzSetVerbose(cone_ptr, value);
     }
 
@@ -1625,15 +1630,15 @@ PyObject* NmzGetPolynomial(PyObject* self, PyObject* args)
     current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
 
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
-        PyObject*        return_value =
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        PyObject*          return_value =
             StringToPyUnicode((cone_ptr->getIntData()).getPolynomial());
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         return return_value;
     }
     else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
-        Cone<long long>* cone_ptr = get_cone_long(cone);
-        PyObject*        return_value =
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        PyObject*          return_value =
             StringToPyUnicode((cone_ptr->getIntData()).getPolynomial());
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         return return_value;
@@ -1671,12 +1676,12 @@ PyObject* NmzSetNrCoeffQuasiPol(PyObject* self, PyObject* args)
     int  overflow;
     long bound = PyLong_AsLongLongAndOverflow(bound_py, &overflow);
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         cone_ptr->setNrCoeffQuasiPol(bound);
         return Py_True;
     }
     else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
-        Cone<long long>* cone_ptr = get_cone_long(cone);
+        Cone< long long >* cone_ptr = get_cone_long(cone);
         cone_ptr->setNrCoeffQuasiPol(bound);
         return Py_True;
     }
@@ -1711,23 +1716,23 @@ PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args)
     current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
 
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
-        Cone<mpz_class>* symm_cone = &(cone_ptr->getSymmetrizedCone());
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        Cone< mpz_class >* symm_cone = &(cone_ptr->getSymmetrizedCone());
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         if (symm_cone == 0) {
             return Py_None;
         }
-        symm_cone = new Cone<mpz_class>(*symm_cone);
+        symm_cone = new Cone< mpz_class >(*symm_cone);
         return pack_cone(symm_cone);
     }
     else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
-        Cone<long long>* cone_ptr = get_cone_long(cone);
-        Cone<long long>* symm_cone = &(cone_ptr->getSymmetrizedCone());
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        Cone< long long >* symm_cone = &(cone_ptr->getSymmetrizedCone());
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         if (symm_cone == 0) {
             return Py_None;
         }
-        symm_cone = new Cone<long long>(*symm_cone);
+        symm_cone = new Cone< long long >(*symm_cone);
         return pack_cone(symm_cone);
     }
     else {
@@ -1770,11 +1775,11 @@ PyObject* NmzGetHilbertSeriesExpansion(PyObject* self, PyObject* args)
     current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
 
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         HS = cone_ptr->getHilbertSeries();
     }
     else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
-        Cone<long long>* cone_ptr = get_cone_long(cone);
+        Cone< long long >* cone_ptr = get_cone_long(cone);
         HS = cone_ptr->getHilbertSeries();
     }
     else {
@@ -1815,15 +1820,15 @@ PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* args)
     }
 
     long degree = PyLong_AsLong(py_degree);
-    pair<libnormaliz::HilbertSeries, mpz_class> ES;
+    pair< libnormaliz::HilbertSeries, mpz_class > ES;
     current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
 
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
-        Cone<mpz_class>* cone_ptr = get_cone_mpz(cone);
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         ES = cone_ptr->getWeightedEhrhartSeries();
     }
     else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
-        Cone<long long>* cone_ptr = get_cone_long(cone);
+        Cone< long long >* cone_ptr = get_cone_long(cone);
         ES = cone_ptr->getWeightedEhrhartSeries();
     }
     else {
@@ -1979,17 +1984,17 @@ extern "C" void initPyNormaliz_cpp(void)
     struct module_state* st = GETSTATE(module);
 
     st->error = PyErr_NewException(
-        const_cast<char*>("PyNormaliz_cpp.INITError"), NULL, NULL);
+        const_cast< char* >("PyNormaliz_cpp.INITError"), NULL, NULL);
     if (st->error == NULL) {
         Py_DECREF(module);
         INITERROR;
     }
 
     NormalizError =
-        PyErr_NewException(const_cast<char*>("Normaliz.error"), NULL, NULL);
+        PyErr_NewException(const_cast< char* >("Normaliz.error"), NULL, NULL);
     Py_INCREF(NormalizError);
     PyNormaliz_cppError = PyErr_NewException(
-        const_cast<char*>("Normaliz.interface_error"), NULL, NULL);
+        const_cast< char* >("Normaliz.interface_error"), NULL, NULL);
     Py_INCREF(PyNormaliz_cppError);
 
     PyModule_AddObject(module, "error", NormalizError);
