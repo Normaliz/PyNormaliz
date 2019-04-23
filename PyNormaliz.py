@@ -69,7 +69,7 @@ class Cone:
         input_list = self.__process_keyword_args(kwargs)
         input_list.append("Volume")
         PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzGetEuclideanVolume(self.cone)
+        return PyNormaliz_cpp.NmzResult(self.cone, "EuclideanVolume")
 
     def HilbertSeries(self, **kwargs):
         try:
