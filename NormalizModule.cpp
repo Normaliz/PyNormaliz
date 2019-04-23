@@ -694,23 +694,23 @@ renf_class* get_cone_renf_renf(PyObject* cone)
 }
 #endif
 
-PyObject* pack_cone(Cone< mpz_class >* C)
+PyObject* pack_cone(Cone< mpz_class >* C, void* dummy = nullptr)
 {
     return PyCapsule_New(reinterpret_cast< void* >(C), cone_name,
                          &delete_cone_mpz);
 }
 
-PyObject* pack_cone(Cone< long long >* C)
+PyObject* pack_cone(Cone< long long >* C, void* dummy = nullptr)
 {
     return PyCapsule_New(reinterpret_cast< void* >(C), cone_name_long,
                          &delete_cone_long);
 }
 
 #ifdef ENFNORMALIZ
-PyObject* pack_cone(Cone< renf_elem_class >* C, renf_class* nf)
+PyObject* pack_cone(Cone< renf_elem_class >* C, void* nf = nullptr)
 {
     NumberFieldCone* cone_ptr = new NumberFieldCone();
-    cone_ptr->nf = nf;
+    cone_ptr->nf = reinterpret_cast< renf_class* >(nf);
     cone_ptr->cone = C;
     return PyCapsule_New(reinterpret_cast< void* >(cone_ptr), cone_name_renf,
                          &delete_cone_renf);
@@ -1343,135 +1343,9 @@ second is the projection third is the annihilator.
 2-tuples. First entry in the tuple is the key, second the decomposition data.
 */
 
-#ifdef ENFNORMALIZ
-PyObject* _NmzResultImpl(Cone< renf_elem_class >* C, PyObject* prop_obj, renf_class* nf)
-{
-
-    string prop = PyUnicodeToString(prop_obj);
-
-    libnormaliz::ConeProperty::Enum p = libnormaliz::toConeProperty(prop);
-
-    current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
-    ConeProperties notComputed = C->compute(ConeProperties(p));
-    PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
-
-    if (notComputed.goals().any()) {
-        return Py_None;
-    }
-
-    // Handle standard cases
-    libnormaliz::OutputType::Enum outputtype = libnormaliz::output_type(p);
-
-
-    switch (p) {
-        case libnormaliz::ConeProperty::Triangulation:
-            return NmzTriangleListToPyList< renf_elem_class >(C->getTriangulation());
-
-        case libnormaliz::ConeProperty::HilbertSeries: {
-            bool is_HSOP = C->isComputed(libnormaliz::ConeProperty::HSOP);
-            return NmzHilbertSeriesToPyList(C->getHilbertSeries(), is_HSOP);
-        }
-
-        case libnormaliz::ConeProperty::EhrhartSeries: {
-            bool is_HSOP = C->isComputed(libnormaliz::ConeProperty::HSOP);
-            return NmzHilbertSeriesToPyList(C->getEhrhartSeries(), is_HSOP);
-        }
-
-        case libnormaliz::ConeProperty::WeightedEhrhartSeries:
-            return NmzWeightedEhrhartSeriesToPyList(
-                C->getWeightedEhrhartSeries());
-
-
-        case libnormaliz::ConeProperty::Grading: {
-            vector< renf_elem_class > grad = C->getGrading();
-            renf_elem_class           denom = C->getGradingDenom();
-            PyObject*         return_list = PyList_New(2);
-            PyList_SetItem(return_list, 0, NmzVectorToPyList(grad));
-            PyList_SetItem(return_list, 1, NmzToPyNumber(denom));
-            return return_list;
-        }
-
-        case libnormaliz::ConeProperty::StanleyDec:
-            return NmzStanleyDecToPyList(C->getStanleyDec());
-
-        case libnormaliz::ConeProperty::InclusionExclusionData:
-            return NmzTriangleListToPyList< long >(
-                C->getInclusionExclusionData());
-
-        case libnormaliz::ConeProperty::Equations:
-            return NmzMatrixToPyList(C->getSublattice().getEquations());
-
-        case libnormaliz::ConeProperty::Congruences:
-            return NmzMatrixToPyList(C->getSublattice().getCongruences());
-
-        case libnormaliz::ConeProperty::Sublattice:
-            return _NmzBasisChangeIntern(C);
-
-        case libnormaliz::ConeProperty::ExternalIndex:
-            return NmzToPyNumber(C->getSublattice().getExternalIndex());
-
-        case libnormaliz::ConeProperty::IntegerHull: {
-            Cone< renf_elem_class >* hull =
-                new Cone< renf_elem_class >(C->getIntegerHullCone());
-            return pack_cone(hull,nf);
-        }
-
-        case libnormaliz::ConeProperty::ProjectCone: {
-            Cone< renf_elem_class >* projection =
-                new Cone< renf_elem_class >(C->getProjectCone());
-            return pack_cone(projection,nf);
-        }
-
-        case libnormaliz::ConeProperty::HilbertQuasiPolynomial:
-            return NmzHilbertQuasiPolynomialToPyList< mpz_class >(
-                C->getHilbertSeries());
-
-        case libnormaliz::ConeProperty::WeightedEhrhartQuasiPolynomial:
-            return NmzWeightedEhrhartQuasiPolynomialToPyList< mpz_class >(
-                C->getIntData());
-
-        default: {
-            switch (outputtype) {
-                case libnormaliz::OutputType::Matrix:
-                    return NmzMatrixToPyList(C->getMatrixConeProperty(p));
-                case libnormaliz::OutputType::MatrixFloat:
-                    return NmzMatrixToPyList(
-                        C->getFloatMatrixConeProperty(p));
-                case libnormaliz::OutputType::Vector:
-                    return NmzVectorToPyList(C->getVectorConeProperty(p));
-                case libnormaliz::OutputType::Integer:
-                    return NmzToPyNumber(C->getIntegerConeProperty(p));
-                case libnormaliz::OutputType::GMPInteger:
-                    return NmzToPyNumber(C->getGMPIntegerConeProperty(p));
-                case libnormaliz::OutputType::Rational:
-                    return NmzToPyNumber(C->getRationalConeProperty(p));
-                case libnormaliz::OutputType::FieldElem:
-                    return NmzToPyNumber(C->getFieldElemConeProperty(p));
-                case libnormaliz::OutputType::Float:
-                    return NmzToPyNumber(C->getFloatConeProperty(p));
-                case libnormaliz::OutputType::MachineInteger:
-                    return NmzToPyNumber(C->getMachineIntegerConeProperty(p));
-                case libnormaliz::OutputType::Bool:
-                    return BoolToPyBool(C->getBooleanConeProperty(p));
-                case libnormaliz::OutputType::Void: {
-                    PyErr_SetString(PyNormaliz_cppError,
-                                    "ConeProperty is input-only");
-                    return NULL;
-                }
-                case libnormaliz::OutputType::Complex: {
-                    PyErr_SetString(PyNormaliz_cppError,
-                                    "This should never happen");
-                    return NULL;
-                }
-            }
-        }
-    }
-    return Py_None;
-}
-#endif
-
 template < typename Integer >
-PyObject* _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj)
+PyObject*
+_NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
 {
 
     string prop = PyUnicodeToString(prop_obj);
@@ -1540,13 +1414,13 @@ PyObject* _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj)
         case libnormaliz::ConeProperty::IntegerHull: {
             Cone< Integer >* hull =
                 new Cone< Integer >(C->getIntegerHullCone());
-            return pack_cone(hull);
+            return pack_cone(hull, nf);
         }
 
         case libnormaliz::ConeProperty::ProjectCone: {
             Cone< Integer >* projection =
                 new Cone< Integer >(C->getProjectCone());
-            return pack_cone(projection);
+            return pack_cone(projection, nf);
         }
 
         case libnormaliz::ConeProperty::HilbertQuasiPolynomial:
@@ -1640,7 +1514,9 @@ PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
 #ifdef ENFNORMALIZ
     else {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
-        result = _NmzResultImpl(cone_ptr, prop, get_cone_renf_renf(cone));
+        result = _NmzResultImpl(
+            cone_ptr, prop,
+            reinterpret_cast< void* >(get_cone_renf_renf(cone)));
     }
 #endif
 
