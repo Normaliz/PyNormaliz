@@ -12,6 +12,8 @@ addons:
       - autoconf
       - automake
       - libtool
+      - python-pip
+      - python3-pip
 env:
   - PYTHON="python2"
     PIP="pip2"
