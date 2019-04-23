@@ -1162,7 +1162,7 @@ PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
 
     // Cone.compute returns the not computed properties
     // we return a bool, true when everything requested was computed
-    return notComputed.none() ? Py_True : Py_False;
+    return notComputed.goals().none() ? Py_True : Py_False;
     FUNC_END
 }
 
