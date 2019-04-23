@@ -9,6 +9,7 @@ Segfault reported in https://github.com/Normaliz/PyNormaliz/issues/23
 >>> cube2 = NmzCone(vertices=V)
 >>> NmzResult(cube2, "SupportHyperplanes") == [[-1, 0, 1], [0, -1, 1], [0, 1, 1], [1, 0, 1]]
 True
->>> NmzResult(cube2, "Volume") == [[8, 1]]
+>>> NmzResult(cube2, "Volume") == [[8,1]]
 True
->>> cube1.Triangulation()
+>>> len(cube1.Triangulation()) == 8
+True
