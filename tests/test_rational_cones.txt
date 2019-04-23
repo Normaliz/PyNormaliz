@@ -35,7 +35,8 @@ True
 True
 >>> abs(NmzResult(cube2, "EuclideanVolume") - 4) < 0.000001
 True
->>> cube1.Triangulation()
+>>> len(cube1.Triangulation()) == 8
+True
 
 A cube in a subspace
 
