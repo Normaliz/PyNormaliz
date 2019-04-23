@@ -9,6 +9,7 @@ import os
 import glob
 import doctest
 
+# run doctests
 attempted = failed = 0
 for filename in os.listdir(os.curdir):
     if filename.endswith('.txt'):
@@ -23,5 +24,10 @@ for filename in os.listdir(os.curdir):
         failed += result[0]
         attempted += result[1]
 
+
+# unit tests
+import generic_test
+
+generic_test.Test1(verbose=False).run(repeat=100)
 
 sys.exit(failed)
