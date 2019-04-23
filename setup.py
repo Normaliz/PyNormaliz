@@ -7,7 +7,14 @@ import os
 try:
     normaliz_dir = os.environ["NORMALIZ_LOCAL_DIR"]
 except KeyError:
-    normaliz_dir = "/usr/local"
+    extra_kwds = {}
+else:
+    extra_kwds = {
+      "include_dirs": [ normaliz_dir + '/include'],
+      "library_dirs": [ normaliz_dir + '/lib'],
+      "runtime_library_dirs": [ normaliz_dir + '/lib'],
+      "extra_link_args": ['-Wl,-R' + normaliz_dir + '/lib' ]
+    }
 
 
 if sys.version_info < (3,5):
@@ -25,13 +32,10 @@ setup(
     py_modules = [ "PyNormaliz" ],
     ext_modules = [ Extension( "PyNormaliz_cpp",
                               [ "NormalizModule.cpp" ],
-                              include_dirs=[ normaliz_dir + '/include'],
-                              library_dirs=[ normaliz_dir + '/lib'],
                               libraries=[ 'arb', 'normaliz', 'gmp', 'flint', 'eanticxx' ],
-                              runtime_library_dirs=[ normaliz_dir + '/lib'],
-                              extra_link_args=['-Wl,-R' + normaliz_dir + '/lib' ],
                               extra_compile_args=['-std=c++11'],
-                              define_macros = macro_list ) ],
+                              define_macros = macro_list,
+                              **extra_kwds) ],
     
     package_data = {'': [ "COPYING", "GPLv2", "Readme.md" ] },
 )
