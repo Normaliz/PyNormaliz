@@ -1921,6 +1921,21 @@ PyObject* NmzSetNumberOfNormalizThreads(PyObject* self, PyObject* args)
 
 /***************************************************************************
  *
+ * Check for ENFNormaliz
+ *
+ ***************************************************************************/
+
+PyObject* NmzHasEAntic(PyObject* self)
+{
+#ifdef ENFNORMALIZ
+    return Py_True;
+#else
+    return Py_False;
+#endif
+}
+
+/***************************************************************************
+ *
  * Python init stuff
  *
  ***************************************************************************/
@@ -1980,6 +1995,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
     {"NmzGetWeightedEhrhartSeriesExpansion",
      (PyCFunction)NmzGetWeightedEhrhartSeriesExpansion, METH_VARARGS,
      "Returns expansion of the weighted Ehrhart series"},
+    {"NmzHasEAntic", (PyCFunction)NmzHasEAntic, METH_NOARGS,
+     "Returns true if (Py)Normaliz was compiled with e-antic support"},
     {
         NULL,
     } /* Sentinel */
