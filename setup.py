@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from distutils.core import setup, Extension
+from distutils.cmd import Command
+
 import sys
 import os
 
@@ -22,6 +24,30 @@ if sys.version_info < (3,5):
 else:
     macro_list = [ ( "ENFNORMALIZ", "1" ) ]
 
+class TestCommand(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        import subprocess
+
+        old_path = os.getcwd()
+        setup_path = os.path.dirname(__file__)
+        tests_path = os.path.join(setup_path, 'tests')
+        try:
+            os.chdir(tests_path)
+
+            if subprocess.call([sys.executable, 'runtests.py']):
+                raise SystemExit("Doctest failures")
+
+        finally:
+            os.chdir(old_path)
+
 setup(
     name = 'PyNormaliz',
     version = '2.0',
@@ -38,4 +64,5 @@ setup(
                               **extra_kwds) ],
     
     package_data = {'': [ "COPYING", "GPLv2", "Readme.md" ] },
+    cmdclass = {'test': TestCommand},
 )
