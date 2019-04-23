@@ -1,0 +1,12 @@
+Test segfault 27
+================
+
+Segfault reported in https://github.com/Normaliz/PyNormaliz/issues/27
+
+>>> import PyNormaliz
+>>> nf = [ "a4-5a2+5", "a", "1.9021+/-0.01" ]
+>>> C = PyNormaliz.NmzCone(number_field=nf, cone=[[[1],[0,1]],[[1],[-1]]])
+>>> PyNormaliz.NmzResult(C, "ExtremeRays") == [[[[0,5], [5,5], [0,5],[-1,5],[0,5]],
+...  [[1,1], [0,1], [0,1],[0,1],[0,1]]], [[[1,1], [0,1], [0,1],[0,1],[0,1]],
+...  [[-1,1], [0,1], [0,1],[0,1],[0,1]]]]
+True
