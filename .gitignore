@@ -5,5 +5,5 @@ build
 PyNormaliz.so
 dist
 MANIFEST
-PyNormaliz.pyc
+*.pyc
 compile.sh
