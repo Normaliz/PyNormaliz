@@ -220,6 +220,21 @@ bool PyNumberToNmz(PyObject* in, mpq_class& out)
         out.swap(temp);
         return true;
     }
+#if PY_MAJOR_VERSION < 3
+    if (PyInt_Check(in)) {
+        out = PyInt_AsLong(in);
+        return true;
+    }
+#endif
+    if (PyLong_Check(in)) {
+        mpz_class out_tmp;
+        bool      check = PyNumberToNmz(in, out_tmp);
+        if (!check) {
+            return false;
+        }
+        out = mpq_class(out_tmp);
+        return true;
+    }
     if (PyList_Check(in)) {
         PyObject* py_num = PyList_GetItem(in, 0);
         PyObject* py_denom = PyList_GetItem(in, 1);
@@ -244,6 +259,12 @@ bool PyNumberToNmz(PyObject* in, mpq_class& out)
 
 bool PyNumberToNmz(PyObject* in, mpz_class& out)
 {
+#if PY_MAJOR_VERSION < 3
+    if (PyInt_Check(in)) {
+        out = PyInt_AsLong(in);
+        return true;
+    }
+#endif
     if (!PyLong_Check(in)) {
         return false;
     }
@@ -792,7 +813,7 @@ static PyObject* NmzListConeProperties(PyObject* args)
 template < typename Integer >
 static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
 {
-    map< InputType, vector< vector< Integer > > > input;
+    map< InputType, vector< vector< mpq_class > > > input;
 
     PyObject* input_list;
 
@@ -838,7 +859,7 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
         PyObject* M = PyTuple_GetItem(input_list, i + 1);
         if (M == Py_None)
             continue;
-        vector< vector< Integer > > Mat;
+        vector< vector< mpq_class > > Mat;
         bool                        okay = PyInputToNmz(Mat, M);
         if (!okay) {
             PyErr_SetString(PyNormaliz_cppError,
@@ -866,7 +887,7 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
                 grading_polynomial = true;
                 continue;
             }
-            vector< vector< Integer > > Mat;
+            vector< vector< mpq_class > > Mat;
             bool okay = PyInputToNmz(Mat, current_value);
             if (!okay) {
                 PyErr_SetString(PyNormaliz_cppError,
