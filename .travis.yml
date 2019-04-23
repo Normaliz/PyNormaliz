@@ -14,6 +14,7 @@ addons:
       - libtool
       - python-pip
       - python3-pip
+      - python3-setuptools
 env:
   - PYTHON="python2"
     PIP="pip2"
@@ -50,11 +51,4 @@ install:
   - sudo $PIP install -v .
 script:
   - export OMP_NUM_THREADS=4
-  # run examples
-  - cd examples
-  - sh runexamples.sh
-  - cd ..
-  # run doctests
-  - cd tests
-  - $PYTHON runtests.py
-  - cd ..
+  - $PYTHON setup.py test
