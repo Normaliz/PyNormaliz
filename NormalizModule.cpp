@@ -235,9 +235,9 @@ bool PyNumberToNmz(PyObject* in, mpq_class& out)
         out = mpq_class(out_tmp);
         return true;
     }
-    if (PyList_Check(in)) {
-        PyObject* py_num = PyList_GetItem(in, 0);
-        PyObject* py_denom = PyList_GetItem(in, 1);
+    if (PySequence_Check(in)) {
+        PyObject* py_num = PySequence_GetItem(in, 0);
+        PyObject* py_denom = PySequence_GetItem(in, 1);
         mpz_class num;
         if (!PyNumberToNmz(py_num, num)) {
             return false;
@@ -368,12 +368,12 @@ PyObject* NmzToPyNumber(renf_elem_class in)
 template < typename Integer >
 static bool PyListToNmz(vector< Integer >& out, PyObject* in)
 {
-    if (!PyList_Check(in))
+    if (!PySequence_Check(in))
         return false;
-    const int n = PyList_Size(in);
+    const int n = PySequence_Size(in);
     out.resize(n);
     for (int i = 0; i < n; ++i) {
-        PyObject* tmp = PyList_GetItem(in, i);
+        PyObject* tmp = PySequence_GetItem(in, i);
         if (!PyNumberToNmz(tmp, out[i]))
             return false;
     }
@@ -383,12 +383,12 @@ static bool PyListToNmz(vector< Integer >& out, PyObject* in)
 template < typename Integer >
 static bool PyIntMatrixToNmz(vector< vector< Integer > >& out, PyObject* in)
 {
-    if (!PyList_Check(in))
+    if (!PySequence_Check(in))
         return false;
-    const int nr = PyList_Size(in);
+    const int nr = PySequence_Size(in);
     out.resize(nr);
     for (int i = 0; i < nr; ++i) {
-        bool okay = PyListToNmz(out[i], PyList_GetItem(in, i));
+        bool okay = PyListToNmz(out[i], PySequence_GetItem(in, i));
         if (!okay)
             return false;
     }
@@ -401,18 +401,18 @@ bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
                       PyObject*                            in,
                       NumberField*                         nf)
 {
-    if (!PyList_Check(in))
+    if (!PySequence_Check(in))
         return false;
-    const int nr = PyList_Size(in);
+    const int nr = PySequence_Size(in);
     out.resize(nr);
     for (int i = 0; i < nr; ++i) {
-        PyObject* current_row = PyList_GetItem(in, i);
-        int       current_length = PyList_Size(current_row);
+        PyObject* current_row = PySequence_GetItem(in, i);
+        int       current_length = PySequence_Size(current_row);
         for (int j = 0; j < current_length; j++) {
-            PyObject*       current_element = PyList_GetItem(current_row, j);
+            PyObject*       current_element = PySequence_GetItem(current_row, j);
             bool            current_res;
             NumberFieldElem current_elem;
-            if (PyList_Check(current_element)) {
+            if (PySequence_Check(current_element)) {
                 vector< mpq_class > current_vector;
                 current_res = PyListToNmz(current_vector, current_element);
                 if (!current_res) {
@@ -424,8 +424,7 @@ bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
                 current_elem = NumberFieldElem(*nf);
                 current_elem = PyUnicodeToString(current_element);
             }
-            if (PyLong_Check(current_element) ||
-                PyInt_Check(current_element)) {
+            if (PyLong_Check(current_element) ){
                 mpq_class tmp;
                 current_res = PyNumberToNmz(current_element, tmp);
                 if (!current_res) {
@@ -433,6 +432,11 @@ bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
                 }
                 current_elem = tmp;
             }
+#if PY_MAJOR_VERSION < 3
+            if( PyInt_Check(current_element)){
+                current_elem = PyInt_AsLong(current_element);
+            }
+#endif
             out[i].push_back(current_elem);
         }
     }
@@ -831,7 +835,7 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
 
     if (PyTuple_Size(args) == 1) {
         input_list = PyTuple_GetItem(args, 0);
-        if (!PyList_Check(input_list)) {
+        if (!PySequence_Check(input_list)) {
             PyErr_SetString(PyNormaliz_cppError,
                             "Single argument must be a list");
             return NULL;
@@ -882,13 +886,13 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
     if (kwargs != NULL) {
         PyObject* keys = PyDict_Keys(kwargs);
         PyObject* values = PyDict_Values(kwargs);
-        const int length = PyList_Size(keys);
+        const int length = PySequence_Size(keys);
         for (int i = 0; i < length; i++) {
-            string type_string = PyUnicodeToString(PyList_GetItem(keys, i));
+            string type_string = PyUnicodeToString(PySequence_GetItem(keys, i));
             if (type_string == "CreateAsLongLong") {
                 continue;
             }
-            PyObject* current_value = PyList_GetItem(values, i);
+            PyObject* current_value = PySequence_GetItem(values, i);
             if (current_value == Py_None)
                 continue;
             if (type_string.compare("polynomial") == 0) {
@@ -929,12 +933,12 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
         PyErr_SetString(PyNormaliz_cppError, "no number field data given");
         return NULL;
     }
-    if (!PyList_CheckExact(number_field_data)) {
+    if (!PySequence_Check(number_field_data)) {
         PyErr_SetString(PyNormaliz_cppError,
                         "number field data must be a list");
         return NULL;
     }
-    if (PyList_Size(number_field_data) != 3) {
+    if (PySequence_Size(number_field_data) != 3) {
         PyErr_SetString(
             PyNormaliz_cppError,
             "number field data must be a list with three entries");
@@ -945,9 +949,9 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
     renf_class* renf;
     // number_field_data contains 4 entries: poly, var, emb
     // All are strings
-    string poly = PyUnicodeToString(PyList_GetItem(number_field_data, 0));
-    string var = PyUnicodeToString(PyList_GetItem(number_field_data, 1));
-    string emb = PyUnicodeToString(PyList_GetItem(number_field_data, 2));
+    string poly = PyUnicodeToString(PySequence_GetItem(number_field_data, 0));
+    string var = PyUnicodeToString(PySequence_GetItem(number_field_data, 1));
+    string emb = PyUnicodeToString(PySequence_GetItem(number_field_data, 2));
     renf = new renf_class(poly.c_str(), var.c_str(), emb.c_str());
 
     map< InputType, vector< vector< renf_elem_class > > > input;
@@ -959,12 +963,12 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
     if (kwargs != NULL) {
         PyObject* keys = PyDict_Keys(kwargs);
         PyObject* values = PyDict_Values(kwargs);
-        const int length = PyList_Size(keys);
+        const int length = PySequence_Size(keys);
         for (int i = 0; i < length; i++) {
-            string type_string = PyUnicodeToString(PyList_GetItem(keys, i));
+            string type_string = PyUnicodeToString(PySequence_GetItem(keys, i));
             if (type_string == "number_field")
                 continue;
-            PyObject* current_value = PyList_GetItem(values, i);
+            PyObject* current_value = PySequence_GetItem(values, i);
             if (current_value == Py_None)
                 continue;
             vector< vector< renf_elem_class > > Mat;
@@ -1145,7 +1149,7 @@ PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
 
     if (arg_len == 2) {
         PyObject* first_arg = PyTuple_GetItem(args, 1);
-        if (PyList_CheckExact(first_arg)) {
+        if (PySequence_Check(first_arg)) {
             to_compute = first_arg;
         }
         else {
@@ -1166,10 +1170,10 @@ PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
     }
 
     ConeProperties propsToCompute;
-    const int      n = PyList_Size(to_compute);
+    const int      n = PySequence_Size(to_compute);
 
     for (int i = 0; i < n; ++i) {
-        PyObject* prop = PyList_GetItem(to_compute, i);
+        PyObject* prop = PySequence_GetItem(to_compute, i);
         if (!string_check(prop)) {
             PyErr_SetString(PyNormaliz_cppError,
                             "All elements must be strings");
