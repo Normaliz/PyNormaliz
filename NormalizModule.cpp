@@ -775,7 +775,7 @@ static PyObject* NmzListConeProperties(PyObject* args)
 template < typename Integer >
 static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
 {
-    map< InputType, vector< vector< mpq_class > > > input;
+    map< InputType, vector< vector< Integer > > > input;
 
     PyObject* input_list;
 
@@ -821,8 +821,8 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
         PyObject* M = PyTuple_GetItem(input_list, i + 1);
         if (M == Py_None)
             continue;
-        vector< vector< mpq_class > > Mat;
-        bool                          okay = PyInputToNmz(Mat, M);
+        vector< vector< Integer > > Mat;
+        bool                        okay = PyInputToNmz(Mat, M);
         if (!okay) {
             PyErr_SetString(PyNormaliz_cppError,
                             "Even entries must be matrices");
@@ -838,6 +838,9 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
         const int length = PyList_Size(keys);
         for (int i = 0; i < length; i++) {
             string type_string = PyUnicodeToString(PyList_GetItem(keys, i));
+            if (type_string == "CreateAsLongLong") {
+                continue;
+            }
             PyObject* current_value = PyList_GetItem(values, i);
             if (current_value == Py_None)
                 continue;
@@ -846,7 +849,7 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
                 grading_polynomial = true;
                 continue;
             }
-            vector< vector< mpq_class > > Mat;
+            vector< vector< Integer > > Mat;
             bool okay = PyInputToNmz(Mat, current_value);
             if (!okay) {
                 PyErr_SetString(PyNormaliz_cppError,
@@ -945,7 +948,6 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
 
     if (kwargs != NULL && PyDict_Contains(kwargs, create_as_long_long) == 1) {
         create_as_long_long = PyDict_GetItem(kwargs, create_as_long_long);
-        PyDict_DelItem(kwargs, create_as_long_long);
         if (create_as_long_long == Py_True) {
             return _NmzConeIntern< long long >(args, kwargs);
         }
