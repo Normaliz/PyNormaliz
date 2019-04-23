@@ -90,15 +90,20 @@ static PyObject*   PyNormaliz_cppError;
 static const char* cone_name = "Cone";
 static const char* cone_name_long = "Cone<long long>";
 static const char* cone_name_renf = "Cone<renf_elem>";
-static string      cone_name_str(cone_name);
-static string      cone_name_str_long(cone_name_long);
-static string      cone_name_str_renf(cone_name_renf);
+
+static string cone_name_str(cone_name);
+static string cone_name_str_long(cone_name_long);
+static string cone_name_str_renf(cone_name_renf);
 
 
 static PyOS_sighandler_t current_interpreter_sigint_handler;
 
 static PyObject* RationalHandler = NULL;
+
+#ifdef ENFNORMALIZ
 static PyObject* NumberfieldElementHandler = NULL;
+#endif
+
 static PyObject* VectorHandler = NULL;
 static PyObject* MatrixHandler = NULL;
 
@@ -151,11 +156,11 @@ PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg)
 #ifndef NMZ_RELEASE
 static_assert(
     false,
-    "Your Normaliz version (unknown) is to old! Update to 3.6.1 or newer.");
+    "Your Normaliz version (unknown) is to old! Update to 3.7.0 or newer.");
 #endif
-#if NMZ_RELEASE < 30601
+#if NMZ_RELEASE < 30700
 static_assert(false,
-              "Your Normaliz version is to old! Update to 3.6.1 or newer.");
+              "Your Normaliz version is to old! Update to 3.7.0 or newer.");
 #endif
 
 /***************************************************************************
@@ -317,6 +322,7 @@ template < typename Integer >
 PyObject* NmzVectorToPyList(const vector< Integer >& in,
                             bool                     do_callback = true);
 
+#ifdef ENFNORMALIZ
 PyObject* NmzToPyNumber(renf_elem_class in)
 {
     vector< mpz_class > output_nums = in.get_num_vector();
@@ -336,6 +342,7 @@ PyObject* NmzToPyNumber(renf_elem_class in)
             CallPythonFuncOnOneArg(NumberfieldElementHandler, out_list);
     return out_list;
 }
+#endif
 
 template < typename Integer >
 static bool PyListToNmz(vector< Integer >& out, PyObject* in)
@@ -367,6 +374,7 @@ static bool PyIntMatrixToNmz(vector< vector< Integer > >& out, PyObject* in)
     return true;
 }
 
+#ifdef ENFNORMALIZ
 template < typename NumberField, typename NumberFieldElem >
 bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
                       PyObject*                            in,
@@ -401,6 +409,7 @@ bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
 
     return true;
 }
+#endif
 
 template < typename Integer >
 static bool PyInputToNmz(vector< vector< Integer > >& out, PyObject* in)
@@ -605,10 +614,12 @@ static PyObject* _NmzBasisChangeIntern(Cone< Integer >* C)
  *
  ***************************************************************************/
 
+#ifdef ENFNORMALIZ
 struct NumberFieldCone {
     renf_class*              nf;
     Cone< renf_elem_class >* cone;
 };
+#endif
 
 void delete_cone_mpz(PyObject* cone)
 {
@@ -624,6 +635,7 @@ void delete_cone_long(PyObject* cone)
     delete cone_ptr;
 }
 
+#ifdef ENFNORMALIZ
 void delete_cone_renf(PyObject* cone)
 {
     NumberFieldCone* cone_ptr = reinterpret_cast< NumberFieldCone* >(
@@ -631,6 +643,7 @@ void delete_cone_renf(PyObject* cone)
     delete cone_ptr->cone;
     // delete cone_ptr->nf;
 }
+#endif
 
 Cone< long long >* get_cone_long(PyObject* cone)
 {
@@ -644,6 +657,7 @@ Cone< mpz_class >* get_cone_mpz(PyObject* cone)
         PyCapsule_GetPointer(cone, cone_name));
 }
 
+#ifdef ENFNORMALIZ
 Cone< renf_elem_class >* get_cone_renf(PyObject* cone)
 {
     NumberFieldCone* cone_ptr = reinterpret_cast< NumberFieldCone* >(
@@ -657,6 +671,7 @@ renf_class* get_cone_renf_renf(PyObject* cone)
         PyCapsule_GetPointer(cone, cone_name_renf));
     return cone_ptr->nf;
 }
+#endif
 
 PyObject* pack_cone(Cone< mpz_class >* C)
 {
@@ -670,6 +685,7 @@ PyObject* pack_cone(Cone< long long >* C)
                          &delete_cone_long);
 }
 
+#ifdef ENFNORMALIZ
 PyObject* pack_cone(Cone< renf_elem_class >* C, renf_class* nf)
 {
     NumberFieldCone* cone_ptr = new NumberFieldCone();
@@ -685,6 +701,7 @@ PyObject* pack_cone(Cone< renf_elem_class >* C)
                     "Trying to pack renf cone without number field");
     return NULL;
 }
+#endif
 
 bool is_cone(PyObject* cone)
 {
@@ -871,6 +888,7 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
     return return_container;
 }
 
+#ifdef ENFNORMALIZ
 static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
 {
 
@@ -924,6 +942,7 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
     return return_container;
     FUNC_END
 }
+#endif
 
 /*
 @Name NmzCone
@@ -952,9 +971,11 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
             return _NmzConeIntern< long long >(args, kwargs);
         }
     }
+#ifdef ENFNORMALIZ
     else if (kwargs != NULL && PyDict_Contains(kwargs, create_as_renf) == 1) {
         return _NmzConeIntern_renf(args, kwargs);
     }
+#endif
     return _NmzConeIntern< mpz_class >(args, kwargs);
     FUNC_END
 }
@@ -986,12 +1007,14 @@ PyObject* _NmzConeCopy(PyObject* self, PyObject* args)
         Cone< long long >* new_cone = new Cone< long long >(*cone_ptr);
         return pack_cone(new_cone);
     }
+#ifdef ENFNORMALIZ
     else {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         Cone< renf_elem_class >* new_cone =
             new Cone< renf_elem_class >(*cone_ptr);
         return pack_cone(new_cone, get_cone_renf_renf(cone));
     }
+#endif
     FUNC_END
 }
 
@@ -1147,10 +1170,12 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
         Cone< long long >* cone_ptr = get_cone_long(cone);
         result = _NmzCompute(cone_ptr, args);
     }
+#ifdef ENFNORMALIZ
     else {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         result = _NmzCompute(cone_ptr, args);
     }
+#endif
 
     PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
 
@@ -1204,10 +1229,12 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
         Cone< long long >* cone_ptr = get_cone_long(cone);
         return NmzIsComputed(cone_ptr, to_compute);
     }
+#ifdef ENFNORMALIZ
     else {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         return NmzIsComputed(cone_ptr, to_compute);
     }
+#endif
 
     FUNC_END
 }
@@ -1283,6 +1310,7 @@ second is the projection third is the annihilator.
 2-tuples. First entry in the tuple is the key, second the decomposition data.
 */
 
+#ifdef ENFNORMALIZ
 PyObject* _NmzResultImpl(Cone< renf_elem_class >* C, PyObject* prop_obj)
 {
 
@@ -1371,6 +1399,7 @@ PyObject* _NmzResultImpl(Cone< renf_elem_class >* C, PyObject* prop_obj)
 
     FUNC_END
 }
+#endif
 
 template < typename Integer >
 PyObject* _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj)
@@ -1521,8 +1550,10 @@ PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
 
     if (kwargs) {
         RationalHandler = PyDict_GetItemString(kwargs, "RationalHandler");
+#ifdef ENFNORMALIZ
         NumberfieldElementHandler =
             PyDict_GetItemString(kwargs, "NumberfieldElementHandler");
+#endif
         VectorHandler = PyDict_GetItemString(kwargs, "VectorHandler");
         MatrixHandler = PyDict_GetItemString(kwargs, "MatrixHandler");
     }
@@ -1537,13 +1568,17 @@ PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
         Cone< long long >* cone_ptr = get_cone_long(cone);
         result = _NmzResultImpl(cone_ptr, prop);
     }
+#ifdef ENFNORMALIZ
     else {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         result = _NmzResultImpl(cone_ptr, prop);
     }
+#endif
 
     RationalHandler = NULL;
+#ifdef ENFNORMALIZ
     NumberfieldElementHandler = NULL;
+#endif
     VectorHandler = NULL;
     MatrixHandler = NULL;
 
@@ -1607,10 +1642,12 @@ PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
         Cone< long long >* cone_ptr = get_cone_long(cone);
         return NmzSetVerbose(cone_ptr, value);
     }
+#ifdef ENFNORMALIZ
     else {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         return NmzSetVerbose(cone_ptr, value);
     }
+#endif
 
     FUNC_END
 }
