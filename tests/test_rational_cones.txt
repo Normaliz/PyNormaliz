@@ -31,11 +31,35 @@ True
 True
 >>> cube1.Volume() == NmzResult(cube2, "Volume") == [[8, 1]]
 True
+>>> cube1.IsPointed() == NmzResult(cube2, "IsPointed") == True
+True
+>>> cube1.EmbeddingDim() == NmzResult(cube2, "EmbeddingDim") == 3
+True
+>>> cube1.IsIntegrallyClosed()
+Traceback (most recent call last):
+...
+error: ...
+>>> NmzResult(cube2, "IsIntegrallyClosed")
+Traceback (most recent call last):
+...
+error: ...
 >>> abs(cube1.EuclideanVolume() - 4) < 0.000001
 True
 >>> abs(NmzResult(cube2, "EuclideanVolume") - 4) < 0.000001
 True
->>> len(cube1.Triangulation()) == 8
+>>> len(cube1.Triangulation()) ==  len(NmzResult(cube2, "Triangulation")) == 8
+True
+>>> int_pts = [[-1,-1,1],[-1,0,1],[-1,1,1],[0,-1,1],[0,0,1],[0,1,1],[1,-1,1],[1,0,1],[1,1,1]]
+>>> cube1.ModuleGenerators() == NmzResult(cube2, "ModuleGenerators") == int_pts
+True
+>>> cube1.Rank() == NmzResult(cube2, "Rank") == 3
+True
+>>> cube1.ModuleRank() == NmzResult(cube2, "ModuleRank") == 9
+True
+>>> sublattice = [[[1,0,0],[0,1,0],[0,0,1]],[[1,0,0],[0,1,0],[0,0,1]],1]
+>>> cube1.Sublattice() == NmzResult(cube2, "Sublattice") == sublattice
+True
+>>> cube1.TriangulationSize() == NmzResult(cube2, "TriangulationSize") == 8
 True
 
 A cube in a subspace
@@ -58,6 +82,8 @@ True
 True
 >>> abs(PyNormaliz.NmzResult(cube, "EuclideanVolume") - 4) < 0.000001
 True
+>>> len(PyNormaliz.NmzResult(cube, "ModuleGenerators")) == 9
+True
 
 A linear subspace
 
@@ -75,6 +101,8 @@ True
 Traceback (most recent call last):
 ...
 error: Could not compute: ...
+>>> len(PyNormaliz.NmzResult(lin, "ModuleGenerators"))
+0
 
 An examples with rays and vertices
 
@@ -98,4 +126,5 @@ True
 Traceback (most recent call last):
 ...
 error: Could not compute: ...
-
+>>> len(PyNormaliz.NmzResult(cone, "ModuleGenerators"))
+3
