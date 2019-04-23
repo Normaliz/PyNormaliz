@@ -424,6 +424,15 @@ bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
                 current_elem = NumberFieldElem(*nf);
                 current_elem = PyUnicodeToString(current_element);
             }
+            if (PyLong_Check(current_element) ||
+                PyInt_Check(current_element)) {
+                mpq_class tmp;
+                current_res = PyNumberToNmz(current_element, tmp);
+                if (!current_res) {
+                    return false;
+                }
+                current_elem = tmp;
+            }
             out[i].push_back(current_elem);
         }
     }
