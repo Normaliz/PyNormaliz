@@ -1425,9 +1425,11 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
 
         case libnormaliz::ConeProperty::HilbertQuasiPolynomial:
             return NmzHilbertQuasiPolynomialToPyList< mpz_class >(
-                C->getHilbertSeries());    // FIXME: Why is this return value
-                                           // not parametrized, but mpz_class
-                                           // only?
+                C->getHilbertSeries());
+
+        case libnormaliz::ConeProperty::EhrhartQuasiPolynomial:
+            return NmzHilbertQuasiPolynomialToPyList< mpz_class >(
+                C->getEhrhartSeries());
 
         case libnormaliz::ConeProperty::WeightedEhrhartQuasiPolynomial:
             return NmzWeightedEhrhartQuasiPolynomialToPyList< mpz_class >(
