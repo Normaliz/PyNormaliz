@@ -920,6 +920,18 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
         PyErr_SetString(PyNormaliz_cppError, "no number field data given");
         return NULL;
     }
+    if (!PyList_CheckExact(number_field_data)) {
+        PyErr_SetString(PyNormaliz_cppError,
+                        "number field data must be a list");
+        return NULL;
+    }
+    if (PyList_Size(number_field_data) != 3) {
+        PyErr_SetString(
+            PyNormaliz_cppError,
+            "number field data must be a list with three entries");
+        return NULL;
+    }
+
 
     renf_class* renf;
     // number_field_data contains 4 entries: poly, var, emb
@@ -1412,9 +1424,7 @@ PyObject* _NmzResultImpl(Cone< renf_elem_class >* C, PyObject* prop_obj, renf_cl
 
         case libnormaliz::ConeProperty::HilbertQuasiPolynomial:
             return NmzHilbertQuasiPolynomialToPyList< mpz_class >(
-                C->getHilbertSeries());    // FIXME: Why is this return value
-                                           // not parametrized, but mpz_class
-                                           // only?
+                C->getHilbertSeries());
 
         case libnormaliz::ConeProperty::WeightedEhrhartQuasiPolynomial:
             return NmzWeightedEhrhartQuasiPolynomialToPyList< mpz_class >(
