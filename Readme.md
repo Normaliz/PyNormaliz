@@ -5,14 +5,13 @@
 
 PyNormaliz provides an interface to Normaliz (https://www.normaliz.uni-osnabrueck.de) via libNormaliz. It offers the complete functionality of Normaliz, and can be used interactively from python. For a first example, see [this introduction](doc/PyNormaliz_Tutorial.ipynb) by Richard Sieg.
 
-Its sibling [PyQNormaliz](https://github.com/Normaliz/PyQNormaliz) is a python interface to QNormaliz.
 
 ## Requirements
 
 * python 2.7 or higher or python 3.4 or higher
 * Normaliz 3.2.1 Oor higher (https://github.com/Normaliz/Normaliz/releases)
 
-The source packages of the Normaliz realeases contain PyNormaliz and PyQNormaliz.
+The source packages of the Normaliz realeases contains PyNormaliz.
 
 ## Installation
 
@@ -20,7 +19,7 @@ The PyNormaliz install script assumes that you have executed the
 ```
 install_normaliz_with_qnormaliz_eantic.sh
 ```
-script. To install PyNormaliz and PyQNormaliz navigate to the Normaliz directory and type
+script. To install PyNormaliz and navigate to the Normaliz directory and type
 ```
 ./install_pynormaliz.sh --user
 ```
