@@ -19,11 +19,6 @@ else:
     }
 
 
-if sys.version_info < (3,5):
-    macro_list = [ ( "PYTHON_VERSION_OLDER_THREE_FIVE", "1" ), ( "ENFNORMALIZ", "1" ) ]
-else:
-    macro_list = [ ( "ENFNORMALIZ", "1" ) ]
-
 class TestCommand(Command):
     user_options = []
 
@@ -60,7 +55,6 @@ setup(
                               [ "NormalizModule.cpp" ],
                               libraries=[ 'arb', 'normaliz', 'gmp', 'flint', 'eanticxx' ],
                               extra_compile_args=['-std=c++11'],
-                              define_macros = macro_list,
                               **extra_kwds) ],
     
     package_data = {'': [ "COPYING", "GPLv2", "Readme.md" ] },
