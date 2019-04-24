@@ -16,39 +16,22 @@ addons:
       - python3-pip
       - python3-setuptools
 env:
-  - PYTHON="python2"
-    PIP="pip2"
-  - PYTHON="python3"
-    PIP="pip3"
+  - PY="2"
+    EANTIC="no"
+  - PY="2"
+    EANTIC="yes"
+  - PY="3"
+    EANTIC="no"
+  - PY="3"
+    EANTIC="yes"
 install:
   - export MAKE="make -j2"
-  - which gcc
-  # install arb
-  - wget https://github.com/fredrik-johansson/arb/archive/2.16.0.tar.gz
-  - tar xf 2.16.0.tar.gz
-  - cd arb-2.16.0/
-  - ./configure --prefix=/usr
-  - make
-  - sudo make install
-  - cd ..
-  # install e-antic
-  - wget http://www.labri.fr/perso/vdelecro/e-antic/e-antic-0.1.2.tar.gz
-  - tar xf e-antic-0.1.2.tar.gz 
-  - cd e-antic-0.1.2/
-  - ./configure --prefix=/usr
-  - make
-  - sudo make install
-  - cd ..
+  - export PYTHON="python${PY}"
+  - export PIPINSTALL="pip${PY} install --no-index --no-deps -v"
   # install normaliz
-  - git clone --depth=1 https://github.com/Normaliz/Normaliz
-  - cd Normaliz
-  - ./bootstrap.sh
-  - ./configure --disable-scip --disable-nmzintegrate --enable-flint --enable-enfnormaliz --prefix=/usr
-  - make
-  - sudo make install
-  - cd ..
+  - ./.travis-install-normaliz.sh
   # install pynormaliz
-  - sudo $PIP install -v .
+  - sudo $PIPINSTALL .
 script:
   - export OMP_NUM_THREADS=4
   - $PYTHON setup.py test
