@@ -7,7 +7,9 @@
 #include <Python.h>
 using namespace std;
 
+#ifdef ENFNORMALIZ
 #include <e-antic/renfxx.h>
+#endif
 
 #include <iostream>
 using std::cerr;
@@ -315,7 +317,7 @@ PyObject* NmzToPyNumber(const mpz_class in)
     return ret_val;
 }
 
-PyObject* NmzToPyList(const mpq_class in)
+PyObject* NmzToPyNumber(const mpq_class in)
 {
     PyObject* out_list = PyList_New(2);
     PyList_SetItem(out_list, 0, NmzToPyNumber(in.get_num()));
@@ -1036,8 +1038,10 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
 
     static const char* string_for_long = "CreateAsLongLong";
     PyObject* create_as_long_long = StringToPyUnicode(string_for_long);
+#ifdef ENFNORMALIZ
     static const char* string_for_renf = "number_field";
     PyObject*          create_as_renf = StringToPyUnicode(string_for_renf);
+#endif
 
     if (kwargs != NULL && PyDict_Contains(kwargs, create_as_long_long) == 1) {
         create_as_long_long = PyDict_GetItem(kwargs, create_as_long_long);
@@ -1089,6 +1093,7 @@ PyObject* _NmzConeCopy(PyObject* self, PyObject* args)
         return pack_cone(new_cone, get_cone_renf_renf(cone));
     }
 #endif
+    return Py_None;
     FUNC_END
 }
 
@@ -1229,7 +1234,7 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
 
     PyObject* cone = PyTuple_GetItem(args, 0);
 
-    PyObject* result;
+    PyObject* result = Py_None;
 
     if (!is_cone(cone)) {
         PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
@@ -1309,6 +1314,7 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
         return NmzIsComputed(cone_ptr, to_compute);
     }
 #endif
+    return Py_False;
 
     FUNC_END
 }
@@ -1544,7 +1550,7 @@ PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
         MatrixHandler = PyDict_GetItemString(kwargs, "MatrixHandler");
     }
 
-    PyObject* result;
+    PyObject* result = Py_None;
 
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
@@ -1636,6 +1642,7 @@ PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
         return NmzSetVerbose(cone_ptr, value);
     }
 #endif
+    return Py_None;
 
     FUNC_END
 }
