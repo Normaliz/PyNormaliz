@@ -355,6 +355,8 @@ PyObject* NmzToPyNumber(renf_elem_class in)
         PyList_SetItem(current, 0, NmzToPyNumber(output_nums[i]));
         Py_IncRef(denom_py);
         PyList_SetItem(current, 1, denom_py);
+        if (RationalHandler != NULL)
+            current = CallPythonFuncOnOneArg(RationalHandler, current);
         PyList_SetItem(out_list, i, current);
     }
     Py_DecRef(denom_py);
