@@ -158,7 +158,7 @@ class Test1(GenericPyNormalizTest):
     TriangulationSize = 1
     UnitGroupIndex = normaliz_error
     VerticesOfPolyhedron = [[-3,-2,-1,1], [-1,1,-1,2], [1,1,-1,1], [1,1,1,1]]
-    Volume = [[5,1]]
+    Volume = [5,1]
     WitnessNotIntegrallyClosed = normaliz_error
 
 if __name__ == '__main__':
