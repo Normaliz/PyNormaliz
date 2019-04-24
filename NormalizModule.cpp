@@ -374,7 +374,7 @@ PyObject* NmzToPyNumber(renf_elem_class in)
     mpz_class           output_den = in.get_den();
     PyObject*           denom_py = NmzToPyNumber(output_den);
     PyObject*           out_list = PyList_New(output_nums.size());
-    for (int i = 0; i < output_nums.size(); i++) {
+    for (size_t i = 0; i < output_nums.size(); i++) {
         PyObject* current = PyList_New(2);
         PyList_SetItem(current, 0, NmzToPyNumber(output_nums[i]));
         Py_IncRef(denom_py);
