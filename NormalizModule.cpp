@@ -67,6 +67,25 @@ typedef int py_size_t;
         return NULL;                                                         \
     }
 
+
+class PyNormalizInputException: public std::exception {
+private:
+    std::string message_;
+public:
+    explicit PyNormalizInputException(const std::string& message);
+    virtual const char* what() const throw() {
+        return message_.c_str();
+    }
+    std::string what_message() const throw() {
+        return message_;
+    }
+};
+
+
+PyNormalizInputException::PyNormalizInputException(const std::string& message) : message_(message) {
+
+}
+
 /***************************************************************************
  *
  * Signal handling
@@ -235,7 +254,7 @@ bool PyNumberToNmz(PyObject* in, mpq_class& out)
         out = mpq_class(out_tmp);
         return true;
     }
-    if (PySequence_Check(in)) {
+    if (PyList_CheckExact(in) || PyTuple_CheckExact(in) ) {
         PyObject* py_num = PySequence_GetItem(in, 0);
         PyObject* py_denom = PySequence_GetItem(in, 1);
         mpz_class num;
@@ -253,7 +272,10 @@ bool PyNumberToNmz(PyObject* in, mpq_class& out)
     PyObject*   in_as_string = PyObject_Str(in);
     string      s = PyUnicodeToString(in_as_string);
     const char* in_as_c_string = s.c_str();
-    out.set_str(in_as_c_string, 10);
+    int check = out.set_str(in_as_c_string, 10);
+    if(check == -1){
+        throw PyNormalizInputException("coefficient in matrix must be PyFloat, PyInt, PyLong, Sequence, must be able to be converted to a valid gmp input string");
+    }
     return true;
 }
 
@@ -266,7 +288,7 @@ bool PyNumberToNmz(PyObject* in, mpz_class& out)
     }
 #endif
     if (!PyLong_Check(in)) {
-        return false;
+        throw PyNormalizInputException("input coeff must be a PyInt or PyLong");
     }
     int  overflow;
     long input_long = PyLong_AsLongAndOverflow(in, &overflow);
@@ -308,7 +330,7 @@ bool PyNumberToNmz(PyObject* in, long long& out)
     int overflow;
     out = PyLong_AsLongLongAndOverflow(in, &overflow);
     if (overflow == -1)
-        return false;
+        throw PyNormalizInputException("Cannot store input coefficient in long long");
     return true;
 }
 
@@ -371,7 +393,7 @@ template < typename Integer >
 static bool PyListToNmz(vector< Integer >& out, PyObject* in)
 {
     if (!PySequence_Check(in))
-        return false;
+        throw PyNormalizInputException("Input list is not a sequence");
     const int n = PySequence_Size(in);
     out.resize(n);
     for (int i = 0; i < n; ++i) {
@@ -386,7 +408,7 @@ template < typename Integer >
 static bool PyIntMatrixToNmz(vector< vector< Integer > >& out, PyObject* in)
 {
     if (!PySequence_Check(in))
-        return false;
+        throw PyNormalizInputException("Input matrix is not a sequence");
     const int nr = PySequence_Size(in);
     out.resize(nr);
     for (int i = 0; i < nr; ++i) {
@@ -404,7 +426,7 @@ bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
                       NumberField*                         nf)
 {
     if (!PySequence_Check(in))
-        return false;
+        throw PyNormalizInputException("Number field data is not a list");
     const int nr = PySequence_Size(in);
     out.resize(nr);
     for (int i = 0; i < nr; ++i) {
@@ -459,7 +481,7 @@ static bool PyInputToNmz(vector< vector< Integer > >& out, PyObject* in)
     if (check_input) {
         return true;
     }
-    return false;
+    throw PyNormalizInputException("Input could not be converted to vector or list");
 }
 
 template < typename Integer >
@@ -875,10 +897,11 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
         if (M == Py_None)
             continue;
         vector< vector< mpq_class > > Mat;
-        bool                        okay = PyInputToNmz(Mat, M);
-        if (!okay) {
+        try{
+            PyInputToNmz(Mat, M);
+        } catch( PyNormalizInputException& e ){
             PyErr_SetString(PyNormaliz_cppError,
-                            "Even entries must be matrices");
+                (string("When parsing ") + type_str + ": " + e.what_message()).c_str());
             return NULL;
         }
 
@@ -903,11 +926,12 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
                 continue;
             }
             vector< vector< mpq_class > > Mat;
-            bool okay = PyInputToNmz(Mat, current_value);
-            if (!okay) {
-                PyErr_SetString(PyNormaliz_cppError,
-                                "Even entries must be matrices");
-                return NULL;
+            try{
+                PyInputToNmz(Mat, current_value);
+            } catch( PyNormalizInputException& e ){
+               PyErr_SetString(PyNormaliz_cppError,
+                (string("When parsing ") + type_string + ": " + e.what_message()).c_str());
+             return NULL;
             }
             input[libnormaliz::to_type(type_string)] = Mat;
         }
@@ -974,10 +998,12 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
             if (current_value == Py_None)
                 continue;
             vector< vector< renf_elem_class > > Mat;
-            bool okay = prepare_nf_input(Mat, current_value, renf);
-            if (!okay) {
-                PyErr_SetString(PyNormaliz_cppError, "Could not read matrix");
-                return NULL;
+            try{
+                prepare_nf_input(Mat, current_value, renf);
+            } catch( PyNormalizInputException& e ) {
+               PyErr_SetString(PyNormaliz_cppError,
+                (string("When parsing ") + type_string + ": " + e.what_message()).c_str());
+                 return NULL;
             }
             input[libnormaliz::to_type(type_string)] = Mat;
         }
@@ -2013,14 +2039,14 @@ extern "C" void initPyNormaliz_cpp(void)
     }
 
     NormalizError =
-        PyErr_NewException(const_cast< char* >("Normaliz.error"), NULL, NULL);
+        PyErr_NewException(const_cast< char* >("PyNormaliz_cpp.NormalizError"), NULL, NULL);
     Py_INCREF(NormalizError);
     PyNormaliz_cppError = PyErr_NewException(
-        const_cast< char* >("Normaliz.interface_error"), NULL, NULL);
+        const_cast< char* >("PyNormaliz_cpp.NormalizInterfaceError"), NULL, NULL);
     Py_INCREF(PyNormaliz_cppError);
 
-    PyModule_AddObject(module, "error", NormalizError);
-    PyModule_AddObject(module, "error", PyNormaliz_cppError);
+    PyModule_AddObject(module, "normaliz_error", NormalizError);
+    PyModule_AddObject(module, "pynormaliz_error", PyNormaliz_cppError);
 
     current_interpreter_sigint_handler = PyOS_getsig(SIGINT);
 
