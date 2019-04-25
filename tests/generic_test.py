@@ -16,6 +16,8 @@ import unittest
 from sys import stdout
 
 from PyNormaliz import NmzCone, NmzResult, normaliz_error
+
+from itertools import product
 from random import shuffle
 
 methods = [
@@ -64,28 +66,46 @@ postprocess = {
 }
 
 class GenericPyNormalizTest:
-    def __init__(self, verbose=True):
-        self.verbose = verbose
+    def __init__(self, verbosity=1):
+        self.verbosity = verbosity
+
+    def expected_answers(self):
+        ans = {}
+        for meth in methods:
+            try:
+                obj = getattr(self, meth)
+            except AttributeError:
+                continue
+            else:
+                ans[meth] = obj
+        return ans
 
     def run(self, repeat=1):
+        tested = failed = 0
+        if self.verbosity >= 1:
+            print("Unittest {} ({} repetitions)".format(self, repeat))
+
+        ans = self.expected_answers()
+        def_methods = sorted(ans.keys())
+
+        if self.verbosity >= 2:
+            undef_methods = sorted(set(methods).difference(def_methods))
+            print("Testing: {}".format(", ".join(meth for meth in def_methods)))
+            print("Skipping: {}".format(", ".join(meth for meth in undef_methods)))
 
         for i in range(repeat):
-            if self.verbose:
+            if self.verbosity >= 3:
                 print("*"*80)
                 print("{} run {}".format(self, i))
                 stdout.flush()
             polytope = NmzCone(**self.init_data)
 
-            shuffle(methods)
-            for meth in methods:
-                try:
-                    obj = getattr(self, meth)
-                except AttributeError:
-                    print("Skipping unspecified {}".format(meth))
-                    stdout.flush()
-                    continue
+            shuffle(def_methods)
+            for meth in def_methods:
+                tested += 1
 
-                if self.verbose:
+                obj = ans[meth] 
+                if self.verbosity >= 3:
                     print("Testing {}... ".format(meth), end='')
                     stdout.flush()
 
@@ -95,15 +115,17 @@ class GenericPyNormalizTest:
                     try:
                         NmzResult(polytope, meth)
                     except obj:
-                        if self.verbose:
+                        if self.verbosity >= 3:
                             print("pass")
                             stdout.flush()
                         continue
                     except Exception as obj2:
-                        if self.verbose:
-                            print("failed")
-                            stdout.flush()
-                        raise ValueError("got {} instead of {}".format(obj2, obj))
+                        print("*"*50)
+                        print("Unittest {}, failure {}".format(self, meth))
+                        print("{}: got {} instead of {}".format(meth, obj2, obj))
+                        print("*"*50)
+                        stdout.flush()
+                        failed += 1
 
                 # otherwise we just check equality of results
                 # (possibly after some postprocessing)
@@ -115,11 +137,13 @@ class GenericPyNormalizTest:
                         obj2 = post(obj2)
 
                     if obj != obj2:
-                        if self.verbose:
-                            print("failed")
-                            stdout.flush()
-                        raise ValueError("got {} instead of {}".format(obj2, obj))
-                    elif self.verbose:
+                        print("*"*50)
+                        print("Unittest {}, failure {}".format(self, meth))
+                        print("{}: got {} instead of {}".format(meth, obj2, obj))
+                        print("*"*50)
+                        stdout.flush()
+                        failed += 1
+                    elif self.verbosity >= 3:
                         print("pass")
                         stdout.flush()
 
@@ -161,5 +185,95 @@ class Test1(GenericPyNormalizTest):
     Volume = [5,1]
     WitnessNotIntegrallyClosed = normaliz_error
 
+class Test2(GenericPyNormalizTest):
+    "A cube in a subspace"
+
+    init_data = {"vertices": list((2,) + p+(-2,1,) for p in product([-1,0,1],repeat=2))}
+
+    # expected results
+    AffineDim = 2
+    Congruences = []
+    Dehomogenization = normaliz_error
+    EmbeddingDim = 5
+    EhrhartQuasiPolynomial = [[1,4,4],1]
+    Equations = [[1,0,0,0,-2],[0,0,0,1,2]]
+    ExcludedFaces = normaliz_error
+    ExternalIndex = 1
+    ExtremeRays = []
+    GeneratorOfInterior = normaliz_error
+    Generators = [[2,-1,-1,-2,1], [2,-1,0,-2,1], [2,-1,1,-2,1], [2,0,-1,-2,1],
+            [2,0,0,-2,1], [2,0,1,-2,1], [2,1,-1,-2,1], [2,1,0,-2,1], [2,1,1,-2,1]]
+    Grading = normaliz_error
+    GradingDenom = normaliz_error
+    HilbertQuasiPolynomial = normaliz_error
+    InclusionExclusionData = normaliz_error
+    IsInhomogeneous = True
+    IsIntegrallyClosed = normaliz_error
+    IsPointed = True
+    IsTriangulationPartial = Exception # what is the actual error we got here?
+    IsTriangulationNested = Exception # idem
+    MaximalSubspace = []
+    ModuleGenerators = [[2,-1,-1,-2,1], [2,-1,0,-2,1], [2,-1,1,-2,1], [2,0,-1,-2,1],
+           [2,0,0,-2,1], [2,0,1,-2,1], [2,1,-1,-2,1], [2,1,0,-2,1], [2,1,1,-2,1]]
+    ModuleRank = 9
+    Rank = 3
+    ReesPrimaryMultiplicity = normaliz_error
+    RecessionRank = 0
+    SupportHyperplanes = [[0,-1,0,0,1],[0,0,-1,0,1],[0,0,1,0,1],[0,1,0,0,1]]
+    Triangulation = [[[0,1,3],1], [[1,2,3],1], [[2,3,4],1], [[2,4,5],1], [[3,4,6], 1],
+            [[4,5,6], 1], [[5,6,7], 1], [[5,7,8], 1]]
+    TriangulationSize = 8
+    UnitGroupIndex = normaliz_error
+    VerticesOfPolyhedron = [[2,-1,-1,-2,1], [2,-1,1,-2,1], [2,1,-1,-2,1], [2,1,1,-2,1]]
+    Volume = [8,1]
+    WitnessNotIntegrallyClosed = normaliz_error
+
+class Test3(GenericPyNormalizTest):
+    "A 2-dimensional linear subspace"
+
+    init_data = {"vertices": [[1,2,3,5]], "cone": [[1,0,-1],[-1,0,1]]}
+
+    # expected results
+    AffineDim = 1
+    Congruences = []
+    Dehomogenization = normaliz_error
+    EmbeddingDim = 4
+    EhrhartQuasiPolynomial = [[1], [0], [0], [0], [0], 1]
+    Equations = [[1,-2,1,0],[0,5,0,-2]]
+#    Generators = ...
+# apparently not well defined
+    Grading = normaliz_error
+    HilbertQuasiPolynomial = normaliz_error
+    IsInhomogeneous = True
+    IsIntegrallyClosed = normaliz_error
+    IsPointed = False
+    VerticesOfPolyhedron = [[0,2,4,5]]
+    ExtremeRays = []
+    MaximalSubspace = [[1,0,-1,0]]
+    ModuleGenerators = []
+    ModuleRank = 0
+#    SupportHyperplanes = [[0,0,0,1]] # [[0,-2,0,1]]
+# not well defined
+    RecessionRank = 1
+    TriangulationSize = 1
+    Volume = normaliz_error
+    WitnessNotIntegrallyClosed = normaliz_error
+
+
+class Test4(GenericPyNormalizTest):
+    init_data = {"vertices": [[0,0,1],[1,0,1],[0,1,1]], "cone": [[1, 1]]}
+
+    # expected results
+    Equations = []
+    ExtremeRays = [[1,1,0]]
+    MaximalSubspace = []
+    ModuleGenerators = [[0,0,1],[0,1,1],[1,0,1]]
+    SupportHyperplanes = [[-1,1,1],[0,1,0],[1,-1,1],[1,0,0]]
+    VerticesOfPolyhedron = [[0,0,1],[0,1,1],[1,0,1]]
+    Volume = normaliz_error
+
+tests = [Test1, Test2, Test3, Test4]
+
 if __name__ == '__main__':
-    Test1().run(repeat=100)
+    for test in tests:
+        test().run()

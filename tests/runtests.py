@@ -40,8 +40,9 @@ for filename in os.listdir(os.curdir):
 
 
 # unit tests
-import generic_test
+from generic_test import tests
 
-generic_test.Test1(verbose=False).run(repeat=100)
+for test in tests:
+    test(verbosity=2).run(repeat=10)
 
 sys.exit(failed)
