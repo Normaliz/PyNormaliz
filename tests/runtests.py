@@ -9,10 +9,21 @@ import os
 import glob
 import doctest
 
+# some doctest are conditional on the presence of some libraries
+# and normaliz configuration
+import PyNormaliz
+skip = set()
+if not PyNormaliz.NmzHasEAntic():
+    skip.add("segfault-27.txt")
+
 # run doctests
 attempted = failed = 0
 for filename in os.listdir(os.curdir):
     if filename.endswith('.txt'):
+        if filename in skip:
+            print("Skip {}".format(filename))
+            continue
+
         print("Doctest {}".format(filename))
         result = doctest.testfile(filename, 
                         optionflags=doctest.IGNORE_EXCEPTION_DETAIL |
