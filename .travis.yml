@@ -18,10 +18,12 @@ addons:
 env:
   - PY="2"
     EANTIC="no"
+    WITHOUT_ENFNORMALIZ="yes"
   - PY="2"
     EANTIC="yes"
   - PY="3"
     EANTIC="no"
+    WITHOUT_ENFNORMALIZ="yes"
   - PY="3"
     EANTIC="yes"
 install:
