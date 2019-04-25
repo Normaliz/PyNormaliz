@@ -58,7 +58,7 @@ class TestCommand(Command):
 
 setup(
     name = 'PyNormaliz',
-    version = '2.0',
+    version = '2.1',
     description = 'An interface to Normaliz',
     author = 'Sebastian Gutsche, Richard Sieg',
     author_email = 'sebastian.gutsche@gmail.com',
