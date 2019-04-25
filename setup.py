@@ -6,6 +6,7 @@ from distutils.cmd import Command
 import sys
 import os
 
+
 try:
     normaliz_dir = os.environ["NORMALIZ_LOCAL_DIR"]
 except KeyError:

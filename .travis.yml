@@ -40,9 +40,9 @@ install:
   - sudo make install
   - cd ..
   # install normaliz
-  - wget https://github.com/Normaliz/Normaliz/releases/download/v3.7.0/normaliz-3.7.0.tar.gz
-  - tar xf normaliz-3.7.0.tar.gz
-  - cd normaliz-3.7.0
+  - git clone --depth=1 https://github.com/Normaliz/Normaliz
+  - cd Normaliz
+  - ./bootstrap.sh
   - ./configure --disable-scip --disable-nmzintegrate --enable-flint --enable-enfnormaliz --prefix=/usr
   - make
   - sudo make install
