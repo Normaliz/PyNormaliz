@@ -19,6 +19,18 @@ else:
       "extra_link_args": ['-Wl,-R' + normaliz_dir + '/lib' ]
     }
 
+try:
+    normaliz_enf = os.environ["WITHOUT_ENFNORMALIZ"]
+except KeyError:
+    normaliz_enf = True
+else:
+    normaliz_enf = False
+
+if normaliz_enf:
+    extra_kwds["libraries"] = [ 'arb', 'normaliz', 'gmp', 'flint', 'eanticxx' ]
+else:
+    extra_kwds["libraries"] = [ 'normaliz', 'gmp', 'flint' ]
+
 
 class TestCommand(Command):
     user_options = []
@@ -54,7 +66,6 @@ setup(
     py_modules = [ "PyNormaliz" ],
     ext_modules = [ Extension( "PyNormaliz_cpp",
                               [ "NormalizModule.cpp" ],
-                              libraries=[ 'arb', 'normaliz', 'gmp', 'flint', 'eanticxx' ],
                               extra_compile_args=['-std=c++11'],
                               **extra_kwds) ],
     
