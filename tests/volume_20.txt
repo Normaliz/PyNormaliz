@@ -1,0 +1,11 @@
+Test volume 20
+================
+
+Volume error reported in https://github.com/Normaliz/PyNormaliz/issues/20
+
+>>> import PyNormaliz
+>>> cone = PyNormaliz_cpp.NmzCone(**{'subspace': [], 'vertices': [[0, 0, 0, 1],
+[0, 0, 1, 1], [0, 1, 0, 1], [0, 1, 1, 1], [1, 0, 0, 1], [1, 0, 1, 1], [1, 1, 0,
+1], [1, 1, 1, 1]], 'cone': []})
+>>> PyNormaliz_cpp.NmzResult(cone,'EuclideanVolume')
+1.0
