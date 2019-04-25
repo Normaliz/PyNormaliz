@@ -218,7 +218,9 @@ PyObject* StringToPyUnicode(string in)
 
 inline PyObject* BoolToPyBool(bool in)
 {
-    return in ? Py_True : Py_False;
+    if(in)
+        Py_RETURN_TRUE;
+    Py_RETURN_FALSE;
 }
 
 // Do conversion for number field poly elements
@@ -1093,7 +1095,7 @@ PyObject* _NmzConeCopy(PyObject* self, PyObject* args)
         return pack_cone(new_cone, get_cone_renf_renf(cone));
     }
 #endif
-    return Py_None;
+    Py_RETURN_NONE;
     FUNC_END
 }
 
@@ -1220,7 +1222,7 @@ PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
 
     // Cone.compute returns the not computed properties
     // we return a bool, true when everything requested was computed
-    return notComputed.goals().none() ? Py_True : Py_False;
+    return BoolToPyBool(notComputed.goals().none());
     FUNC_END
 }
 
@@ -1234,7 +1236,7 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
 
     PyObject* cone = PyTuple_GetItem(args, 0);
 
-    PyObject* result = Py_None;
+    PyObject* result = NULL;
 
     if (!is_cone(cone)) {
         PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
@@ -1283,7 +1285,7 @@ PyObject* NmzIsComputed(Cone< Integer >* C, PyObject* prop)
     libnormaliz::ConeProperty::Enum p =
         libnormaliz::toConeProperty(PyUnicodeToString(prop));
 
-    return C->isComputed(p) ? Py_True : Py_False;
+    return BoolToPyBool(C->isComputed(p));
 
     FUNC_END
 }
@@ -1314,7 +1316,7 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
         return NmzIsComputed(cone_ptr, to_compute);
     }
 #endif
-    return Py_False;
+    Py_RETURN_FALSE;
 
     FUNC_END
 }
@@ -1336,7 +1338,7 @@ PyObject* NmzSetGrading_inner(Cone< Integer >* cone, PyObject* list)
         return NULL;
     }
     cone->resetGrading(list_c);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 PyObject* NmzSetGrading(PyObject* self, PyObject* args)
@@ -1404,7 +1406,7 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
     PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
 
     if (notComputed.goals().any()) {
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     // Handle standard cases
@@ -1518,7 +1520,7 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
             }
         }
     }
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -1550,7 +1552,7 @@ PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
         MatrixHandler = PyDict_GetItemString(kwargs, "MatrixHandler");
     }
 
-    PyObject* result = Py_None;
+    PyObject* result = NULL;
 
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
@@ -1642,7 +1644,7 @@ PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
         return NmzSetVerbose(cone_ptr, value);
     }
 #endif
-    return Py_None;
+    Py_RETURN_NONE;
 
     FUNC_END
 }
@@ -1716,12 +1718,12 @@ PyObject* NmzSetNrCoeffQuasiPol(PyObject* self, PyObject* args)
     if (cone_name_str == string(PyCapsule_GetName(cone))) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         cone_ptr->setNrCoeffQuasiPol(bound);
-        return Py_True;
+        Py_RETURN_TRUE;
     }
     else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         cone_ptr->setNrCoeffQuasiPol(bound);
-        return Py_True;
+        Py_RETURN_TRUE;
     }
     else {
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
@@ -1758,7 +1760,7 @@ PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args)
         Cone< mpz_class >* symm_cone = &(cone_ptr->getSymmetrizedCone());
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         if (symm_cone == 0) {
-            return Py_None;
+            Py_RETURN_NONE;
         }
         symm_cone = new Cone< mpz_class >(*symm_cone);
         return pack_cone(symm_cone);
@@ -1768,7 +1770,7 @@ PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args)
         Cone< long long >* symm_cone = &(cone_ptr->getSymmetrizedCone());
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         if (symm_cone == 0) {
-            return Py_None;
+            Py_RETURN_NONE;
         }
         symm_cone = new Cone< long long >(*symm_cone);
         return pack_cone(symm_cone);
@@ -1923,9 +1925,9 @@ PyObject* NmzSetNumberOfNormalizThreads(PyObject* self, PyObject* args)
 PyObject* NmzHasEAntic(PyObject* self)
 {
 #ifdef ENFNORMALIZ
-    return Py_True;
+    Py_RETURN_TRUE;
 #else
-    return Py_False;
+    Py_RETURN_FALSE;
 #endif
 }
 
