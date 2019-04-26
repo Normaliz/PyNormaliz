@@ -1,0 +1,7 @@
+Test entries must be matrices 39
+=====================================
+
+Bug reported in https://github.com/Normaliz/PyNormaliz/issues/39
+
+>>> import PyNormaliz
+>>> PyNormaliz.NmzCone(cone=[[1, 1]], subspace=[[-1, 1]], vertices=[[3, 2, 6]])
