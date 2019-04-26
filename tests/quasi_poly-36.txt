@@ -1,0 +1,11 @@
+Interface error on quasi-polynomial 36
+========================================
+
+Bug reported in https://github.com/Normaliz/PyNormaliz/issues/36
+
+>>> import PyNormaliz
+>>> cube = PyNormaliz.NmzCone(vertices = [[0L, 0L, 0L, 1L], [0L, 0L, 1L, 1L], [0L, 1L, 0L, 1L], [0L, 1L, 1L, 1L], [1L, 0L, 0L, 1L], [1L, 0L, 1L, 1L], [1L, 1L, 0L, 1L], [1L, 1L, 1L, 1L]])
+>>> PyNormaliz.NmzCompute(cube,"EhrhartSeries")
+True
+>>> PyNormaliz.NmzResult(cube, "EhrhartQuasiPolynomial")
+[[1L, 3L, 3L, 1L], 1L]
