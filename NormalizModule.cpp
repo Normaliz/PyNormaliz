@@ -196,6 +196,10 @@ static_assert(false,
 
 string PyUnicodeToString(PyObject* in)
 {
+    if (!string_check(in)) {
+        throw PyNormalizInputException("input must be a string");
+        return NULL;
+    }
 #if PY_MAJOR_VERSION >= 3
     string out = "";
     int    length = PyUnicode_GET_SIZE(in);
@@ -773,6 +777,33 @@ bool is_cone(PyObject* cone)
     return false;
 }
 
+bool is_cone_mpz(PyObject* cone)
+{
+    if (PyCapsule_CheckExact(cone)) {
+        string current = string(PyCapsule_GetName(cone));
+        return current == cone_name_str;
+    }
+    return false;
+}
+
+bool is_cone_long(PyObject* cone)
+{
+    if (PyCapsule_CheckExact(cone)) {
+        string current = string(PyCapsule_GetName(cone));
+        return current == cone_name_str_long;
+    }
+    return false;
+}
+
+bool is_cone_renf(PyObject* cone)
+{
+    if (PyCapsule_CheckExact(cone)) {
+        string current = string(PyCapsule_GetName(cone));
+        return current == cone_name_str_renf;
+    }
+    return false;
+}
+
 /***************************************************************************
  *
  * Cone property list
@@ -1023,6 +1054,7 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
     }
 
     Cone< renf_elem_class >* C = new Cone< renf_elem_class >(input);
+    C->setRenf(renf);
 
     PyObject* return_container = pack_cone(C, renf);
 
@@ -1946,6 +1978,50 @@ PyObject* NmzHasEAntic(PyObject* self)
 
 /***************************************************************************
  *
+ * Write output file
+ *
+ ***************************************************************************/
+
+PyObject* NmzWriteOutputFile(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+
+    if ((!PyTuple_Check(args)) || (PyTuple_Size(args) != 2)) {
+        throw PyNormalizInputException(
+            "The arguments must be a cone and a string");
+        return NULL;
+    }
+
+    PyObject* cone_py = PyTuple_GetItem(args, 0);
+    PyObject* filename_py = PyTuple_GetItem(args, 1);
+
+    string filename = PyUnicodeToString(filename_py);
+
+    if (is_cone_mpz(cone_py)) {
+        Cone< mpz_class >* cone = get_cone_mpz(cone_py);
+        cone->write_cone_output(filename);
+        Py_RETURN_TRUE;
+    }
+    if (is_cone_long(cone_py)) {
+        Cone< long long >* cone = get_cone_long(cone_py);
+        cone->write_cone_output(filename);
+        Py_RETURN_TRUE;
+    }
+#ifdef ENFNORMALIZ
+    if (is_cone_renf(cone_py)) {
+        Cone< renf_elem_class >* cone = get_cone_renf(cone_py);
+        cone->write_cone_output(filename);
+        Py_RETURN_TRUE;
+    }
+#endif
+    Py_RETURN_FALSE;
+
+    FUNC_END
+}
+
+
+/***************************************************************************
+ *
  * Python init stuff
  *
  ***************************************************************************/
@@ -2007,6 +2083,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      "Returns expansion of the weighted Ehrhart series"},
     {"NmzHasEAntic", (PyCFunction)NmzHasEAntic, METH_NOARGS,
      "Returns true if (Py)Normaliz was compiled with e-antic support"},
+    {"NmzWriteOutputFile", (PyCFunction)NmzWriteOutputFile, METH_VARARGS,
+     "Prints the Normaliz cone output into a file"},
     {
         NULL,
     } /* Sentinel */
