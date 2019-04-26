@@ -1173,8 +1173,9 @@ PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
 
     if (arg_len == 2) {
         PyObject* first_arg = PyTuple_GetItem(args, 1);
-        if (PySequence_Check(first_arg)) {
+        if (PyList_Check(first_arg) || PyTuple_Check(first_arg)) {
             to_compute = first_arg;
+            Py_IncRef(to_compute);
         }
         else {
             to_compute = PyList_New(1);
@@ -1182,6 +1183,7 @@ PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
             if (result != 0) {
                 PyErr_SetString(PyNormaliz_cppError,
                                 "List could not be created");
+                Py_DecRef(to_compute);
                 return NULL;
             }
         }
@@ -1201,6 +1203,7 @@ PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
         if (!string_check(prop)) {
             PyErr_SetString(PyNormaliz_cppError,
                             "All elements must be strings");
+            Py_DecRef(to_compute);
             return NULL;
         }
         string prop_str(PyUnicodeToString(prop));
@@ -1211,6 +1214,7 @@ PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
 
     // Cone.compute returns the not computed properties
     // we return a bool, true when everything requested was computed
+    Py_DecRef(to_compute);
     return BoolToPyBool(notComputed.goals().none());
     FUNC_END
 }
