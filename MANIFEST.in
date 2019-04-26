@@ -1,3 +1,4 @@
+include configure
 include COPYING
 include GPLv2
 include NormalizModule.cpp
