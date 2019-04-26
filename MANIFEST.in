@@ -3,3 +3,6 @@ include GPLv2
 include NormalizModule.cpp
 include setup.py
 include Readme.md
+include examples/*
+include doc/*
+include tests/*
