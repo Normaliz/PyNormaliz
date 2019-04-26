@@ -2,10 +2,9 @@
 
 from distutils.core import setup, Extension
 from distutils.cmd import Command
+from distutils.command.build import build as _build
 
-import sys
-import os
-
+import sys, os, subprocess
 
 try:
     normaliz_dir = os.environ["NORMALIZ_LOCAL_DIR"]
@@ -19,18 +18,7 @@ else:
       "extra_link_args": ['-Wl,-R' + normaliz_dir + '/lib' ]
     }
 
-try:
-    normaliz_enf = os.environ["WITHOUT_ENFNORMALIZ"]
-except KeyError:
-    normaliz_enf = True
-else:
-    normaliz_enf = False
-
-if normaliz_enf:
-    extra_kwds["libraries"] = [ 'arb', 'normaliz', 'gmp', 'flint', 'eanticxx' ]
-else:
-    extra_kwds["libraries"] = [ 'normaliz', 'gmp', 'flint' ]
-
+libraries = [ 'normaliz', 'gmp', 'flint' ]
 
 class TestCommand(Command):
     user_options = []
@@ -42,8 +30,6 @@ class TestCommand(Command):
         pass
 
     def run(self):
-        import subprocess
-
         old_path = os.getcwd()
         setup_path = os.path.dirname(__file__)
         tests_path = os.path.join(setup_path, 'tests')
@@ -56,6 +42,31 @@ class TestCommand(Command):
         finally:
             os.chdir(old_path)
 
+class build(_build):
+    def run(self):
+        """
+        Run ./configure first and update libraries depending
+        on the generated output.
+        """
+        subprocess.check_call(["make", "configure"])
+        try:
+            subprocess.check_call(["sh", "configure"])
+        except subprocess.CalledProcessError:
+            subprocess.check_call(["cat", "config.log"])
+            raise
+
+        # configure created config.py that we now import
+        from config import ENFNORMALIZ
+        global libraries
+        if ENFNORMALIZ:
+            print("building with ENFNORMALIZ...")
+            libraries.append("arb")
+            libraries.append("eanticxx")
+        else:
+            print("no ENFNORMALIZ support...")
+
+        _build.run(self)
+
 setup(
     name = 'PyNormaliz',
     version = '2.2',
@@ -67,8 +78,9 @@ setup(
     ext_modules = [ Extension( "PyNormaliz_cpp",
                               [ "NormalizModule.cpp" ],
                               extra_compile_args=['-std=c++11'],
+                              libraries=libraries,
                               **extra_kwds) ],
     
     package_data = {'': [ "COPYING", "GPLv2", "Readme.md" ] },
-    cmdclass = {'test': TestCommand},
+    cmdclass = {'build': build, 'test': TestCommand},
 )

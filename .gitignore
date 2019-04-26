@@ -7,3 +7,7 @@ dist
 MANIFEST
 *.pyc
 compile.sh
+configure
+config.status
+config.log
+config.py
