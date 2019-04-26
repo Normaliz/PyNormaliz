@@ -223,15 +223,6 @@ inline PyObject* BoolToPyBool(bool in)
     Py_RETURN_FALSE;
 }
 
-// Do conversion for number field poly elements
-// bool PyPolyStringToNmz(PyObject* in, vector<mpq_class>& out)
-// {
-//     string            c_string = PyUnicodeToString(in);
-//     vector<mpq_class> temp = poly_components(c_string);
-//     out.swap(temp);
-//     return true;
-// }
-
 // Converting MPZ's to PyLong and back via strings. Worst possible solution
 // ever.
 bool PyNumberToNmz(PyObject*, mpz_class&);
@@ -239,8 +230,7 @@ bool PyNumberToNmz(PyObject*, mpz_class&);
 bool PyNumberToNmz(PyObject* in, mpq_class& out)
 {
     if (PyFloat_Check(in)) {
-        mpq_class temp(PyFloat_AsDouble(in));
-        out.swap(temp);
+        out = mpq_class(PyFloat_AsDouble(in));
         return true;
     }
 #if PY_MAJOR_VERSION < 3
@@ -269,8 +259,7 @@ bool PyNumberToNmz(PyObject* in, mpq_class& out)
         if (!PyNumberToNmz(py_denom, denom)) {
             return false;
         }
-        mpq_class temp(num, denom);
-        out.swap(temp);
+        out = mpq_class(num, denom);
         return true;
     }
     PyObject*   in_as_string = PyObject_Str(in);
@@ -296,9 +285,8 @@ bool PyNumberToNmz(PyObject* in, mpz_class& out)
     }
     int  overflow;
     long input_long = PyLong_AsLongAndOverflow(in, &overflow);
-    if (overflow != -1) {
-        mpz_class temp(input_long);
-        out.swap(temp);
+    if (overflow == 0) {
+        out = mpz_class(input_long);
         return true;
     }
     PyObject*   in_as_string = PyObject_Str(in);
@@ -436,6 +424,7 @@ bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
     for (int i = 0; i < nr; ++i) {
         PyObject* current_row = PySequence_GetItem(in, i);
         int       current_length = PySequence_Size(current_row);
+        out[i].resize(current_length);
         for (int j = 0; j < current_length; j++) {
             PyObject*       current_element = PySequence_GetItem(current_row, j);
             bool            current_res;
@@ -465,7 +454,7 @@ bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
                 current_elem = PyInt_AsLong(current_element);
             }
 #endif
-            out[i].push_back(current_elem);
+            out[i][j] = current_elem;
         }
     }
 
