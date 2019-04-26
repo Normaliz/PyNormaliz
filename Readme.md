@@ -3,7 +3,7 @@
 
 ## What is PyNormaliz
 
-PyNormaliz provides an interface to Normaliz (https://www.normaliz.uni-osnabrueck.de) via libNormaliz. It offers the complete functionality of Normaliz, and can be used interactively from python. For a first example, see [this introduction](doc/PyNormaliz_Tutorial.ipynb) by Richard Sieg.
+PyNormaliz provides an interface to Normaliz (https://www.normaliz.uni-osnabrueck.de) via libNormaliz. It offers the complete functionality of Normaliz, and can be used interactively from python. For a first example, see [this introduction](doc/PyNormaliz_Tutorial.pdf) by Richard Sieg.
 
 
 ## Requirements
