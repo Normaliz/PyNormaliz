@@ -5,5 +5,5 @@ Volume error reported in https://github.com/Normaliz/PyNormaliz/issues/22
 
 >>> import PyNormaliz
 >>> square = PyNormaliz.Cone(vertices=[[0,0,1],[1,0,1],[0,1,1],[1,1,1]])
->>> square.EuclideanVolume()
-1.0000000000000002
+>>> square.EuclideanVolume() - 1.0 < 0.001
+True

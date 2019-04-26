@@ -4,4 +4,4 @@ Test segfault 37
 Segfault reported in https://github.com/Normaliz/PyNormaliz/issues/37
 
 >>> import PyNormaliz
->>> p = PyNormaliz.NmzCone(cone=[], number_field=['a^2 - 2', 'a', '[1.414213562373095 +/- 2.99e-16]'], subspace=[], vertices=[[1L, 1L], [[[0L, 1L], [1L, 1L]], 1L]])
+>>> p = PyNormaliz.NmzCone(cone=[], number_field=['a^2 - 2', 'a', '[1.414213562373095 +/- 2.99e-16]'], subspace=[], vertices=[[1, 1], [[[0, 1], [1, 1]], 1]])

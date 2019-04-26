@@ -4,6 +4,6 @@ Test equations 41
 Equations error reported in https://github.com/Normaliz/PyNormaliz/issues/41
 
 >>> import PyNormaliz
->>> cone = PyNormaliz.NmzCone(**{'inhom_inequalities': [[-1L, 2L, 0L], [0L, 0L, 1L], [2L, -1L, 0L]], 'number_field': ['a^2 - 2', 'a', '[1.4 +/- 0.1]']})
+>>> cone = PyNormaliz.NmzCone(**{'inhom_inequalities': [[-1, 2, 0], [0, 0, 1], [2, -1, 0]], 'number_field': ['a^2 - 2', 'a', '[1.4 +/- 0.1]']})
 >>> PyNormaliz.NmzResult(cone, "Equations")
 []
