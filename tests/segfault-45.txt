@@ -5,5 +5,5 @@ Segfault reported in https://github.com/Normaliz/PyNormaliz/issues/45
 
 >>> from PyNormaliz import NmzCone, NmzResult
 >>> polytope = NmzCone(vertices=[(-3,-2,-1,1), (-1,1,-1,2), (1,1,-1,1), (1,1,1,1)])
->>> NmzResult(polytope, "EhrhartQuasiPolynomial")
-[[6L, 7L, 6L, 5L], 6L]
+>>> NmzResult(polytope, "EhrhartQuasiPolynomial") == [[6, 7, 6, 5], 6]
+True

@@ -14,7 +14,10 @@ import doctest
 import PyNormaliz
 skip = set()
 if not PyNormaliz.NmzHasEAntic():
+    skip.add("equation-41.txt")
     skip.add("segfault-27.txt")
+    skip.add("segfault-35.txt")
+    skip.add("vertex_denom-37.txt")
 
 # run doctests
 attempted = failed = 0
