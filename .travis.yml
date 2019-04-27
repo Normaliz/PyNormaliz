@@ -27,11 +27,19 @@ env:
 install:
   - export MAKE="make -j2"
   - export PYTHON="python${PY}"
-  - export PIPINSTALL="pip${PY} install --no-index --no-deps -v"
+  - export PIP="pip${PY}"
+  - export PIPINSTALL="${PIP} install --no-index --no-deps -v"
   # install normaliz
   - ./.travis-install-normaliz.sh
   # install pynormaliz
   - sudo $PIPINSTALL .
 script:
   - export OMP_NUM_THREADS=4
+  # run tests
   - $PYTHON setup.py test
+  # uninstall, make source distribution and reinstall from it
+  # and check that the module can be imported
+  - sudo $PIP uninstall -y PyNormaliz
+  - make sdist
+  - sudo $PIPINSTALL dist/PyNormaliz-*.tar.gz
+  - $PYTHON -c "import PyNormaliz"
