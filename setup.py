@@ -2,7 +2,7 @@
 
 from distutils.core import setup, Extension
 from distutils.cmd import Command
-from distutils.command.build import build as _build
+from distutils.command.build_ext import build_ext as _build_ext
 
 import sys, os, subprocess
 
@@ -42,7 +42,7 @@ class TestCommand(Command):
         finally:
             os.chdir(old_path)
 
-class build(_build):
+class build_ext(_build_ext):
     def run(self):
         """
         Run ./configure first and update libraries depending
@@ -65,7 +65,7 @@ class build(_build):
         else:
             print("no ENFNORMALIZ support...")
 
-        _build.run(self)
+        _build_ext.run(self)
 
 setup(
     name = 'PyNormaliz',
@@ -82,5 +82,5 @@ setup(
                               **extra_kwds) ],
     
     package_data = {'': [ "COPYING", "GPLv2", "Readme.md" ] },
-    cmdclass = {'build': build, 'test': TestCommand},
+    cmdclass = {'build_ext': build_ext, 'test': TestCommand},
 )
