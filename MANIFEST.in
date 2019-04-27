@@ -1,6 +1,8 @@
-include configure
 include COPYING
 include GPLv2
+include configure
+include config.py.in
+include m4/ax_cxx_compile_stdcxx.m4
 include NormalizModule.cpp
 include setup.py
 include Readme.md

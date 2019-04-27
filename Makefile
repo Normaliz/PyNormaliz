@@ -10,5 +10,5 @@ clean:
 configure: configure.ac
 	autoconf
 
-dist: configure
+sdist: configure
 	$(PYTHON) setup.py sdist
