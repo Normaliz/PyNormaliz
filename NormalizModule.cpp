@@ -1944,15 +1944,22 @@ PyObject* NmzSetNumberOfNormalizThreads(PyObject* self, PyObject* args)
 
     FUNC_BEGIN
 
-    PyObject* num_treads = PyTuple_GetItem(args, 0);
+    PyObject* num_threads = PyTuple_GetItem(args, 0);
 
-    if (!PyLong_Check(num_treads)) {
-        PyErr_SetString(PyNormaliz_cppError,
-                        "First argument must be an integer");
+    long num_threads_long;
+
+    if (PyLong_Check(num_threads)) {
+        num_threads_long = PyLong_AsLong(num_threads);
+    }
+#if PY_MAJOR_VERSION < 3
+    else if (PyInt_Check(num_threads)) {
+        num_threads_long = PyInt_AsLong(num_threads);
+    }
+#endif
+    else {
+        throw PyNormalizInputException("argument must be an integer");
         return NULL;
     }
-
-    long num_threads_long = PyLong_AsLong(num_treads);
 
     num_threads_long = libnormaliz::set_thread_limit(num_threads_long);
 
