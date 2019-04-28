@@ -6,11 +6,16 @@ from distutils.command.build_ext import build_ext as _build_ext
 
 import sys, os, subprocess
 
+from copy import copy
+
+has_extra_dir = False
+
 try:
     normaliz_dir = os.environ["NORMALIZ_LOCAL_DIR"]
 except KeyError:
     extra_kwds = {}
 else:
+    has_extra_dir = True
     extra_kwds = {
       "include_dirs": [ normaliz_dir + '/include'],
       "library_dirs": [ normaliz_dir + '/lib'],
@@ -49,12 +54,16 @@ class build_ext(_build_ext):
         on the generated output.
         """
         subprocess.check_call(["make", "configure"])
+        global has_extra_dir
+        my_env = copy(os.environ)
+        if has_extra_dir:
+            my_env.update({ 'CPPFLAGS' : '-I' + normaliz_dir + '/include',
+                            'LDFLAGS' : '-L' + normaliz_dir + '/lib' })
         try:
-            subprocess.check_call(["sh", "configure"])
+            subprocess.check_call(["sh", "configure"], env = my_env )
         except subprocess.CalledProcessError:
             subprocess.check_call(["cat", "config.log"])
             raise
-
         # configure created config.py that we now import
         from config import ENFNORMALIZ
         global libraries
