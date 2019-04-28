@@ -11,3 +11,4 @@ configure
 config.status
 config.log
 config.py
+/autom4te.cache/
