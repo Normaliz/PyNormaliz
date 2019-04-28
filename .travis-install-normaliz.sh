@@ -17,9 +17,9 @@ then
     cd ..
 
     # install e-antic
-    wget http://www.labri.fr/perso/vdelecro/e-antic/e-antic-0.1.2.tar.gz
-    tar xf e-antic-0.1.2.tar.gz
-    cd e-antic-0.1.2/
+    wget http://www.labri.fr/perso/vdelecro/e-antic/e-antic-0.1.3b0.tar.gz
+    tar xf e-antic-0.1.3b0.tar.gz
+    cd e-antic-0.1.3b0/
     ./configure --prefix=/usr
     make
     sudo make install
