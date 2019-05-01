@@ -76,10 +76,17 @@ class build_ext(_build_ext):
 
         _build_ext.run(self)
 
+from os import path
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'Readme.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
 setup(
     name = 'PyNormaliz',
     version = '2.2',
     description = 'An interface to Normaliz',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     author = 'Sebastian Gutsche, Richard Sieg',
     author_email = 'sebastian.gutsche@gmail.com',
     url = 'https://github.com/Normaliz/PyNormaliz',

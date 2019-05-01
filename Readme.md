@@ -21,7 +21,7 @@ install_normaliz_with_qnormaliz_eantic.sh
 ```
 script. To install PyNormaliz and navigate to the Normaliz directory and type
 ```
-./install_pynormaliz.sh --user
+python setup.py install --user
 ```
 
 The script can be customized by some options. See Appendix E of the [Normaliz manual](https://github.com/Normaliz/Normaliz/blob/master/doc/Normaliz.pdf).
