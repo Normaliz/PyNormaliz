@@ -77,13 +77,14 @@ class build_ext(_build_ext):
         _build_ext.run(self)
 
 from os import path
+import io
 this_directory = path.abspath(path.dirname(__file__))
-with open(path.join(this_directory, 'Readme.md'), encoding='utf-8') as f:
+with io.open(path.join(this_directory, 'Readme.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
     name = 'PyNormaliz',
-    version = '2.3',
+    version = '2.4',
     description = 'An interface to Normaliz',
     long_description=long_description,
     long_description_content_type='text/markdown',
