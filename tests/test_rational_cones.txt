@@ -61,4 +61,8 @@ True
 True
 >>> cube1.TriangulationSize() == NmzResult(cube2, "TriangulationSize") == 8
 True
+>>> NmzResult(cube2, "FVector" ) == [ 1, 4, 4, 1 ]
+True
+>>> len(NmzResult(cube2, "FaceLattice")) == 10
+True
 

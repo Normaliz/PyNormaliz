@@ -355,6 +355,11 @@ PyObject* NmzToPyNumber(size_t in)
 }
 #endif
 
+PyObject* NmzToPyNumber(int in)
+{
+    return PyLong_FromLong(in);
+}
+
 PyObject* NmzToPyNumber(long in)
 {
     return PyLong_FromLong(in);
@@ -670,6 +675,29 @@ static PyObject* _NmzBasisChangeIntern(Cone< Integer >* C)
     // Dim, Rank, Equations and Congruences are already covered by special
     // functions ditto ExternalIndex
     return res;
+}
+
+static PyObject* NmzBitsetToPyList(const boost::dynamic_bitset<>& bits){
+    ssize_t len = bits.size();
+    PyObject* list = PyList_New(len);
+    for(ssize_t i = 0;i<len;i++){
+        PyList_SetItem(list,i,BoolToPyBool(bits[i]));
+    }
+    return list;
+}
+
+static PyObject* NmzFacelatticeToPython(const map<boost::dynamic_bitset<>,int>& lattice){
+    ssize_t len = lattice.size();
+    PyObject* list = PyList_New(len);
+    ssize_t curr = 0;
+    for(auto it=lattice.begin();it != lattice.end(); it++){
+        PyObject* list_int = PyList_New(2);
+        PyList_SetItem(list_int,0,NmzBitsetToPyList(it->first));
+        PyList_SetItem(list_int,1,NmzToPyNumber(it->second));
+        PyList_SetItem(list,curr,list_int);
+        curr++;
+    }
+    return list;
 }
 
 /***************************************************************************
@@ -1528,6 +1556,12 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
         case libnormaliz::ConeProperty::WeightedEhrhartQuasiPolynomial:
             return NmzWeightedEhrhartQuasiPolynomialToPyList< mpz_class >(
                 C->getIntData());
+
+        case libnormaliz::ConeProperty::FVector:
+            return NmzVectorToPyList(C->getFVector());
+        
+        case libnormaliz::ConeProperty::FaceLattice:
+            return NmzFacelatticeToPython(C->getFaceLattice());
 
         default: {
             switch (outputtype) {

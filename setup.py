@@ -84,7 +84,7 @@ with io.open(path.join(this_directory, 'Readme.md'), encoding='utf-8') as f:
 
 setup(
     name = 'PyNormaliz',
-    version = '2.4',
+    version = '2.5',
     description = 'An interface to Normaliz',
     long_description=long_description,
     long_description_content_type='text/markdown',
