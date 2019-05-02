@@ -2065,6 +2065,39 @@ PyObject* NmzWriteOutputFile(PyObject* self, PyObject* args)
     FUNC_END
 }
 
+/***************************************************************************
+ *
+ * Get renf precision
+ *
+ ***************************************************************************/
+
+PyObject* NmzGetRenfInfo(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+
+    if( (!PyTuple_Check(args)) || (PyTuple_Size(args) != 1) ){
+        throw PyNormalizInputException(
+            "Only one argument allowed"
+        );
+        return NULL;
+    }
+    PyObject* cone_py = PyTuple_GetItem(args, 0);
+
+    if(!is_cone_renf(cone_py)){
+        throw PyNormalizInputException(
+            "Only Renf cones allowed"
+        );
+        return NULL;
+    }
+
+    renf_class* renf = get_cone_renf_renf(cone_py);
+    double a_double = renf->gen().get_d();
+    std::string res1 = arb_get_str(renf->get_renf()->emb, 64, 0);
+    long prec = renf->get_renf()->prec;
+    return PyTuple_Pack(3,PyFloat_FromDouble(a_double),StringToPyUnicode(res1),PyLong_FromLong(prec));
+
+    FUNC_END
+}
 
 /***************************************************************************
  *
@@ -2131,6 +2164,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      "Returns true if (Py)Normaliz was compiled with e-antic support"},
     {"NmzWriteOutputFile", (PyCFunction)NmzWriteOutputFile, METH_VARARGS,
      "Prints the Normaliz cone output into a file"},
+    {"NmzGetRenfInfo", (PyCFunction)NmzGetRenfInfo, METH_VARARGS,
+     "Outputs info of the number field associated to a renf cone"},
     {
         NULL,
     } /* Sentinel */
