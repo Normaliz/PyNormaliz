@@ -52,6 +52,8 @@ typedef int py_size_t;
     {                                                                        \
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);             \
         libnormaliz::nmz_interrupted = false;                                \
+        PyErr_SetString(PyExc_KeyboardInterrupt,                             \
+                        "interrupted Normaliz Computation");                 \
         PyErr_SetInterrupt();                                                \
         PyErr_CheckSignals();                                                \
         return NULL;                                                         \
@@ -677,24 +679,27 @@ static PyObject* _NmzBasisChangeIntern(Cone< Integer >* C)
     return res;
 }
 
-static PyObject* NmzBitsetToPyList(const boost::dynamic_bitset<>& bits){
-    ssize_t len = bits.size();
+static PyObject* NmzBitsetToPyList(const boost::dynamic_bitset<>& bits)
+{
+    ssize_t   len = bits.size();
     PyObject* list = PyList_New(len);
-    for(ssize_t i = 0;i<len;i++){
-        PyList_SetItem(list,i,BoolToPyBool(bits[i]));
+    for (ssize_t i = 0; i < len; i++) {
+        PyList_SetItem(list, i, BoolToPyBool(bits[i]));
     }
     return list;
 }
 
-static PyObject* NmzFacelatticeToPython(const map<boost::dynamic_bitset<>,int>& lattice){
-    ssize_t len = lattice.size();
+static PyObject*
+NmzFacelatticeToPython(const map< boost::dynamic_bitset<>, int >& lattice)
+{
+    ssize_t   len = lattice.size();
     PyObject* list = PyList_New(len);
-    ssize_t curr = 0;
-    for(auto it=lattice.begin();it != lattice.end(); it++){
+    ssize_t   curr = 0;
+    for (auto it = lattice.begin(); it != lattice.end(); it++) {
         PyObject* list_int = PyList_New(2);
-        PyList_SetItem(list_int,0,NmzBitsetToPyList(it->first));
-        PyList_SetItem(list_int,1,NmzToPyNumber(it->second));
-        PyList_SetItem(list,curr,list_int);
+        PyList_SetItem(list_int, 0, NmzBitsetToPyList(it->first));
+        PyList_SetItem(list_int, 1, NmzToPyNumber(it->second));
+        PyList_SetItem(list, curr, list_int);
         curr++;
     }
     return list;
@@ -1559,7 +1564,7 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
 
         case libnormaliz::ConeProperty::FVector:
             return NmzVectorToPyList(C->getFVector());
-        
+
         case libnormaliz::ConeProperty::FaceLattice:
             return NmzFacelatticeToPython(C->getFaceLattice());
 
