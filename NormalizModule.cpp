@@ -2074,7 +2074,7 @@ PyObject* NmzWriteOutputFile(PyObject* self, PyObject* args)
 PyObject* NmzGetRenfInfo(PyObject* self, PyObject* args)
 {
     FUNC_BEGIN
-
+#ifdef ENFNORMALIZ
     if( (!PyTuple_Check(args)) || (PyTuple_Size(args) != 1) ){
         throw PyNormalizInputException(
             "Only one argument allowed"
@@ -2095,6 +2095,9 @@ PyObject* NmzGetRenfInfo(PyObject* self, PyObject* args)
     std::string res1 = arb_get_str(renf->get_renf()->emb, 64, 0);
     long prec = renf->get_renf()->prec;
     return PyTuple_Pack(3,PyFloat_FromDouble(a_double),StringToPyUnicode(res1),PyLong_FromLong(prec));
+#else
+    return NULL;
+#endif
 
     FUNC_END
 }
