@@ -60,7 +60,7 @@ class build_ext(_build_ext):
             my_env.update({ 'CPPFLAGS' : '-I' + normaliz_dir + '/include',
                             'LDFLAGS' : '-L' + normaliz_dir + '/lib' })
         try:
-            subprocess.check_call(["sh", "configure"], env = my_env )
+            subprocess.check_call(["sh", "./configure"], env = my_env )
         except subprocess.CalledProcessError:
             subprocess.check_call(["cat", "config.log"])
             raise
