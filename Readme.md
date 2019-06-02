@@ -82,3 +82,4 @@ NmzIsComputed(C, "HilbertBasis")
 NmzResult takes a cone and a string representing an output property, and returns the computed value of this property as a matrix, a list, or as a bool.
 ```
 NmzResult(C, "HilbertBasis")
+```
