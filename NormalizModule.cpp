@@ -22,12 +22,14 @@ using std::string;
 #include <libnormaliz/cone.h>
 #include <libnormaliz/map_operations.h>
 #include <libnormaliz/vector_operations.h>
+#include <libnormaliz/automorph.h>
 
 using libnormaliz::Cone;
 // using libnormaliz::ConeProperty;
 using libnormaliz::ConeProperties;
 using libnormaliz::Sublattice_Representation;
 using libnormaliz::Type::InputType;
+using libnormaliz::AutomorphismGroup;
 
 #include <vector>
 using std::map;
@@ -702,6 +704,35 @@ NmzFacelatticeToPython(const map< boost::dynamic_bitset<>, int >& lattice)
         PyList_SetItem(list, curr, list_int);
         curr++;
     }
+    return list;
+}
+
+template < typename Integer >
+static PyObject*
+NmzAutomorphismsToPython(const AutomorphismGroup< Integer >& grp)
+{
+
+    PyObject* list = PyList_New(4);
+
+    PyList_SetItem(list, 0, NmzToPyNumber(grp.getOrder()));
+
+    PyObject* current = PyList_New(2);
+    PyList_SetItem(current, 0, NmzMatrixToPyList(grp.getExtremeRaysPerms()));
+    PyList_SetItem(current, 1, NmzMatrixToPyList(grp.getExtremeRaysOrbits()));
+    PyList_SetItem(list, 1, current);
+
+    current = PyList_New(2);
+    PyList_SetItem(current, 0, NmzMatrixToPyList(grp.getVerticesPerms()));
+    PyList_SetItem(current, 1, NmzMatrixToPyList(grp.getVerticesOrbits()));
+    PyList_SetItem(list, 2, current);
+
+    current = PyList_New(2);
+    PyList_SetItem(current, 0,
+                   NmzMatrixToPyList(grp.getSupportHyperplanesPerms()));
+    PyList_SetItem(current, 1,
+                   NmzMatrixToPyList(grp.getSupportHyperplanesOrbits()));
+    PyList_SetItem(list, 3, current);
+
     return list;
 }
 
@@ -1567,6 +1598,26 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
 
         case libnormaliz::ConeProperty::FaceLattice:
             return NmzFacelatticeToPython(C->getFaceLattice());
+
+        case libnormaliz::ConeProperty::Automorphisms:
+            return NmzAutomorphismsToPython(C->getAutomorphismGroup(
+                libnormaliz::ConeProperty::Automorphisms));
+
+        case libnormaliz::ConeProperty::AmbientAutomorphisms:
+            return NmzAutomorphismsToPython(C->getAutomorphismGroup(
+                libnormaliz::ConeProperty::AmbientAutomorphisms));
+
+        case libnormaliz::ConeProperty::CombinatorialAutomorphisms:
+            return NmzAutomorphismsToPython(C->getAutomorphismGroup(
+                libnormaliz::ConeProperty::CombinatorialAutomorphisms));
+
+        case libnormaliz::ConeProperty::RationalAutomorphisms:
+            return NmzAutomorphismsToPython(C->getAutomorphismGroup(
+                libnormaliz::ConeProperty::RationalAutomorphisms));
+
+        case libnormaliz::ConeProperty::EuclideanAutomorphisms:
+            return NmzAutomorphismsToPython(C->getAutomorphismGroup(
+                libnormaliz::ConeProperty::EuclideanAutomorphisms));
 
         default: {
             switch (outputtype) {
