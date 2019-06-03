@@ -18,6 +18,7 @@ if not PyNormaliz.NmzHasEAntic():
     skip.add("segfault-27.txt")
     skip.add("segfault-35.txt")
     skip.add("vertex_denom-37.txt")
+    skip.add("modify_cone_renf.txt")
 
 # run doctests
 attempted = failed = 0

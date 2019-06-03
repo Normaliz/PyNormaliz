@@ -1345,6 +1345,78 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
 
 /***************************************************************************
  *
+ * NmzModify
+ *
+ ***************************************************************************/
+
+template<typename Integer>
+PyObject* _NmzModify(Cone<Integer>* cone, PyObject* args)
+{
+    string property = PyUnicodeToString( PyTuple_GetItem(args, 1) );
+    PyObject* matrix_py = PyTuple_GetItem(args,2);
+
+    vector<vector<Integer>> mat;
+    PyInputToNmz( mat,matrix_py );
+
+    cone->modifyCone(libnormaliz::to_type(property),mat);
+    Py_RETURN_TRUE;
+
+}
+
+#ifdef ENFNORMALIZ
+PyObject* _NmzModify_Renf(Cone<renf_elem_class>* cone, renf_class* nf, PyObject* args)
+{
+    string property = PyUnicodeToString( PyTuple_GetItem(args, 1) );
+    PyObject* matrix_py = PyTuple_GetItem(args,2);
+
+    vector<vector<renf_elem_class>> mat;
+    prepare_nf_input( mat,matrix_py,nf );
+
+    cone->modifyCone(libnormaliz::to_type(property),mat);
+    Py_RETURN_TRUE;
+
+}
+#endif
+
+PyObject* _NmzModify_Outer(PyObject* self, PyObject* args)
+{
+
+    FUNC_BEGIN
+
+    current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
+
+    PyObject* cone = PyTuple_GetItem(args, 0);
+
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+
+    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        return _NmzModify(cone_ptr, args);
+    }
+    else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        return _NmzModify(cone_ptr, args);
+    }
+#ifdef ENFNORMALIZ
+    else {
+        Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
+        renf_class* nf = get_cone_renf_renf(cone);
+        return _NmzModify_Renf(cone_ptr, nf, args);
+    }
+#endif
+
+    PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
+
+    Py_RETURN_TRUE;
+
+    FUNC_END
+}
+
+/***************************************************************************
+ *
  * NmzIsComputed
  *
  ***************************************************************************/
@@ -2169,6 +2241,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      "Prints the Normaliz cone output into a file"},
     {"NmzGetRenfInfo", (PyCFunction)NmzGetRenfInfo, METH_VARARGS,
      "Outputs info of the number field associated to a renf cone"},
+    {"NmzModifyCone", (PyCFunction)_NmzModify_Outer, METH_VARARGS,
+     "Modifies a given input property of a cone using a new matrix"},
     {
         NULL,
     } /* Sentinel */
