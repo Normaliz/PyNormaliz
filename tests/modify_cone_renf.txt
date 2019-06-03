@@ -1,0 +1,12 @@
+Test modify cone renf
+==================
+
+>>> from PyNormaliz import NmzCone, NmzResult, NmzModifyCone
+>>> nf = [ "a4-5a2+5", "a", "1.9021+/-0.01" ]
+>>> C = NmzCone(number_field=nf, cone=[[1,0],[0,1]])
+>>> NmzResult(C,"ExtremeRays") == [[[[0, 1]], [[1, 1]]], [[[1, 1]], [[0, 1]]]]
+True
+>>> NmzModifyCone(C,"cone",[[-1,0]])
+True
+>>> NmzResult(C,"ExtremeRays") == [[[[0, 1]], [[1, 1]]]]
+True

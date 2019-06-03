@@ -1,0 +1,11 @@
+Test modify cone
+==================
+
+>>> from PyNormaliz import NmzCone, NmzResult, NmzModifyCone
+>>> C = NmzCone(cone=[[1,0],[0,1]])
+>>> NmzResult(C,"HilbertBasis") == [[0, 1], [1, 0]]
+True
+>>> NmzModifyCone(C,"cone",[[-1,0]])
+True
+>>> NmzResult(C,"HilbertBasis") == [[0, 1]]
+True
