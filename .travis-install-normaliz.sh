@@ -32,6 +32,17 @@ else
     exit 1
 fi
 
+# install nauty
+NAUTY_VERSION="27rc2"
+wget http://pallini.di.uniroma1.it/nauty${NAUTY_VERSION}.tar.gz
+tar xvf nauty${NAUTY_VERSION}.tar.gz
+cd nauty${NAUTY_VERSION}
+./configure
+make all -j4 CFLAGS=-fPIC
+sudo mkdir -p /usr/local/include/nauty
+sudo cp nauty.h /usr/local/include/nauty
+sudo cp nauty.a /usr/local/lib/libnauty.a
+
 # install normaliz
 git clone --depth=1 https://github.com/Normaliz/Normaliz
 cd Normaliz
