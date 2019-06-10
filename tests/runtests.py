@@ -44,6 +44,6 @@ for filename in os.listdir(os.curdir):
 from generic_test import tests
 
 for test in tests:
-    test(verbosity=2).run(repeat=10)
+    failed += test(verbosity=2).run(repeat=10)
 
 sys.exit(failed)
