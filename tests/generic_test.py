@@ -22,6 +22,7 @@ from random import shuffle
 
 methods = [
          "AffineDim",
+         "Automorphisms",
          "Congruences",
          "Dehomogenization",
          "Equations",
@@ -147,6 +148,8 @@ class GenericPyNormalizTest:
                         print("pass")
                         stdout.flush()
 
+        return failed
+
 class Test1(GenericPyNormalizTest):
     init_data = {"vertices": [(-3,-2,-1,1), (-1,1,-1,2), (1,1,-1,1), (1,1,1,1)]}
 
@@ -192,6 +195,7 @@ class Test2(GenericPyNormalizTest):
 
     # expected results
     AffineDim = 2
+    Automorphisms = [8, [[[],[]],[]], [[[0,2,1,3], [1,0,3,2]], [[0,1,2,3]]], [[[1,0,3,2], [0,2,1,3]], [[0,1,2,3]]]]
     Congruences = []
     Dehomogenization = normaliz_error
     EmbeddingDim = 5
