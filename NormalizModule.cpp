@@ -382,6 +382,19 @@ PyObject* NmzToPyNumber(renf_elem_class in)
 }
 #endif
 
+PyObject* NmzToPyNumber(const dynamic_bitset& in)
+{
+    PyObject* result = PyList_New(0);
+    for (int i = 0; i < in.size(); i++) {
+        if (in[i]) {
+            PyObject* number = NmzToPyNumber(i);
+            PyList_Append(result, number);
+            Py_DecRef(number);
+        }
+    }
+    return result;
+}
+
 template < typename Integer >
 static bool PyListToNmz(vector< Integer >& out, PyObject* in)
 {
@@ -1670,6 +1683,9 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
         case libnormaliz::ConeProperty::EuclideanAutomorphisms:
             return NmzAutomorphismsToPython(C->getAutomorphismGroup(
                 libnormaliz::ConeProperty::EuclideanAutomorphisms));
+
+        case libnormaliz::ConeProperty::Incidence:
+            return NmzVectorToPyList(C->getIncidence());
 
         default: {
             switch (outputtype) {
