@@ -158,25 +158,6 @@ PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg)
 #define string_check PyString_Check
 #endif
 
-// Hacky 64-bit check. Works for windows and gcc, probably not clang.
-// Check windows
-#if _WIN32 || _WIN64
-#if _WIN64
-#define ENVIRONMENT64
-#else
-#define ENVIRONMENT32
-#endif
-#endif
-
-// Check GCC
-#if __GNUC__
-#if __x86_64__ || __ppc64__ || __aarch64__
-#define ENVIRONMENT64
-#else
-#define ENVIRONMENT32
-#endif
-#endif
-
 #ifndef NMZ_RELEASE
 static_assert(
     false,
@@ -337,22 +318,15 @@ bool PyNumberToNmz(PyObject* in, long long& out)
     return true;
 }
 
-PyObject* NmzToPyNumber(long long in)
+PyObject* NmzToPyNumber(unsigned int in)
 {
-    return PyLong_FromLongLong(in);
+    return PyLong_FromUnsignedLong(in);
 }
 
-PyObject* NmzToPyNumber(libnormaliz::key_t in)
+PyObject* NmzToPyNumber(unsigned long in)
 {
-    return PyLong_FromLong(in);
+    return PyLong_FromUnsignedLong(in);
 }
-
-#ifdef ENVIRONMENT64
-PyObject* NmzToPyNumber(size_t in)
-{
-    return PyLong_FromLong(in);
-}
-#endif
 
 PyObject* NmzToPyNumber(int in)
 {
@@ -362,6 +336,11 @@ PyObject* NmzToPyNumber(int in)
 PyObject* NmzToPyNumber(long in)
 {
     return PyLong_FromLong(in);
+}
+
+PyObject* NmzToPyNumber(long long in)
+{
+    return PyLong_FromLongLong(in);
 }
 
 PyObject* NmzToPyNumber(double in)
