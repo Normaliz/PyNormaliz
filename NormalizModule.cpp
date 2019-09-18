@@ -292,9 +292,9 @@ PyObject* NmzToPyNumber(const mpz_class in)
     if (in.fits_slong_p()) {
         return PyLong_FromLong(in.get_si());
     }
-    string    mpz_as_string = in.get_str();
+    string    mpz_as_string = in.get_str(16);
     char*     mpz_as_c_string = const_cast< char* >(mpz_as_string.c_str());
-    PyObject* ret_val = PyLong_FromString(mpz_as_c_string, NULL, 10);
+    PyObject* ret_val = PyLong_FromString(mpz_as_c_string, NULL, 16);
     return ret_val;
 }
 
