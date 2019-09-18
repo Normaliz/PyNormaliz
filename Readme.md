@@ -9,7 +9,7 @@ PyNormaliz provides an interface to Normaliz (https://www.normaliz.uni-osnabruec
 ## Requirements
 
 * python 2.7 or higher or python 3.4 or higher
-* Normaliz 3.2.1 or higher (https://github.com/Normaliz/Normaliz/releases)
+* Normaliz 3.7.0 or higher (https://github.com/Normaliz/Normaliz/releases)
 
 The source packages of the Normaliz realeases contains PyNormaliz.
 
