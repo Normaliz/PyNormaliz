@@ -11,11 +11,6 @@ using namespace std;
 #include <e-antic/renfxx.h>
 #endif
 
-#include <iostream>
-using std::cerr;
-using std::cout;
-using std::endl;
-
 #include <string>
 using std::string;
 
