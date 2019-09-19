@@ -47,7 +47,7 @@ sudo cp nauty.a /usr/local/lib/libnauty.a
 git clone --depth=1 https://github.com/Normaliz/Normaliz
 cd Normaliz
 ./bootstrap.sh
-./configure --disable-scip --disable-nmzintegrate $NMZ_ENF --prefix=/usr
+./configure --disable-nmzintegrate $NMZ_ENF --prefix=/usr
 make
 sudo make install
 cd ..
