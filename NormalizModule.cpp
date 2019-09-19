@@ -31,6 +31,12 @@ using libnormaliz::Sublattice_Representation;
 using libnormaliz::Type::InputType;
 using libnormaliz::AutomorphismGroup;
 
+#ifdef LIBNORMALIZ_DYNAMIC_BITSET_H
+using libnormaliz::dynamic_bitset;
+#else
+typedef boost::dynamic_bitset<> dynamic_bitset;
+#endif
+
 #include <vector>
 using std::map;
 using std::pair;
@@ -681,7 +687,7 @@ static PyObject* _NmzBasisChangeIntern(Cone< Integer >* C)
     return res;
 }
 
-static PyObject* NmzBitsetToPyList(const boost::dynamic_bitset<>& bits)
+static PyObject* NmzBitsetToPyList(const dynamic_bitset& bits)
 {
     ssize_t   len = bits.size();
     PyObject* list = PyList_New(len);
@@ -692,7 +698,7 @@ static PyObject* NmzBitsetToPyList(const boost::dynamic_bitset<>& bits)
 }
 
 static PyObject*
-NmzFacelatticeToPython(const map< boost::dynamic_bitset<>, int >& lattice)
+NmzFacelatticeToPython(const map<dynamic_bitset, int>& lattice)
 {
     ssize_t   len = lattice.size();
     PyObject* list = PyList_New(len);
