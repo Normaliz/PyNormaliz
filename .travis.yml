@@ -1,5 +1,8 @@
 dist: xenial
-language: c
+language: python
+python:
+  - "2.7"
+  - "3.6"
 cache: ccache
 addons:
   apt:
@@ -12,34 +15,23 @@ addons:
       - autoconf
       - automake
       - libtool
-      - python-pip
-      - python3-pip
-      - python3-setuptools
 env:
-  - PY="2"
-    EANTIC="no"
-  - PY="2"
-    EANTIC="yes"
-  - PY="3"
-    EANTIC="no"
-  - PY="3"
-    EANTIC="yes"
+  - EANTIC=no
+  - EANTIC=yes
 install:
-  - export MAKE="make -j2"
-  - export PYTHON="python${PY}"
-  - export PIP="pip${PY}"
-  - export PIPINSTALL="${PIP} install --no-index --no-deps -v"
+  - export MAKEFLAGS="-j2"
+  - export PIP=$(which pip) # workaround so that sudo uses correct pip
   # install normaliz
   - ./.travis-install-normaliz.sh
   # install pynormaliz
-  - sudo $PIPINSTALL .
+  - sudo $PIP install --no-index --no-deps -v .
 script:
   - export OMP_NUM_THREADS=4
   # run tests
-  - $PYTHON setup.py test
+  - python setup.py test
   # uninstall, make source distribution and reinstall from it
   # and check that the module can be imported
   - sudo $PIP uninstall -y PyNormaliz
   - make sdist
-  - sudo $PIPINSTALL dist/PyNormaliz-*.tar.gz
-  - $PYTHON -c "import PyNormaliz"
+  - sudo $PIP install --no-index --no-deps -v dist/PyNormaliz-*.tar.gz
+  - python -c "import PyNormaliz"
