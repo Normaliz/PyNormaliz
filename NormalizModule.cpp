@@ -103,7 +103,7 @@ PyNormalizInputException::PyNormalizInputException(const std::string& message)
  *
  ***************************************************************************/
 
-void signal_handler(int signal)
+static void signal_handler(int signal)
 {
     libnormaliz::nmz_interrupted = true;
 }
@@ -143,7 +143,7 @@ static PyObject* MatrixHandler = NULL;
  *
  ***************************************************************************/
 
-PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg)
+static PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg)
 {
     PyObject* single_arg_tuple = PyTuple_Pack(1, single_arg);
     PyObject* return_obj = PyObject_CallObject(function, single_arg_tuple);
@@ -180,7 +180,7 @@ static_assert(false,
  *
  ***************************************************************************/
 
-string PyUnicodeToString(PyObject* in)
+static string PyUnicodeToString(PyObject* in)
 {
     if (!string_check(in)) {
         throw PyNormalizInputException("input must be a string");
@@ -199,7 +199,7 @@ string PyUnicodeToString(PyObject* in)
 #endif
 }
 
-PyObject* StringToPyUnicode(string in)
+static PyObject* StringToPyUnicode(string in)
 {
 #if PY_MAJOR_VERSION >= 3
     return PyUnicode_FromString(in.c_str());
@@ -210,7 +210,7 @@ PyObject* StringToPyUnicode(string in)
 
 // Boolean conversion
 
-inline PyObject* BoolToPyBool(bool in)
+static inline PyObject* BoolToPyBool(bool in)
 {
     if (in)
         Py_RETURN_TRUE;
@@ -219,9 +219,9 @@ inline PyObject* BoolToPyBool(bool in)
 
 // Converting MPZ's to PyLong and back via strings. Worst possible solution
 // ever.
-bool PyNumberToNmz(PyObject*, mpz_class&);
+static bool PyNumberToNmz(PyObject*, mpz_class&);
 
-bool PyNumberToNmz(PyObject* in, mpq_class& out)
+static bool PyNumberToNmz(PyObject* in, mpq_class& out)
 {
     if (PyFloat_Check(in)) {
         out = mpq_class(PyFloat_AsDouble(in));
@@ -268,7 +268,7 @@ bool PyNumberToNmz(PyObject* in, mpq_class& out)
     return true;
 }
 
-bool PyNumberToNmz(PyObject* in, mpz_class& out)
+static bool PyNumberToNmz(PyObject* in, mpz_class& out)
 {
 #if PY_MAJOR_VERSION < 3
     if (PyInt_Check(in)) {
@@ -293,7 +293,7 @@ bool PyNumberToNmz(PyObject* in, mpz_class& out)
     return true;
 }
 
-PyObject* NmzToPyNumber(const mpz_class in)
+static PyObject* NmzToPyNumber(const mpz_class in)
 {
     if (in.fits_slong_p()) {
         return PyLong_FromLong(in.get_si());
@@ -304,7 +304,7 @@ PyObject* NmzToPyNumber(const mpz_class in)
     return ret_val;
 }
 
-PyObject* NmzToPyNumber(const mpq_class in)
+static PyObject* NmzToPyNumber(const mpq_class in)
 {
     PyObject* out_list = PyList_New(2);
     PyList_SetItem(out_list, 0, NmzToPyNumber(in.get_num()));
@@ -314,7 +314,7 @@ PyObject* NmzToPyNumber(const mpq_class in)
     return out_list;
 }
 
-bool PyNumberToNmz(PyObject* in, long long& out)
+static bool PyNumberToNmz(PyObject* in, long long& out)
 {
     int overflow;
     out = PyLong_AsLongLongAndOverflow(in, &overflow);
@@ -324,42 +324,42 @@ bool PyNumberToNmz(PyObject* in, long long& out)
     return true;
 }
 
-PyObject* NmzToPyNumber(unsigned int in)
+static PyObject* NmzToPyNumber(unsigned int in)
 {
     return PyLong_FromUnsignedLong(in);
 }
 
-PyObject* NmzToPyNumber(unsigned long in)
+static PyObject* NmzToPyNumber(unsigned long in)
 {
     return PyLong_FromUnsignedLong(in);
 }
 
-PyObject* NmzToPyNumber(int in)
+static PyObject* NmzToPyNumber(int in)
 {
     return PyLong_FromLong(in);
 }
 
-PyObject* NmzToPyNumber(long in)
+static PyObject* NmzToPyNumber(long in)
 {
     return PyLong_FromLong(in);
 }
 
-PyObject* NmzToPyNumber(long long in)
+static PyObject* NmzToPyNumber(long long in)
 {
     return PyLong_FromLongLong(in);
 }
 
-PyObject* NmzToPyNumber(double in)
+static PyObject* NmzToPyNumber(double in)
 {
     return PyFloat_FromDouble(in);
 }
 
 template < typename Integer >
-PyObject* NmzVectorToPyList(const vector< Integer >& in,
+static PyObject* NmzVectorToPyList(const vector< Integer >& in,
                             bool                     do_callback = true);
 
 #ifdef ENFNORMALIZ
-PyObject* NmzToPyNumber(renf_elem_class in)
+static PyObject* NmzToPyNumber(renf_elem_class in)
 {
     vector< mpz_class > output_nums = in.get_num_vector();
     mpz_class           output_den = in.get_den();
@@ -414,7 +414,7 @@ static bool PyIntMatrixToNmz(vector< vector< Integer > >& out, PyObject* in)
 
 #ifdef ENFNORMALIZ
 template < typename NumberField, typename NumberFieldElem >
-bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
+static bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
                       PyObject*                            in,
                       NumberField*                         nf)
 {
@@ -480,7 +480,7 @@ static bool PyInputToNmz(vector< vector< Integer > >& out, PyObject* in)
 }
 
 template < typename Integer >
-PyObject* NmzVectorToPyList(const vector< Integer >& in, bool do_callback)
+static PyObject* NmzVectorToPyList(const vector< Integer >& in, bool do_callback)
 {
     PyObject*    vector;
     const size_t n = in.size();
@@ -496,7 +496,7 @@ PyObject* NmzVectorToPyList(const vector< Integer >& in, bool do_callback)
 template PyObject* NmzVectorToPyList(const vector< mpq_class >& in,
                                      bool                       do_callback);
 
-PyObject* NmzBoolVectorToPyList(const vector< bool >& in)
+static PyObject* NmzBoolVectorToPyList(const vector< bool >& in)
 {
     PyObject*    vector;
     const size_t n = in.size();
@@ -509,7 +509,7 @@ PyObject* NmzBoolVectorToPyList(const vector< bool >& in)
     return vector;
 }
 
-PyObject* NmzBoolMatrixToPyList(const vector< vector< bool > >& in)
+static PyObject* NmzBoolMatrixToPyList(const vector< vector< bool > >& in)
 {
     PyObject*    matrix;
     const size_t n = in.size();
@@ -523,7 +523,7 @@ PyObject* NmzBoolMatrixToPyList(const vector< vector< bool > >& in)
 }
 
 template < typename Integer >
-PyObject* NmzMatrixToPyList(const vector< vector< Integer > >& in)
+static PyObject* NmzMatrixToPyList(const vector< vector< Integer > >& in)
 {
     PyObject*    matrix;
     const size_t n = in.size();
@@ -536,7 +536,7 @@ PyObject* NmzMatrixToPyList(const vector< vector< Integer > >& in)
     return matrix;
 }
 
-PyObject* NmzHilbertSeriesToPyList(const libnormaliz::HilbertSeries& HS,
+static PyObject* NmzHilbertSeriesToPyList(const libnormaliz::HilbertSeries& HS,
                                    bool                              is_HSOP)
 {
     PyObject* return_list = PyList_New(3);
@@ -558,7 +558,7 @@ PyObject* NmzHilbertSeriesToPyList(const libnormaliz::HilbertSeries& HS,
 }
 
 template < typename Integer >
-PyObject* NmzWeightedEhrhartSeriesToPyList(
+static PyObject* NmzWeightedEhrhartSeriesToPyList(
     const std::pair< libnormaliz::HilbertSeries, Integer >& HS)
 {
     PyObject* return_list = PyList_New(4);
@@ -572,7 +572,7 @@ PyObject* NmzWeightedEhrhartSeriesToPyList(
 }
 
 template < typename Integer >
-PyObject*
+static PyObject*
 NmzHilbertQuasiPolynomialToPyList(const libnormaliz::HilbertSeries& HS)
 {
     vector< vector< Integer > > HQ = HS.getHilbertQuasiPolynomial();
@@ -587,7 +587,7 @@ NmzHilbertQuasiPolynomialToPyList(const libnormaliz::HilbertSeries& HS)
 }
 
 template < typename Integer >
-PyObject* NmzWeightedEhrhartQuasiPolynomialToPyList(
+static PyObject* NmzWeightedEhrhartQuasiPolynomialToPyList(
     const libnormaliz::IntegrationData& int_data)
 {
     vector< vector< Integer > > ehrhart_qp =
@@ -604,7 +604,7 @@ PyObject* NmzWeightedEhrhartQuasiPolynomialToPyList(
 }
 
 template < typename Integer >
-PyObject* NmzTriangleListToPyList(
+static PyObject* NmzTriangleListToPyList(
     const vector< pair< vector< libnormaliz::key_t >, Integer > >& in)
 {
     const size_t n = in.size();
@@ -621,7 +621,7 @@ PyObject* NmzTriangleListToPyList(
 }
 
 template < typename Integer >
-PyObject*
+static PyObject*
 NmzStanleyDataToPyList(const libnormaliz::STANLEYDATA< Integer >& StanleyData)
 {
     PyObject* pair = PyList_New(2);
@@ -633,7 +633,7 @@ NmzStanleyDataToPyList(const libnormaliz::STANLEYDATA< Integer >& StanleyData)
 }
 
 template < typename Integer >
-PyObject* NmzStanleyDecToPyList(
+static PyObject* NmzStanleyDecToPyList(
     const list< libnormaliz::STANLEYDATA< Integer > >& StanleyDec)
 {
     const size_t n = StanleyDec.size();
@@ -729,14 +729,14 @@ struct NumberFieldCone {
 };
 #endif
 
-void delete_cone_mpz(PyObject* cone)
+static void delete_cone_mpz(PyObject* cone)
 {
     Cone< mpz_class >* cone_ptr = reinterpret_cast< Cone< mpz_class >* >(
         PyCapsule_GetPointer(cone, cone_name));
     delete cone_ptr;
 }
 
-void delete_cone_long(PyObject* cone)
+static void delete_cone_long(PyObject* cone)
 {
     Cone< long long >* cone_ptr = reinterpret_cast< Cone< long long >* >(
         PyCapsule_GetPointer(cone, cone_name_long));
@@ -744,7 +744,7 @@ void delete_cone_long(PyObject* cone)
 }
 
 #ifdef ENFNORMALIZ
-void delete_cone_renf(PyObject* cone)
+static void delete_cone_renf(PyObject* cone)
 {
     NumberFieldCone* cone_ptr = reinterpret_cast< NumberFieldCone* >(
         PyCapsule_GetPointer(cone, cone_name_renf));
@@ -753,27 +753,27 @@ void delete_cone_renf(PyObject* cone)
 }
 #endif
 
-Cone< long long >* get_cone_long(PyObject* cone)
+static Cone< long long >* get_cone_long(PyObject* cone)
 {
     return reinterpret_cast< Cone< long long >* >(
         PyCapsule_GetPointer(cone, cone_name_long));
 }
 
-Cone< mpz_class >* get_cone_mpz(PyObject* cone)
+static Cone< mpz_class >* get_cone_mpz(PyObject* cone)
 {
     return reinterpret_cast< Cone< mpz_class >* >(
         PyCapsule_GetPointer(cone, cone_name));
 }
 
 #ifdef ENFNORMALIZ
-Cone< renf_elem_class >* get_cone_renf(PyObject* cone)
+static Cone< renf_elem_class >* get_cone_renf(PyObject* cone)
 {
     NumberFieldCone* cone_ptr = reinterpret_cast< NumberFieldCone* >(
         PyCapsule_GetPointer(cone, cone_name_renf));
     return cone_ptr->cone;
 }
 
-renf_class* get_cone_renf_renf(PyObject* cone)
+static renf_class* get_cone_renf_renf(PyObject* cone)
 {
     NumberFieldCone* cone_ptr = reinterpret_cast< NumberFieldCone* >(
         PyCapsule_GetPointer(cone, cone_name_renf));
@@ -781,20 +781,20 @@ renf_class* get_cone_renf_renf(PyObject* cone)
 }
 #endif
 
-PyObject* pack_cone(Cone< mpz_class >* C, void* dummy = nullptr)
+static PyObject* pack_cone(Cone< mpz_class >* C, void* dummy = nullptr)
 {
     return PyCapsule_New(reinterpret_cast< void* >(C), cone_name,
                          &delete_cone_mpz);
 }
 
-PyObject* pack_cone(Cone< long long >* C, void* dummy = nullptr)
+static PyObject* pack_cone(Cone< long long >* C, void* dummy = nullptr)
 {
     return PyCapsule_New(reinterpret_cast< void* >(C), cone_name_long,
                          &delete_cone_long);
 }
 
 #ifdef ENFNORMALIZ
-PyObject* pack_cone(Cone< renf_elem_class >* C, void* nf = nullptr)
+static PyObject* pack_cone(Cone< renf_elem_class >* C, void* nf = nullptr)
 {
     NumberFieldCone* cone_ptr = new NumberFieldCone();
     cone_ptr->nf = reinterpret_cast< renf_class* >(nf);
@@ -803,7 +803,7 @@ PyObject* pack_cone(Cone< renf_elem_class >* C, void* nf = nullptr)
                          &delete_cone_renf);
 }
 
-PyObject* pack_cone(Cone< renf_elem_class >* C)
+static PyObject* pack_cone(Cone< renf_elem_class >* C)
 {
     PyErr_SetString(PyNormaliz_cppError,
                     "Trying to pack renf cone without number field");
@@ -811,7 +811,7 @@ PyObject* pack_cone(Cone< renf_elem_class >* C)
 }
 #endif
 
-bool is_cone(PyObject* cone)
+static bool is_cone(PyObject* cone)
 {
     if (PyCapsule_CheckExact(cone)) {
         string current = string(PyCapsule_GetName(cone));
@@ -821,7 +821,7 @@ bool is_cone(PyObject* cone)
     return false;
 }
 
-bool is_cone_mpz(PyObject* cone)
+static bool is_cone_mpz(PyObject* cone)
 {
     if (PyCapsule_CheckExact(cone)) {
         string current = string(PyCapsule_GetName(cone));
@@ -830,7 +830,7 @@ bool is_cone_mpz(PyObject* cone)
     return false;
 }
 
-bool is_cone_long(PyObject* cone)
+static bool is_cone_long(PyObject* cone)
 {
     if (PyCapsule_CheckExact(cone)) {
         string current = string(PyCapsule_GetName(cone));
@@ -839,7 +839,7 @@ bool is_cone_long(PyObject* cone)
     return false;
 }
 
-bool is_cone_renf(PyObject* cone)
+static bool is_cone_renf(PyObject* cone)
 {
     if (PyCapsule_CheckExact(cone)) {
         string current = string(PyCapsule_GetName(cone));
@@ -1119,7 +1119,7 @@ Special cases are a string describing a polynomial for the polynomial
 input type, and the CreateAsLongLong keyword to restrict normaliz computations
 to machine integers instead of arbitrary precision numbers.
 */
-PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     FUNC_BEGIN
 
@@ -1151,7 +1151,7 @@ PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
 @Description
 Returns a copy of the cone.
 */
-PyObject* _NmzConeCopy(PyObject* self, PyObject* args)
+static PyObject* _NmzConeCopy(PyObject* self, PyObject* args)
 {
     FUNC_BEGIN
     PyObject* cone = PyTuple_GetItem(args, 0);
@@ -1191,7 +1191,7 @@ PyObject* _NmzConeCopy(PyObject* self, PyObject* args)
  ***************************************************************************/
 
 template < typename Integer >
-PyObject* NmzHilbertSeries(Cone< Integer >* C, PyObject* args)
+static PyObject* NmzHilbertSeries(Cone< Integer >* C, PyObject* args)
 {
     FUNC_BEGIN
 
@@ -1216,7 +1216,7 @@ PyObject* NmzHilbertSeries(Cone< Integer >* C, PyObject* args)
 }
 
 
-PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args)
+static PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args)
 {
 
     FUNC_BEGIN
@@ -1259,7 +1259,7 @@ PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args)
 
 
 template < typename Integer >
-PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
+static PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
 {
     FUNC_BEGIN
 
@@ -1316,7 +1316,7 @@ PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
 }
 
 
-PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
+static PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
 {
 
     FUNC_BEGIN
@@ -1361,7 +1361,7 @@ PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
  ***************************************************************************/
 
 template<typename Integer>
-PyObject* _NmzModify(Cone<Integer>* cone, PyObject* args)
+static PyObject* _NmzModify(Cone<Integer>* cone, PyObject* args)
 {
     string property = PyUnicodeToString( PyTuple_GetItem(args, 1) );
     PyObject* matrix_py = PyTuple_GetItem(args,2);
@@ -1375,7 +1375,7 @@ PyObject* _NmzModify(Cone<Integer>* cone, PyObject* args)
 }
 
 #ifdef ENFNORMALIZ
-PyObject* _NmzModify_Renf(Cone<renf_elem_class>* cone, renf_class* nf, PyObject* args)
+static PyObject* _NmzModify_Renf(Cone<renf_elem_class>* cone, renf_class* nf, PyObject* args)
 {
     string property = PyUnicodeToString( PyTuple_GetItem(args, 1) );
     PyObject* matrix_py = PyTuple_GetItem(args,2);
@@ -1389,7 +1389,7 @@ PyObject* _NmzModify_Renf(Cone<renf_elem_class>* cone, renf_class* nf, PyObject*
 }
 #endif
 
-PyObject* _NmzModify_Outer(PyObject* self, PyObject* args)
+static PyObject* _NmzModify_Outer(PyObject* self, PyObject* args)
 {
 
     FUNC_BEGIN
@@ -1439,7 +1439,7 @@ PyObject* _NmzModify_Outer(PyObject* self, PyObject* args)
 Returns if the cone property <property_string> is computed in the cone <cone>.
 */
 template < typename Integer >
-PyObject* NmzIsComputed(Cone< Integer >* C, PyObject* prop)
+static PyObject* NmzIsComputed(Cone< Integer >* C, PyObject* prop)
 {
     FUNC_BEGIN
 
@@ -1451,7 +1451,7 @@ PyObject* NmzIsComputed(Cone< Integer >* C, PyObject* prop)
     FUNC_END
 }
 
-PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
+static PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
 {
     FUNC_BEGIN
 
@@ -1489,7 +1489,7 @@ PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
  ***************************************************************************/
 
 template < typename Integer >
-PyObject* NmzSetGrading_inner(Cone< Integer >* cone, PyObject* list)
+static PyObject* NmzSetGrading_inner(Cone< Integer >* cone, PyObject* list)
 {
     vector< Integer > list_c;
     bool              result = PyListToNmz(list_c, list);
@@ -1502,7 +1502,7 @@ PyObject* NmzSetGrading_inner(Cone< Integer >* cone, PyObject* list)
     Py_RETURN_NONE;
 }
 
-PyObject* NmzSetGrading(PyObject* self, PyObject* args)
+static PyObject* NmzSetGrading(PyObject* self, PyObject* args)
 {
     FUNC_BEGIN
     PyObject* cone = PyTuple_GetItem(args, 0);
@@ -1554,7 +1554,7 @@ second is the projection third is the annihilator.
 */
 
 template < typename Integer >
-PyObject*
+static PyObject*
 _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
 {
 
@@ -1710,7 +1710,7 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
     Py_RETURN_NONE;
 }
 
-PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     FUNC_BEGIN
@@ -1776,7 +1776,7 @@ PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
  *
  ***************************************************************************/
 
-PyObject* NmzSetVerboseDefault(PyObject* self, PyObject* args)
+static PyObject* NmzSetVerboseDefault(PyObject* self, PyObject* args)
 {
     FUNC_BEGIN
     PyObject* value = PyTuple_GetItem(args, 0);
@@ -1790,7 +1790,7 @@ PyObject* NmzSetVerboseDefault(PyObject* self, PyObject* args)
 }
 
 template < typename Integer >
-PyObject* NmzSetVerbose(Cone< Integer >* C, PyObject* value)
+static PyObject* NmzSetVerbose(Cone< Integer >* C, PyObject* value)
 {
     FUNC_BEGIN
     bool old_value;
@@ -1799,7 +1799,7 @@ PyObject* NmzSetVerbose(Cone< Integer >* C, PyObject* value)
     FUNC_END
 }
 
-PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
+static PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
 {
     FUNC_BEGIN
 
@@ -1842,7 +1842,7 @@ PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
  *
  ***************************************************************************/
 
-PyObject* NmzGetPolynomial(PyObject* self, PyObject* args)
+static PyObject* NmzGetPolynomial(PyObject* self, PyObject* args)
 {
 
     FUNC_BEGIN
@@ -1886,7 +1886,7 @@ PyObject* NmzGetPolynomial(PyObject* self, PyObject* args)
  *
  ***************************************************************************/
 
-PyObject* NmzSetNrCoeffQuasiPol(PyObject* self, PyObject* args)
+static PyObject* NmzSetNrCoeffQuasiPol(PyObject* self, PyObject* args)
 {
 
     FUNC_BEGIN
@@ -1928,7 +1928,7 @@ PyObject* NmzSetNrCoeffQuasiPol(PyObject* self, PyObject* args)
  *
  ***************************************************************************/
 
-PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args)
+static PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args)
 {
 
     FUNC_BEGIN
@@ -1978,7 +1978,7 @@ PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args)
  *
  ***************************************************************************/
 
-PyObject* NmzGetHilbertSeriesExpansion(PyObject* self, PyObject* args)
+static PyObject* NmzGetHilbertSeriesExpansion(PyObject* self, PyObject* args)
 {
 
     FUNC_BEGIN
@@ -2027,7 +2027,7 @@ PyObject* NmzGetHilbertSeriesExpansion(PyObject* self, PyObject* args)
 }
 
 
-PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* args)
+static PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* args)
 {
 
     FUNC_BEGIN
@@ -2081,7 +2081,7 @@ PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* args)
  *
  ***************************************************************************/
 
-PyObject* NmzSetNumberOfNormalizThreads(PyObject* self, PyObject* args)
+static PyObject* NmzSetNumberOfNormalizThreads(PyObject* self, PyObject* args)
 {
 
     FUNC_BEGIN
@@ -2116,7 +2116,7 @@ PyObject* NmzSetNumberOfNormalizThreads(PyObject* self, PyObject* args)
  *
  ***************************************************************************/
 
-PyObject* NmzHasEAntic(PyObject* self)
+static PyObject* NmzHasEAntic(PyObject* self)
 {
 #ifdef ENFNORMALIZ
     Py_RETURN_TRUE;
@@ -2131,7 +2131,7 @@ PyObject* NmzHasEAntic(PyObject* self)
  *
  ***************************************************************************/
 
-PyObject* NmzWriteOutputFile(PyObject* self, PyObject* args)
+static PyObject* NmzWriteOutputFile(PyObject* self, PyObject* args)
 {
     FUNC_BEGIN
 
@@ -2174,7 +2174,7 @@ PyObject* NmzWriteOutputFile(PyObject* self, PyObject* args)
  *
  ***************************************************************************/
 
-PyObject* NmzGetRenfInfo(PyObject* self, PyObject* args)
+static PyObject* NmzGetRenfInfo(PyObject* self, PyObject* args)
 {
     FUNC_BEGIN
 #ifdef ENFNORMALIZ
