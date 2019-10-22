@@ -509,19 +509,6 @@ static PyObject* NmzBoolVectorToPyList(const vector< bool >& in)
     return vector;
 }
 
-static PyObject* NmzBoolMatrixToPyList(const vector< vector< bool > >& in)
-{
-    PyObject*    matrix;
-    const size_t n = in.size();
-    matrix = PyList_New(n);
-    for (size_t i = 0; i < n; ++i) {
-        PyList_SetItem(matrix, i, NmzBoolVectorToPyList(in[i]));
-    }
-    if (MatrixHandler != NULL)
-        matrix = CallPythonFuncOnOneArg(MatrixHandler, matrix);
-    return matrix;
-}
-
 template < typename Integer >
 static PyObject* NmzMatrixToPyList(const vector< vector< Integer > >& in)
 {
@@ -839,6 +826,7 @@ static bool is_cone_long(PyObject* cone)
     return false;
 }
 
+#ifdef ENFNORMALIZ
 static bool is_cone_renf(PyObject* cone)
 {
     if (PyCapsule_CheckExact(cone)) {
@@ -847,6 +835,7 @@ static bool is_cone_renf(PyObject* cone)
     }
     return false;
 }
+#endif
 
 /***************************************************************************
  *
