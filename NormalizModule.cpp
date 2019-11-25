@@ -1350,7 +1350,7 @@ static PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
  ***************************************************************************/
 
 template<typename Integer>
-static PyObject* _NmzModify(Cone<Integer>* cone, PyObject* args)
+PyObject* _NmzModify(Cone<Integer>* cone, PyObject* args)
 {
     string property = PyUnicodeToString( PyTuple_GetItem(args, 1) );
     PyObject* matrix_py = PyTuple_GetItem(args,2);
@@ -1364,7 +1364,7 @@ static PyObject* _NmzModify(Cone<Integer>* cone, PyObject* args)
 }
 
 #ifdef ENFNORMALIZ
-static PyObject* _NmzModify_Renf(Cone<renf_elem_class>* cone, renf_class* nf, PyObject* args)
+PyObject* _NmzModify_Renf(Cone<renf_elem_class>* cone, renf_class* nf, PyObject* args)
 {
     string property = PyUnicodeToString( PyTuple_GetItem(args, 1) );
     PyObject* matrix_py = PyTuple_GetItem(args,2);
@@ -1378,7 +1378,7 @@ static PyObject* _NmzModify_Renf(Cone<renf_elem_class>* cone, renf_class* nf, Py
 }
 #endif
 
-static PyObject* _NmzModify_Outer(PyObject* self, PyObject* args)
+PyObject* _NmzModify_Outer(PyObject* self, PyObject* args)
 {
 
     FUNC_BEGIN
