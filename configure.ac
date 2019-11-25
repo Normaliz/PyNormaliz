@@ -22,7 +22,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([
 #include <gmpxx.h>
 #include <libnormaliz/cone.h>
 ],[
-libnormaliz::Cone<mpq_class> * C;
+libnormaliz::Cone<mpz_class> *C;
 ])], [have_normaliz=yes])
 
 if test "$have_normaliz" = "no"; then
