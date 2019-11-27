@@ -5,7 +5,7 @@ include config.py.in
 include m4/ax_cxx_compile_stdcxx.m4
 include NormalizModule.cpp
 include setup.py
-include Readme.md
+include README.md
 include examples/*
 include doc/*
 include tests/*

@@ -79,7 +79,7 @@ class build_ext(_build_ext):
 from os import path
 import io
 this_directory = path.abspath(path.dirname(__file__))
-with io.open(path.join(this_directory, 'Readme.md'), encoding='utf-8') as f:
+with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
@@ -98,6 +98,6 @@ setup(
                               libraries=libraries,
                               **extra_kwds) ],
     
-    package_data = {'': [ "COPYING", "GPLv2", "Readme.md" ] },
+    package_data = {'': [ "COPYING", "GPLv2", "README.md" ] },
     cmdclass = {'build_ext': build_ext, 'test': TestCommand},
 )
