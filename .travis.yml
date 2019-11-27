@@ -18,6 +18,18 @@ addons:
 env:
   - EANTIC=no
   - EANTIC=yes
+
+# send email notifications if master branch starts failing
+# or stops failing
+notifications:
+  email:
+    if: branch = master
+    recipients:
+      - max@quendi.de
+      - wbruns@uos.de
+    on_success: change
+    on_failure: change
+
 install:
   - export MAKEFLAGS="-j2"
   - export PIP=$(which pip) # workaround so that sudo uses correct pip
@@ -25,6 +37,7 @@ install:
   - ./.travis-install-normaliz.sh
   # install pynormaliz
   - sudo $PIP install --no-index --no-deps -v .
+
 script:
   - export OMP_NUM_THREADS=4
   # run tests
