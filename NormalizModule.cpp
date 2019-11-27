@@ -5,11 +5,6 @@
  ***************************************************************************/
 
 #include <Python.h>
-using namespace std;
-
-#ifdef ENFNORMALIZ
-#include <e-antic/renfxx.h>
-#endif
 
 #include <string>
 using std::string;
@@ -67,7 +62,7 @@ typedef int py_size_t;
         PyErr_SetString(NormalizError, e.what());                            \
         return NULL;                                                         \
     }                                                                        \
-    catch (exception & e)                                                    \
+    catch (std::exception & e)                                               \
     {                                                                        \
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);             \
         PyErr_SetString(PyNormaliz_cppError, e.what());                      \
@@ -621,11 +616,11 @@ NmzStanleyDataToPyList(const libnormaliz::STANLEYDATA< Integer >& StanleyData)
 
 template < typename Integer >
 static PyObject* NmzStanleyDecToPyList(
-    const list< libnormaliz::STANLEYDATA< Integer > >& StanleyDec)
+    const std::list< libnormaliz::STANLEYDATA< Integer > >& StanleyDec)
 {
     const size_t n = StanleyDec.size();
     PyObject*    M = PyList_New(n);
-    typename list< libnormaliz::STANLEYDATA< Integer > >::const_iterator S =
+    typename std::list< libnormaliz::STANLEYDATA< Integer > >::const_iterator S =
         StanleyDec.begin();
     for (size_t i = 0; i < n; ++i) {
         PyList_SetItem(M, i, NmzStanleyDataToPyList(*S));
