@@ -354,7 +354,7 @@ static PyObject* NmzVectorToPyList(const vector< Integer >& in,
                             bool                     do_callback = true);
 
 #ifdef ENFNORMALIZ
-static PyObject* NmzToPyNumber(renf_elem_class in)
+static PyObject* NmzToPyNumber(const renf_elem_class &in)
 {
     vector< mpz_class > output_nums = in.get_num_vector();
     mpz_class           output_den = in.get_den();
