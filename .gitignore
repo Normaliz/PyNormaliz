@@ -1,14 +1,6 @@
-function_file
-create_class_functions.gi
 build
 *cpython*
 PyNormaliz.so
 dist
 MANIFEST
 *.pyc
-compile.sh
-configure
-config.status
-config.log
-config.py
-/autom4te.cache/
