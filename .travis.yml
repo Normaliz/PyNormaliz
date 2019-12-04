@@ -45,6 +45,6 @@ script:
   # uninstall, make source distribution and reinstall from it
   # and check that the module can be imported
   - sudo $PIP uninstall -y PyNormaliz
-  - make sdist
+  - python setup.py sdist
   - sudo $PIP install --no-index --no-deps -v dist/PyNormaliz-*.tar.gz
   - python -c "import PyNormaliz"
