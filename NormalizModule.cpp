@@ -116,11 +116,6 @@ static const char* cone_name = "Cone";
 static const char* cone_name_long = "Cone<long long>";
 static const char* cone_name_renf = "Cone<renf_elem>";
 
-static string cone_name_str(cone_name);
-static string cone_name_str_long(cone_name_long);
-static string cone_name_str_renf(cone_name_renf);
-
-
 static PyOS_sighandler_t current_interpreter_sigint_handler;
 
 static PyObject* RationalHandler = NULL;
@@ -194,7 +189,7 @@ static string PyUnicodeToString(PyObject* in)
 #endif
 }
 
-static PyObject* StringToPyUnicode(string in)
+static PyObject* StringToPyUnicode(const string &in)
 {
 #if PY_MAJOR_VERSION >= 3
     return PyUnicode_FromString(in.c_str());
@@ -795,9 +790,9 @@ static PyObject* pack_cone(Cone< renf_elem_class >* C, void* nf)
 static bool is_cone(PyObject* cone)
 {
     if (PyCapsule_CheckExact(cone)) {
-        string current = string(PyCapsule_GetName(cone));
-        return cone_name_str == current || cone_name_str_long == current ||
-               cone_name_str_renf == current;
+        const char *name = PyCapsule_GetName(cone);
+        return !strcmp(name, cone_name) || !strcmp(name, cone_name_long) ||
+               !strcmp(name, cone_name_renf);
     }
     return false;
 }
@@ -805,8 +800,8 @@ static bool is_cone(PyObject* cone)
 static bool is_cone_mpz(PyObject* cone)
 {
     if (PyCapsule_CheckExact(cone)) {
-        string current = string(PyCapsule_GetName(cone));
-        return current == cone_name_str;
+        const char *name = PyCapsule_GetName(cone);
+        return !strcmp(name, cone_name);
     }
     return false;
 }
@@ -814,8 +809,8 @@ static bool is_cone_mpz(PyObject* cone)
 static bool is_cone_long(PyObject* cone)
 {
     if (PyCapsule_CheckExact(cone)) {
-        string current = string(PyCapsule_GetName(cone));
-        return current == cone_name_str_long;
+        const char *name = PyCapsule_GetName(cone);
+        return !strcmp(name, cone_name_long);
     }
     return false;
 }
@@ -824,8 +819,8 @@ static bool is_cone_long(PyObject* cone)
 static bool is_cone_renf(PyObject* cone)
 {
     if (PyCapsule_CheckExact(cone)) {
-        string current = string(PyCapsule_GetName(cone));
-        return current == cone_name_str_renf;
+        const char *name = PyCapsule_GetName(cone);
+        return !strcmp(name, cone_name_renf);
     }
     return false;
 }
@@ -1143,20 +1138,18 @@ static PyObject* _NmzConeCopy(PyObject* self, PyObject* args)
         return NULL;
     }
 
-    string current_name = string(PyCapsule_GetName(cone));
-
-    if (cone_name_str == current_name) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         Cone< mpz_class >* new_cone = new Cone< mpz_class >(*cone_ptr);
         return pack_cone(new_cone);
     }
-    else if (cone_name_str_long == current_name) {
+    else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         Cone< long long >* new_cone = new Cone< long long >(*cone_ptr);
         return pack_cone(new_cone);
     }
 #ifdef ENFNORMALIZ
-    else {
+    else if (is_cone_renf(cone)) {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         Cone< renf_elem_class >* new_cone =
             new Cone< renf_elem_class >(*cone_ptr);
@@ -1212,14 +1205,13 @@ static PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args)
     }
 
     current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
-    string current_name = string(PyCapsule_GetName(cone));
-    if (cone_name_str == current_name) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         PyObject*          return_value = NmzHilbertSeries(cone_ptr, args);
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         return return_value;
     }
-    else if (cone_name_str_long == current_name) {
+    else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         PyObject*          return_value = NmzHilbertSeries(cone_ptr, args);
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
@@ -1315,16 +1307,16 @@ static PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
         return NULL;
     }
 
-    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         result = _NmzCompute(cone_ptr, args);
     }
-    else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
+    else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         result = _NmzCompute(cone_ptr, args);
     }
 #ifdef ENFNORMALIZ
-    else {
+    else if (is_cone_renf(cone)) {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         result = _NmzCompute(cone_ptr, args);
     }
@@ -1386,16 +1378,16 @@ PyObject* _NmzModify_Outer(PyObject* self, PyObject* args)
         return NULL;
     }
 
-    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         return _NmzModify(cone_ptr, args);
     }
-    else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
+    else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         return _NmzModify(cone_ptr, args);
     }
 #ifdef ENFNORMALIZ
-    else {
+    else if (is_cone_renf(cone)) {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         renf_class* nf = get_cone_renf_renf(cone);
         return _NmzModify_Renf(cone_ptr, nf, args);
@@ -1446,16 +1438,16 @@ static PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
         return NULL;
     }
 
-    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         return NmzIsComputed(cone_ptr, to_compute);
     }
-    else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
+    else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         return NmzIsComputed(cone_ptr, to_compute);
     }
 #ifdef ENFNORMALIZ
-    else {
+    else if (is_cone_renf(cone)) {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         return NmzIsComputed(cone_ptr, to_compute);
     }
@@ -1494,7 +1486,7 @@ static PyObject* NmzSetGrading(PyObject* self, PyObject* args)
         PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
         return NULL;
     }
-    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         return NmzSetGrading_inner(cone_ptr, grading_py);
     }
@@ -1727,16 +1719,16 @@ static PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
 
     PyObject* result = NULL;
 
-    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         result = _NmzResultImpl(cone_ptr, prop);
     }
-    else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
+    else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         result = _NmzResultImpl(cone_ptr, prop);
     }
 #ifdef ENFNORMALIZ
-    else {
+    else if (is_cone_renf(cone)) {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         result = _NmzResultImpl(
             cone_ptr, prop,
@@ -1803,16 +1795,16 @@ static PyObject* NmzSetVerbose_Outer(PyObject* self, PyObject* args)
         return NULL;
     }
 
-    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         return NmzSetVerbose(cone_ptr, value);
     }
-    else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
+    else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         return NmzSetVerbose(cone_ptr, value);
     }
 #ifdef ENFNORMALIZ
-    else {
+    else if (is_cone_renf(cone)) {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         return NmzSetVerbose(cone_ptr, value);
     }
@@ -1842,14 +1834,14 @@ static PyObject* NmzGetPolynomial(PyObject* self, PyObject* args)
 
     current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
 
-    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         PyObject*          return_value =
             StringToPyUnicode((cone_ptr->getIntData()).getPolynomial());
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         return return_value;
     }
-    else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
+    else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         PyObject*          return_value =
             StringToPyUnicode((cone_ptr->getIntData()).getPolynomial());
@@ -1888,12 +1880,12 @@ static PyObject* NmzSetNrCoeffQuasiPol(PyObject* self, PyObject* args)
 
     int  overflow;
     long bound = PyLong_AsLongLongAndOverflow(bound_py, &overflow);
-    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         cone_ptr->setNrCoeffQuasiPol(bound);
         Py_RETURN_TRUE;
     }
-    else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
+    else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         cone_ptr->setNrCoeffQuasiPol(bound);
         Py_RETURN_TRUE;
@@ -1928,7 +1920,7 @@ static PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args)
 
     current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
 
-    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         Cone< mpz_class >* symm_cone = &(cone_ptr->getSymmetrizedCone());
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
@@ -1938,7 +1930,7 @@ static PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args)
         symm_cone = new Cone< mpz_class >(*symm_cone);
         return pack_cone(symm_cone);
     }
-    else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
+    else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         Cone< long long >* symm_cone = &(cone_ptr->getSymmetrizedCone());
         PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
@@ -1987,11 +1979,11 @@ static PyObject* NmzGetHilbertSeriesExpansion(PyObject* self, PyObject* args)
     libnormaliz::HilbertSeries HS;
     current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
 
-    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         HS = cone_ptr->getHilbertSeries();
     }
-    else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
+    else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         HS = cone_ptr->getHilbertSeries();
     }
@@ -2036,11 +2028,11 @@ static PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* 
     pair< libnormaliz::HilbertSeries, mpz_class > ES;
     current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
 
-    if (cone_name_str == string(PyCapsule_GetName(cone))) {
+    if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         ES = cone_ptr->getWeightedEhrhartSeries();
     }
-    else if (cone_name_str_long == string(PyCapsule_GetName(cone))) {
+    else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         ES = cone_ptr->getWeightedEhrhartSeries();
     }
