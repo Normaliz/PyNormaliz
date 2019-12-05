@@ -379,14 +379,17 @@ static PyObject* NmzToPyNumber(const renf_elem_class &in)
 
 PyObject* NmzToPyNumber(const dynamic_bitset& in)
 {
-    PyObject* result = PyList_New(0);
-    for (int i = 0; i < in.size(); i++) {
-        if (in[i]) {
-            PyObject* number = NmzToPyNumber(i);
-            PyList_Append(result, number);
-            Py_DecRef(number);
-        }
+    PyObject* zero = NmzToPyNumber(0);
+    PyObject* one = NmzToPyNumber(1);
+    size_t    len = in.size();
+    PyObject* result = PyList_New(len);
+    for (size_t i = 0; i < len; i++) {
+        // use PySequence_SetItem (which increments the ref count)
+        // instead of PyList_SetItem (which does not)
+        PySequence_SetItem(result, i, in[i] ? one : zero);
     }
+    Py_DecRef(one);
+    Py_DecRef(zero);
     return result;
 }
 
@@ -669,16 +672,6 @@ static PyObject* _NmzBasisChangeIntern(Cone< Integer >* C)
     return res;
 }
 
-static PyObject* NmzBitsetToPyList(const dynamic_bitset& bits)
-{
-    ssize_t   len = bits.size();
-    PyObject* list = PyList_New(len);
-    for (ssize_t i = 0; i < len; i++) {
-        PyList_SetItem(list, i, BoolToPyBool(bits[i]));
-    }
-    return list;
-}
-
 static PyObject*
 NmzFacelatticeToPython(const map<dynamic_bitset, int>& lattice)
 {
@@ -687,7 +680,7 @@ NmzFacelatticeToPython(const map<dynamic_bitset, int>& lattice)
     ssize_t   curr = 0;
     for (auto it = lattice.begin(); it != lattice.end(); it++) {
         PyObject* list_int = PyList_New(2);
-        PyList_SetItem(list_int, 0, NmzBitsetToPyList(it->first));
+        PyList_SetItem(list_int, 0, NmzToPyNumber(it->first));
         PyList_SetItem(list_int, 1, NmzToPyNumber(it->second));
         PyList_SetItem(list, curr, list_int);
         curr++;
