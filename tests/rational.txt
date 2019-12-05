@@ -1,0 +1,17 @@
+Rational
+================
+
+Based on rational.in in Normaliz resp. rational.tst in NormalizInterface
+
+>>> import PyNormaliz
+>>> M = [[1,1,2 ],[-1,-1,3],[1,-2,4]]
+>>> gr = [[0,0,1]]
+>>> cone = PyNormaliz.Cone(integral_closure=M, grading=gr)
+>>> cone.HilbertBasis()
+[[0, 0, 1], [1, 1, 2], [-1, -1, 3], [0, -1, 3], [1, 0, 3], [1, -2, 4], [1, -1, 4], [0, -2, 5]]
+>>> cone.HilbertSeries()
+[[1, 0, 0, 3, 2, -1, 2, 2, 1, 1, 1, 1, 2], [1, 2, 12], 0]
+>>> cone.PrintHilbertSeries()
+(1 + 3t³ + 2t⁴ - 1t⁵ + 2t⁶ + 2t⁷ + 1t⁸ + 1t⁹ + 1t¹⁰ + 1t¹¹ + 2t¹²)
+------------------------------------------------------------------
+                    (1 - t) (1 - t²) (1 - t¹²)

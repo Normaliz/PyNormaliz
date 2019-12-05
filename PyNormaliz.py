@@ -178,7 +178,7 @@ class Cone:
                     numerator += '({}{!s}'.format('-' if not isPositive(coefficient)
                                                   else '', abs(coefficient))
                 # Only include sign if `coefficient` is negative
-                elif i is firstNonZero:
+                elif exp is firstNonZero:
                     numerator += '{}{!s}t{}'.format('-' if not isPositive(
                         coefficient) else '', abs(coefficient), to_sup(exp))
                 else:
@@ -498,9 +498,9 @@ class Cone:
 
     def EhrhartQuasiPolynomial(self, **kwargs):
         input_list = self.__process_keyword_args(kwargs)
-        input_list.append("HilbertQuasiPolynomial")
+        input_list.append("EhrhartQuasiPolynomial")
         PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "HilbertQuasiPolynomial")
+        return PyNormaliz_cpp.NmzResult(self.cone, "EhrhartQuasiPolynomial")
 
     def IsTriangulationNested(self, **kwargs):
         input_list = self.__process_keyword_args(kwargs)
