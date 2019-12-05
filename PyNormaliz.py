@@ -178,7 +178,7 @@ class Cone:
                     numerator += '({}{!s}'.format('-' if not isPositive(coefficient)
                                                   else '', abs(coefficient))
                 # Only include sign if `coefficient` is negative
-                elif i is firstNonZero:
+                elif exp is firstNonZero:
                     numerator += '{}{!s}t{}'.format('-' if not isPositive(
                         coefficient) else '', abs(coefficient), to_sup(exp))
                 else:
