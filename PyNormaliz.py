@@ -498,9 +498,9 @@ class Cone:
 
     def EhrhartQuasiPolynomial(self, **kwargs):
         input_list = self.__process_keyword_args(kwargs)
-        input_list.append("HilbertQuasiPolynomial")
+        input_list.append("EhrhartQuasiPolynomial")
         PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "HilbertQuasiPolynomial")
+        return PyNormaliz_cpp.NmzResult(self.cone, "EhrhartQuasiPolynomial")
 
     def IsTriangulationNested(self, **kwargs):
         input_list = self.__process_keyword_args(kwargs)
