@@ -33,18 +33,23 @@ notifications:
 install:
   - export MAKEFLAGS="-j2"
   - export PIP=$(which pip) # workaround so that sudo uses correct pip
+  - pip install coverage
   # install normaliz
   - ./.travis-install-normaliz.sh
-  # install pynormaliz
-  - sudo $PIP install --no-index --no-deps -v .
 
 script:
-  - export OMP_NUM_THREADS=4
+  # build pynormaliz
+  - export CFLAGS="$CFLAGS --coverage"
+  - export PYTHONPATH="$PWD"
+  - python setup.py build_ext --inplace
   # run tests
-  - python setup.py test
-  # uninstall, make source distribution and reinstall from it
+  - export OMP_NUM_THREADS=4
+  - coverage run tests/runtests.py
+  # make source distribution, install from it
   # and check that the module can be imported
-  - sudo $PIP uninstall -y PyNormaliz
   - python setup.py sdist
   - sudo $PIP install --no-index --no-deps -v dist/PyNormaliz-*.tar.gz
   - python -c "import PyNormaliz"
+
+after_script:
+  - bash <(curl -s https://codecov.io/bash)

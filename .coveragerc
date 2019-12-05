@@ -1,0 +1,5 @@
+# See <https://github.com/codecov/example-python>
+# and <https://coverage.readthedocs.io/en/latest/config.html>
+#
+[run]
+source=PyNormaliz
