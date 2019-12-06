@@ -499,22 +499,6 @@ static PyObject* NmzVectorToPyList(const vector< Integer >& in, bool do_callback
     return vector;
 }
 
-template PyObject* NmzVectorToPyList(const vector< mpq_class >& in,
-                                     bool                       do_callback);
-
-static PyObject* NmzBoolVectorToPyList(const vector< bool >& in)
-{
-    PyObject*    vector;
-    const size_t n = in.size();
-    vector = PyList_New(n);
-    for (size_t i = 0; i < n; ++i) {
-        PyList_SetItem(vector, i, BoolToPyBool(in[i]));
-    }
-    if (VectorHandler != NULL)
-        vector = CallPythonFuncOnOneArg(VectorHandler, vector);
-    return vector;
-}
-
 template < typename Integer >
 static PyObject* NmzMatrixToPyList(const vector< vector< Integer > >& in)
 {
