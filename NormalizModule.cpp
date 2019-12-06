@@ -374,17 +374,11 @@ static PyObject* NmzToPyNumber(const renf_elem_class &in)
 
 PyObject* NmzToPyNumber(const dynamic_bitset& in)
 {
-    PyObject* zero = NmzToPyNumber(0);
-    PyObject* one = NmzToPyNumber(1);
     size_t    len = in.size();
     PyObject* result = PyList_New(len);
     for (size_t i = 0; i < len; i++) {
-        // use PySequence_SetItem (which increments the ref count)
-        // instead of PyList_SetItem (which does not)
-        PySequence_SetItem(result, i, in[i] ? one : zero);
+        PyList_SetItem(result, i, NmzToPyNumber(in[i] ? 1 : 0));
     }
-    Py_DecRef(one);
-    Py_DecRef(zero);
     return result;
 }
 
