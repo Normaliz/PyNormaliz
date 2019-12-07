@@ -2068,13 +2068,40 @@ static PyObject* NmzSetNumberOfNormalizThreads(PyObject* self, PyObject* args)
 
 /***************************************************************************
  *
- * Check for ENFNormaliz
+ * Check for various features
  *
  ***************************************************************************/
 
 static PyObject* NmzHasEAntic(PyObject* self)
 {
 #ifdef ENFNORMALIZ
+    Py_RETURN_TRUE;
+#else
+    Py_RETURN_FALSE;
+#endif
+}
+
+static PyObject* NmzHasNauty(PyObject* self)
+{
+#ifdef NMZ_NAUTY
+    Py_RETURN_TRUE;
+#else
+    Py_RETURN_FALSE;
+#endif
+}
+
+static PyObject* NmzHasFlint(PyObject* self)
+{
+#ifdef NMZ_FLINT
+    Py_RETURN_TRUE;
+#else
+    Py_RETURN_FALSE;
+#endif
+}
+
+static PyObject* NmzHasCocoa(PyObject* self)
+{
+#ifdef NMZ_COCOA
     Py_RETURN_TRUE;
 #else
     Py_RETURN_FALSE;
@@ -2222,8 +2249,16 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
     {"NmzGetWeightedEhrhartSeriesExpansion",
      (PyCFunction)NmzGetWeightedEhrhartSeriesExpansion, METH_VARARGS,
      "Returns expansion of the weighted Ehrhart series"},
+
     {"NmzHasEAntic", (PyCFunction)NmzHasEAntic, METH_NOARGS,
      "Returns true if (Py)Normaliz was compiled with e-antic support"},
+    {"NmzHasNauty", (PyCFunction)NmzHasNauty, METH_NOARGS,
+     "Returns true if (Py)Normaliz was compiled with nauty support"},
+    {"NmzHasFlint", (PyCFunction)NmzHasFlint, METH_NOARGS,
+     "Returns true if (Py)Normaliz was compiled with Flint support"},
+    {"NmzHasCocoa", (PyCFunction)NmzHasCocoa, METH_NOARGS,
+     "Returns true if (Py)Normaliz was compiled with CoCoA support"},
+
     {"NmzWriteOutputFile", (PyCFunction)NmzWriteOutputFile, METH_VARARGS,
      "Prints the Normaliz cone output into a file"},
     {"NmzGetRenfInfo", (PyCFunction)NmzGetRenfInfo, METH_VARARGS,
