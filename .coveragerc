@@ -3,3 +3,4 @@
 #
 [run]
 source=PyNormaliz
+omit = tests

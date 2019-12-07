@@ -7,17 +7,17 @@ cache: ccache
 addons:
   apt:
     update: true
-  apt_packages:
+    packages:
       - libgmp-dev
       - libmpfr-dev
       - libflint-dev
-      - libboost-dev
       - autoconf
       - automake
       - libtool
 env:
-  - EANTIC=no
-  - EANTIC=yes
+  - EANTIC=no NAUTY=yes COCOALIB=no #FLINT=yes
+  - EANTIC=no NAUTY=yes COCOALIB=yes #FLINT=yes
+  - EANTIC=yes NAUTY=yes COCOALIB=yes #FLINT=yes
 
 # send email notifications if master branch starts failing
 # or stops failing
@@ -31,6 +31,8 @@ notifications:
     on_failure: change
 
 install:
+  - export NMZ_PREFIX=${TRAVIS_HOME}/local
+  - export NORMALIZ_LOCAL_DIR=${NMZ_PREFIX}
   - export MAKEFLAGS="-j2"
   - export PIP=$(which pip) # workaround so that sudo uses correct pip
   - pip install coverage
@@ -44,7 +46,9 @@ script:
   - python setup.py build_ext --inplace
   # run tests
   - export OMP_NUM_THREADS=4
-  - coverage run tests/runtests.py
+  - pushd tests
+  - coverage run runtests.py
+  - popd
   # make source distribution, install from it
   # and check that the module can be imported
   - python setup.py sdist

@@ -3,52 +3,25 @@
 set -e  # exit on error
 set -x  # print command before execution
 
-if [ "$EANTIC" == "yes" ]
-then
-    NMZ_ENF="--enable-flint --enable-enfnormaliz"
+# don't pollute the PyNormaliz directory
+cd /tmp
 
-    # install arb
-    wget https://github.com/fredrik-johansson/arb/archive/2.16.0.tar.gz
-    tar xf 2.16.0.tar.gz
-    cd arb-2.16.0/
-    ./configure --prefix=/usr
-    make
-    sudo make install
-    cd ..
-
-    # install e-antic
-    wget http://www.labri.fr/perso/vdelecro/e-antic/e-antic-0.1.3b0.tar.gz
-    tar xf e-antic-0.1.3b0.tar.gz
-    cd e-antic-0.1.3b0/
-    ./configure --prefix=/usr
-    make
-    sudo make install
-    cd ..
-
-elif [ "$EANTIC" == "no" ]
-then
-    NMZ_ENF="--disable-flint --disable-enfnormaliz"
-else
-    exit 1
-fi
-
-# install nauty
-NAUTY_VERSION="27rc2"
-wget http://pallini.di.uniroma1.it/nauty${NAUTY_VERSION}.tar.gz
-tar xvf nauty${NAUTY_VERSION}.tar.gz
-cd nauty${NAUTY_VERSION}
-./configure
-make all CFLAGS=-fPIC
-sudo mkdir -p /usr/local/include/nauty
-sudo cp nauty.h /usr/local/include/nauty
-sudo cp nauty.a /usr/local/lib/libnauty.a
-
-# install normaliz
 git clone --depth=1 https://github.com/Normaliz/Normaliz
 cd Normaliz
-./bootstrap.sh
-./configure --disable-nmzintegrate $NMZ_ENF --prefix=/usr
-make
-sudo make install
-cd ..
 
+# install dependencies
+
+[ "$COCOALIB" == "yes" ] && ./install_scripts_opt/install_nmz_cocoa.sh && echo "cocoalib complete!"
+[ "$FLINT" == "yes" ] && ./install_scripts_opt/install_nmz_flint.sh && echo "flint complete!"
+[ "$EANTIC" == "yes" ] && ./install_scripts_opt/install_nmz_arb.sh && echo "arb complete!"
+[ "$EANTIC" == "yes" ] && ./install_scripts_opt/install_nmz_e-antic.sh && echo "e-antic complete!"
+[ "$NAUTY" == "yes" ] && ./install_scripts_opt/install_nmz_nauty.sh && echo "nauty complete!"
+
+# finally install Normaliz
+./bootstrap.sh
+export CPPFLAGS="${CPPFLAGS} -I${NMZ_PREFIX}/include"
+export LDFLAGS="${LDFLAGS} -L${NMZ_PREFIX}/lib"
+./configure --prefix=${NMZ_PREFIX}
+make
+make install
+cd ..
