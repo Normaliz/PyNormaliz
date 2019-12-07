@@ -22,7 +22,8 @@ if not PyNormaliz.NmzHasEAntic():
 
 # run doctests
 attempted = failed = 0
-for filename in os.listdir(os.curdir):
+dir = os.path.dirname(os.path.realpath(__file__))
+for filename in os.listdir(dir):
     if filename.endswith('.txt'):
         if filename in skip:
             print("Skip {}".format(filename))
