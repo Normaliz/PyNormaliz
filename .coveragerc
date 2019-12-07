@@ -2,5 +2,4 @@
 # and <https://coverage.readthedocs.io/en/latest/config.html>
 #
 [run]
-source=PyNormaliz
 omit = tests
