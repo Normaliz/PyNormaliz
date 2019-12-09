@@ -46,9 +46,7 @@ script:
   - python setup.py build_ext --inplace
   # run tests
   - export OMP_NUM_THREADS=4
-  - pushd tests
-  - coverage run runtests.py
-  - popd
+  - coverage run tests/runtests.py
   # make source distribution, install from it
   # and check that the module can be imported
   - python setup.py sdist

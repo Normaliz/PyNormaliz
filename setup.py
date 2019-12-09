@@ -22,28 +22,6 @@ else:
       "runtime_library_dirs": [ normaliz_dir + '/lib'],
     }
 
-class TestCommand(Command):
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        old_path = os.getcwd()
-        setup_path = os.path.dirname(__file__)
-        tests_path = os.path.join(setup_path, 'tests')
-        try:
-            os.chdir(tests_path)
-
-            if subprocess.call([sys.executable, 'runtests.py']):
-                raise SystemExit("Doctest failures")
-
-        finally:
-            os.chdir(old_path)
-
 from os import path
 import io
 this_directory = path.abspath(path.dirname(__file__))
@@ -67,5 +45,4 @@ setup(
                               **extra_kwds) ],
     
     package_data = {'': [ "COPYING", "GPLv2", "README.md" ] },
-    cmdclass = {'test': TestCommand},
 )
