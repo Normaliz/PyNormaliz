@@ -838,7 +838,7 @@ static PyObject* NmzListConeProperties(PyObject* args)
 
     ConeProperties goals = props.goals();
     ConeProperties options = props.options();
-
+    
     int number_goals = goals.count();
     int number_options = options.count();
 
@@ -1240,7 +1240,7 @@ static PyObject* _NmzCompute(Cone< Integer >* C, PyObject* args)
     else {
         to_compute = PyList_New(arg_len - 1);
         for (int i = 1; i < arg_len; i++) {
-            PyList_SetItem(to_compute, i, PyTuple_GetItem(args, i));
+            PyList_SetItem(to_compute, i-1, PyTuple_GetItem(args, i));
         }
     }
 
