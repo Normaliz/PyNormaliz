@@ -242,340 +242,76 @@ class Cone:
         print(self.PrintPrettyHilbertSeries(numerator,denominator))
         return None
 
-    # Auto generated stuff
-
-    def Generators(self, **kwargs):
+    def _generic_getter(self, name, **kwargs):
         input_list = self.__process_keyword_args(kwargs)
-        input_list.append("Generators")
+        input_list.append(name)
         PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "Generators")
+        return PyNormaliz_cpp.NmzResult(self.cone, name)
 
-    def ExtremeRays(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("ExtremeRays")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "ExtremeRays")
 
-    def VerticesOfPolyhedron(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("VerticesOfPolyhedron")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "VerticesOfPolyhedron")
+# Generate getters for a bunch of Normalize properties
+def add_dyn_getter(name):
+    if hasattr(Cone, name):
+        return
+    def inner(self, **kwargs):
+        return self._generic_getter(name, **kwargs)
+    inner.__doc__ = "docstring for %s" % name
+    inner.__name__ = name
+    setattr(Cone, name, inner)
 
-    def SupportHyperplanes(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("SupportHyperplanes")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "SupportHyperplanes")
-
-    def HilbertBasis(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("HilbertBasis")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "HilbertBasis")
-
-    def ModuleGenerators(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("ModuleGenerators")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "ModuleGenerators")
-
-    def Deg1Elements(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("Deg1Elements")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "Deg1Elements")
-
-    def ModuleGeneratorsOverOriginalMonoid(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("ModuleGeneratorsOverOriginalMonoid")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "ModuleGeneratorsOverOriginalMonoid")
-
-    def Sublattice(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("Sublattice")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "Sublattice")
-
-    def ExcludedFaces(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("ExcludedFaces")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "ExcludedFaces")
-
-    def OriginalMonoidGenerators(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("OriginalMonoidGenerators")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "OriginalMonoidGenerators")
-
-    def MaximalSubspace(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("MaximalSubspace")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "MaximalSubspace")
-
-    def Equations(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("Equations")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "Equations")
-
-    def Congruences(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("Congruences")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "Congruences")
-
-    def Grading(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("Grading")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "Grading")
-
-    def Dehomogenization(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("Dehomogenization")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "Dehomogenization")
-
-    def WitnessNotIntegrallyClosed(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("WitnessNotIntegrallyClosed")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "WitnessNotIntegrallyClosed")
-
-    def TriangulationSize(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("TriangulationSize")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "TriangulationSize")
-
-    def TriangulationDetSum(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("TriangulationDetSum")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "TriangulationDetSum")
-
-    def ReesPrimaryMultiplicity(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("ReesPrimaryMultiplicity")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "ReesPrimaryMultiplicity")
-
-    def GradingDenom(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("GradingDenom")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "GradingDenom")
-
-    def UnitGroupIndex(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("UnitGroupIndex")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "UnitGroupIndex")
-
-    def InternalIndex(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("InternalIndex")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "InternalIndex")
-
-    def ExternalIndex(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("ExternalIndex")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "ExternalIndex")
-
-    def Multiplicity(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("Multiplicity")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "Multiplicity")
-
-    def RecessionRank(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("RecessionRank")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "RecessionRank")
-
-    def AffineDim(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("AffineDim")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "AffineDim")
-
-    def ModuleRank(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("ModuleRank")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "ModuleRank")
-
-    def Rank(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("Rank")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "Rank")
-
-    def EmbeddingDim(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("EmbeddingDim")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "EmbeddingDim")
-
-    def IsPointed(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("IsPointed")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "IsPointed")
-
-    def IsDeg1ExtremeRays(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("IsDeg1ExtremeRays")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "IsDeg1ExtremeRays")
-
-    def IsDeg1HilbertBasis(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("IsDeg1HilbertBasis")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "IsDeg1HilbertBasis")
-
-    def IsIntegrallyClosed(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("IsIntegrallyClosed")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "IsIntegrallyClosed")
-
-    def IsReesPrimary(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("IsReesPrimary")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "IsReesPrimary")
-
-    def IsInhomogeneous(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("IsInhomogeneous")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "IsInhomogeneous")
-
-    def Triangulation(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("Triangulation")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "Triangulation")
-
-    def InclusionExclusionData(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("InclusionExclusionData")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "InclusionExclusionData")
-
-    def StanleyDec(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("StanleyDec")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "StanleyDec")
-
-    def ClassGroup(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("ClassGroup")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "ClassGroup")
-
-    def ConeDecomposition(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("ConeDecomposition")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "ConeDecomposition")
-
-    def HilbertQuasiPolynomial(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("HilbertQuasiPolynomial")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "HilbertQuasiPolynomial")
-
-    def EhrhartQuasiPolynomial(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("EhrhartQuasiPolynomial")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "EhrhartQuasiPolynomial")
-
-    def IsTriangulationNested(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("IsTriangulationNested")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "IsTriangulationNested")
-
-    def IsTriangulationPartial(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("IsTriangulationPartial")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "IsTriangulationPartial")
-
-    def WeightedEhrhartQuasiPolynomial(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("WeightedEhrhartQuasiPolynomial")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "WeightedEhrhartQuasiPolynomial")
-
-    def WeightedEhrhartSeries(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("WeightedEhrhartSeries")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "WeightedEhrhartSeries")
-
-    def Integral(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("Integral")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "Integral")
-
-    def VirtualMultiplicity(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("VirtualMultiplicity")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "VirtualMultiplicity")
-
-    def IsGorenstein(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("IsGorenstein")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "IsGorenstein")
-
-    def GeneratorOfInterior(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("GeneratorOfInterior")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "GeneratorOfInterior")
-
-    def VerticesFloat(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("VerticesFloat")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "VerticesFloat")
-
-    def Volume(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("Volume")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "Volume")
-
-    def SuppHypsFloat(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("SuppHypsFloat")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "SuppHypsFloat")
-
-    def LatticePoints(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("LatticePoints")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "LatticePoints")
-
-    def EuclideanIntegral(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("EuclideanIntegral")
-        PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, "EuclideanIntegral")
+add_dyn_getter("AffineDim")
+add_dyn_getter("ClassGroup")
+add_dyn_getter("ConeDecomposition")
+add_dyn_getter("Congruences")
+add_dyn_getter("Deg1Elements")
+add_dyn_getter("Dehomogenization")
+add_dyn_getter("EhrhartQuasiPolynomial")
+add_dyn_getter("EmbeddingDim")
+add_dyn_getter("Equations")
+add_dyn_getter("EuclideanIntegral")
+add_dyn_getter("ExcludedFaces")
+add_dyn_getter("ExternalIndex")
+add_dyn_getter("ExtremeRays")
+add_dyn_getter("GeneratorOfInterior")
+add_dyn_getter("Generators")
+add_dyn_getter("Grading")
+add_dyn_getter("GradingDenom")
+add_dyn_getter("HilbertBasis")
+add_dyn_getter("HilbertQuasiPolynomial")
+add_dyn_getter("InclusionExclusionData")
+add_dyn_getter("Integral")
+add_dyn_getter("InternalIndex")
+add_dyn_getter("IsDeg1ExtremeRays")
+add_dyn_getter("IsDeg1HilbertBasis")
+add_dyn_getter("IsGorenstein")
+add_dyn_getter("IsInhomogeneous")
+add_dyn_getter("IsIntegrallyClosed")
+add_dyn_getter("IsPointed")
+add_dyn_getter("IsReesPrimary")
+add_dyn_getter("IsTriangulationNested")
+add_dyn_getter("IsTriangulationPartial")
+add_dyn_getter("LatticePoints")
+add_dyn_getter("MaximalSubspace")
+add_dyn_getter("ModuleGenerators")
+add_dyn_getter("ModuleGeneratorsOverOriginalMonoid")
+add_dyn_getter("ModuleRank")
+add_dyn_getter("Multiplicity")
+add_dyn_getter("OriginalMonoidGenerators")
+add_dyn_getter("Rank")
+add_dyn_getter("RecessionRank")
+add_dyn_getter("ReesPrimaryMultiplicity")
+add_dyn_getter("StanleyDec")
+add_dyn_getter("Sublattice")
+add_dyn_getter("SuppHypsFloat")
+add_dyn_getter("SupportHyperplanes")
+add_dyn_getter("Triangulation")
+add_dyn_getter("TriangulationDetSum")
+add_dyn_getter("TriangulationSize")
+add_dyn_getter("UnitGroupIndex")
+add_dyn_getter("VerticesFloat")
+add_dyn_getter("VerticesOfPolyhedron")
+add_dyn_getter("VirtualMultiplicity")
+add_dyn_getter("Volume")
+add_dyn_getter("WeightedEhrhartQuasiPolynomial")
+add_dyn_getter("WeightedEhrhartSeries")
+add_dyn_getter("WitnessNotIntegrallyClosed")
