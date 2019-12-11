@@ -1670,6 +1670,11 @@ static PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     FUNC_BEGIN
+    
+    if(PyTuple_Size(args)!=2){
+        PyErr_SetString(PyNormaliz_cppError, "Exactly one computation goal required for NmzResult");
+        return NULL;        
+    }
 
     PyObject* cone = PyTuple_GetItem(args, 0);
     PyObject* prop = PyTuple_GetItem(args, 1);

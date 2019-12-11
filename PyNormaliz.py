@@ -190,8 +190,7 @@ class Cone:
         def getDenominator(coefficients):
             exponents = [(inner, coefficients.count(inner))
                          for inner in set(coefficients)]
-            denominator = ' '.join('(1 - t{}){}'. format(to_sup(x[0]) if x[
-                                   0] is not 1 else '', to_sup(x[1]) if x[1] is not 1 else '') for x in exponents)
+            denominator = ' '.join('(1 - t{}){}'. format(to_sup(x[0]) if x[0] is not 1 else '', to_sup(x[1]) if x[1] is not 1 else '') for x in exponents)
             return denominator
 
         num = getNumerator(numCoefficients)
