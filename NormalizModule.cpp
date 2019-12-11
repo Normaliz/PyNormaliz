@@ -258,8 +258,7 @@ static bool PyNumberToNmz(PyObject* in, mpq_class& out)
     }
     PyObject*   in_as_string = PyObject_Str(in);
     string      s = PyUnicodeToString(in_as_string);
-    const char* in_as_c_string = s.c_str();
-    int         check = out.set_str(in_as_c_string, 10);
+    int         check = out.set_str(s.c_str(), 10);
     if (check == -1) {
         throw PyNormalizInputException(
             "coefficient in matrix must be PyFloat, PyInt, PyLong, Sequence, "
@@ -288,8 +287,7 @@ static bool PyNumberToNmz(PyObject* in, mpz_class& out)
     }
     PyObject*   in_as_string = PyObject_Str(in);
     string      s = PyUnicodeToString(in_as_string);
-    const char* in_as_c_string = s.c_str();
-    out.set_str(in_as_c_string, 10);
+    out.set_str(s.c_str(), 10);
     return true;
 }
 
@@ -298,10 +296,12 @@ static PyObject* NmzToPyNumber(const mpz_class in)
     if (in.fits_slong_p()) {
         return PyLong_FromLong(in.get_si());
     }
+
+    // in Python 2, the first argument to PyLong_FromString is not const, thus
+    // we need to perform a const cast here.
     string    mpz_as_string = in.get_str(16);
     char*     mpz_as_c_string = const_cast< char* >(mpz_as_string.c_str());
-    PyObject* ret_val = PyLong_FromString(mpz_as_c_string, NULL, 16);
-    return ret_val;
+    return PyLong_FromString(mpz_as_c_string, NULL, 16);
 }
 
 static PyObject* NmzToPyNumber(const mpq_class in)
@@ -476,13 +476,10 @@ static bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
 template < typename Integer >
 static bool PyInputToNmz(vector< vector< Integer > >& out, PyObject* in)
 {
-    bool check_input;
-    check_input = PyIntMatrixToNmz(out, in);
-    if (check_input)
+    if (PyIntMatrixToNmz(out, in))
         return true;
     out.resize(1);
-    check_input = PyListToNmz(out[0], in);
-    if (check_input) {
+    if (PyListToNmz(out[0], in)) {
         return true;
     }
     throw PyNormalizInputException(
@@ -1196,13 +1193,11 @@ static PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args)
 
     if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
-        PyObject*          return_value = NmzHilbertSeries(cone_ptr, args);
-        return return_value;
+        return NmzHilbertSeries(cone_ptr, args);
     }
     else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
-        PyObject*          return_value = NmzHilbertSeries(cone_ptr, args);
-        return return_value;
+        return NmzHilbertSeries(cone_ptr, args);
     }
     else {
         PyErr_SetString(PyNormaliz_cppError,
@@ -1760,9 +1755,7 @@ template < typename Integer >
 static PyObject* NmzSetVerbose(Cone< Integer >* C, PyObject* value)
 {
     FUNC_BEGIN
-    bool old_value;
-    old_value = C->setVerbose(value == Py_True);
-    return BoolToPyBool(old_value);
+    return BoolToPyBool(C->setVerbose(value == Py_True));
     FUNC_END
 }
 
@@ -1825,15 +1818,11 @@ static PyObject* NmzGetPolynomial(PyObject* self, PyObject* args)
 
     if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
-        PyObject*          return_value =
-            StringToPyUnicode((cone_ptr->getIntData()).getPolynomial());
-        return return_value;
+        return StringToPyUnicode((cone_ptr->getIntData()).getPolynomial());
     }
     else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
-        PyObject*          return_value =
-            StringToPyUnicode((cone_ptr->getIntData()).getPolynomial());
-        return return_value;
+        return StringToPyUnicode((cone_ptr->getIntData()).getPolynomial());
     }
     else {
         PyErr_SetString(PyNormaliz_cppError,
@@ -1909,21 +1898,13 @@ static PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args)
 
     if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
-        Cone< mpz_class >* symm_cone = &(cone_ptr->getSymmetrizedCone());
-        if (symm_cone == 0) {
-            Py_RETURN_NONE;
-        }
-        symm_cone = new Cone< mpz_class >(*symm_cone);
-        return pack_cone(symm_cone);
+        Cone< mpz_class >& symm_cone = cone_ptr->getSymmetrizedCone();
+        return pack_cone(new Cone< mpz_class >(symm_cone));
     }
     else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
-        Cone< long long >* symm_cone = &(cone_ptr->getSymmetrizedCone());
-        if (symm_cone == 0) {
-            Py_RETURN_NONE;
-        }
-        symm_cone = new Cone< long long >(*symm_cone);
-        return pack_cone(symm_cone);
+        Cone< long long >& symm_cone = cone_ptr->getSymmetrizedCone();
+        return pack_cone(new Cone< long long >(symm_cone));
     }
     else {
         PyErr_SetString(PyNormaliz_cppError,
@@ -1979,9 +1960,7 @@ static PyObject* NmzGetHilbertSeriesExpansion(PyObject* self, PyObject* args)
     }
 
     HS.set_expansion_degree(degree);
-    PyObject* result = NmzVectorToPyList(HS.getExpansion());
-
-    return result;
+    return NmzVectorToPyList(HS.getExpansion());
 
     FUNC_END
 }
@@ -2026,9 +2005,7 @@ static PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* 
     }
 
     ES.first.set_expansion_degree(degree);
-    PyObject* result = NmzVectorToPyList(ES.first.getExpansion());
-
-    return result;
+    return NmzVectorToPyList(ES.first.getExpansion());
 
     FUNC_END
 }
