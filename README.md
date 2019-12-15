@@ -4,84 +4,92 @@
 # PyNormaliz - An interface to Normaliz
 
 
-## What is PyNormaliz
-
 PyNormaliz provides an interface to [Normaliz](https://www.normaliz.uni-osnabrueck.de) via libNormaliz.
 It offers the complete functionality of Normaliz, and can be used interactively from python.
-For a first example, see [this introduction](doc/PyNormaliz_Tutorial.pdf) by Richard Sieg.
+For a first example, see [this introduction](doc/PyNormaliz_Tutorial.pdf) by Richard Sieg (Slighty outdated: for the installation follow the instructions below).
 
 
 ## Requirements
 
 * python 2.7 or higher or python 3.4 or higher
-* Normaliz 3.7.0 or higher <https://github.com/Normaliz/Normaliz/releases>
+* Normaliz 3.8.3 or higher <https://github.com/Normaliz/Normaliz/releases>
 
 The source packages of the Normaliz realeases contains PyNormaliz.
 
 ## Installation
 
-The PyNormaliz install script assumes that you have executed the
+The PyNormaliz install script assumes that you have executed
 
-    install_normaliz_with_eantic.sh
+    ./install_normaliz_with_eantic.sh
 
-script. To install PyNormaliz and navigate to the Normaliz directory and type
+within the Normaliz directory. To install PyNormaliz navigate to the Normaliz directory and type
 
-    python setup.py install --user
+    ./install_pynormaliz.sh --user
 
-
-The script can be customized by some options. See Appendix E of the
+Also see Appendix E of the
 [Normaliz manual](https://github.com/Normaliz/Normaliz/blob/master/doc/Normaliz.pdf).
 
 ## Usage
 
-The main command is Cone to create a cone, and the member functions
-of the cone class to compute properties. For a full list of input and output
+The command Cone creates a cone (and a lattice), and the member functions
+of the cone class compute its properties. For a full list of input and output
 properties, see the Normaliz manual.
+
+Start by
+
+    import PyNormaliz
+    from PyNormaliz import *
 
 To create a cone, use
 
-    import PyNormaliz
-    C = PyNormaliz.Cone(cone = [[1,0],[0,1]])
+    C = Cone(cone = [[1,0],[0,1]])
 
 
 All possible Normaliz input types can be given as keyword arguments.
 
-To compute a property of the cone, use the provided getters, which correspond to Normaliz computation goals.
+The member functions allow the computation of data of our cone.  For example:
 
     C.HilbertBasis()
 
-You can pass options to the compute functions
+returns what its name says:
+
+    [[0, 1], [1, 0]]
+
+is the matrix of the two Hilbert basis vectors.
+
+One can pass options to the compute functions as in
 
     C.HilbertSeries(HSOP = True)
 
-## Low level commands
+Note that some Normaliz output types must be specially encoded for Python. Our Hilbert Series is
 
-There is also a low-level API, directly using C functions:
+    [[1], [1, 1], 0]
 
-To create a cone, use
+to be read as follows: [1] is the numerator polynomial, [1,1] is the vector of exponents tjhat occur in the denominator, which is (1-t)(1-t) in our case, and 0 is the shift.  So the Hilbert series is given by the rational function 1/(1-t)(1-t). (Aoso see ee [this introduction](doc/PyNormaliz_Tutorial.pdf).)
 
-    C = NmzCone("cone", [[1,0],[0,1]])
+But you can also compute several data simultaneously and specify options:
 
-or, equivalently,
+    C.Compute("LatticePoints", "Volume", "PrimalMode")
+    
+Then
 
-    C = NmzCone(["cone", [[1,0],[0,1]]])
+    C.Volume()
+    
+retrieves the already computed result [1,1], namely the fraction 1/1 = 1.
 
-NmzCone can take an arbitrary number of arguments, either as separated arguments or in a list. First is always a string, describing an input property for Normaliz, followed by a (possibly empty) matrix.
+By using Python functions, the functuionality of Normaliz can be extended. For example, 
+    
+    def intersection(cone1, cone2):
+        intersection_ineq = cone1.SupportHyperplanes()+cone2.SupportHyperplanes()
+        C = Cone(inequalities = intersection_ineq)
+        return C
+        
+computes the intersection of two cones. So
 
-NmzCompute takes a cone as first argument, followed by arbitrary many strings, or a list of strings, describing Normaliz output types. NmzCompute lets Normaliz compute the necessary values, and returns true if everything was computed properly, false otherwise.
+    C1 = Cone(cone=[[1,2],[2,1]])
+    C2 = Cone(cone=[[1,1],[1,3]])
+    intersection(C1,C2).ExtremeRays()
+    
+yeilds the result
 
-    NmzCompute(C, "HilbertBasis")
-
-or
-
-    NmzCompute(C, ["HilbertBasis"])
-
-
-NmzIsComputed takes a cone and a string representing an output property, and returns true if the property is already computed for the cone, false otherwise. (In contrast to NmzCompute it does not start a computation.)
-
-    NmzIsComputed(C, "HilbertBasis")
-
-
-NmzResult takes a cone and a string representing an output property, and returns the computed value of this property as a matrix, a list, or as a bool.
-
-    NmzResult(C, "HilbertBasis")
+    [[1, 1], [1, 2]]
