@@ -1545,7 +1545,9 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
             return NmzWeightedEhrhartSeriesToPyList(
                 C->getWeightedEhrhartSeries());
 
-
+        // though Grading has the return type vector<Integer> we make it
+        // a complex struture within PyNormaliz since we want to combine it
+        // with the grading denominator
         case libnormaliz::ConeProperty::Grading: {
             vector< Integer > grad = C->getGrading();
             Integer           denom = C->getGradingDenom();
@@ -1562,11 +1564,13 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
             return NmzTriangleListToPyList< long >(
                 C->getInclusionExclusionData());
 
+        /* returned as a matrix, no need to make it a complex property
         case libnormaliz::ConeProperty::Equations:
             return NmzMatrixToPyList(C->getSublattice().getEquations());
 
         case libnormaliz::ConeProperty::Congruences:
             return NmzMatrixToPyList(C->getSublattice().getCongruences());
+        */
 
         case libnormaliz::ConeProperty::Sublattice:
             return _NmzBasisChangeIntern(C);
