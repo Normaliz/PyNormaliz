@@ -1597,6 +1597,9 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
         case libnormaliz::ConeProperty::WeightedEhrhartQuasiPolynomial:
             return NmzWeightedEhrhartQuasiPolynomialToPyList< mpz_class >(
                 C->getIntData());
+            
+        case libnormaliz::ConeProperty::ClassGroup:
+            return NmzVectorToPyList(C->getClassGroup());
 
         case libnormaliz::ConeProperty::FVector:
             return NmzVectorToPyList(C->getFVector());
