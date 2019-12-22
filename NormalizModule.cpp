@@ -48,7 +48,6 @@ typedef int py_size_t;
     }                                                                        \
     catch (libnormaliz::InterruptException & e)                              \
     {                                                                        \
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);             \
         libnormaliz::nmz_interrupted = false;                                \
         PyErr_SetString(PyExc_KeyboardInterrupt,                             \
                         "interrupted Normaliz Computation");                 \
@@ -58,13 +57,11 @@ typedef int py_size_t;
     }                                                                        \
     catch (libnormaliz::NormalizException & e)                               \
     {                                                                        \
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);             \
         PyErr_SetString(NormalizError, e.what());                            \
         return NULL;                                                         \
     }                                                                        \
     catch (std::exception & e)                                               \
     {                                                                        \
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);             \
         PyErr_SetString(PyNormaliz_cppError, e.what());                      \
         return NULL;                                                         \
     }
@@ -103,6 +100,21 @@ static void signal_handler(int signal)
     libnormaliz::nmz_interrupted = true;
 }
 
+// helper class implementing RAII pattern for our custom SIGINT handler;
+// it helps ensure we *always* restore the signal handler inside a
+// FUNC_BEGIN / FUNC_END block.
+class TempSignalHandler {
+    PyOS_sighandler_t original_handler;
+public:
+    TempSignalHandler() {
+        original_handler = PyOS_setsig(SIGINT, signal_handler);
+    }
+
+    ~TempSignalHandler() {
+        PyOS_setsig(SIGINT, original_handler);
+    }
+};
+
 /***************************************************************************
  *
  * Static objects
@@ -115,8 +127,6 @@ static PyObject*   PyNormaliz_cppError;
 static const char* cone_name = "Cone";
 static const char* cone_name_long = "Cone<long long>";
 static const char* cone_name_renf = "Cone<renf_elem>";
-
-static PyOS_sighandler_t current_interpreter_sigint_handler;
 
 static PyObject* RationalHandler = NULL;
 
@@ -248,8 +258,7 @@ static bool PyNumberToNmz(PyObject* in, mpq_class& out)
     }
     PyObject*   in_as_string = PyObject_Str(in);
     string      s = PyUnicodeToString(in_as_string);
-    const char* in_as_c_string = s.c_str();
-    int         check = out.set_str(in_as_c_string, 10);
+    int         check = out.set_str(s.c_str(), 10);
     if (check == -1) {
         throw PyNormalizInputException(
             "coefficient in matrix must be PyFloat, PyInt, PyLong, Sequence, "
@@ -278,8 +287,7 @@ static bool PyNumberToNmz(PyObject* in, mpz_class& out)
     }
     PyObject*   in_as_string = PyObject_Str(in);
     string      s = PyUnicodeToString(in_as_string);
-    const char* in_as_c_string = s.c_str();
-    out.set_str(in_as_c_string, 10);
+    out.set_str(s.c_str(), 10);
     return true;
 }
 
@@ -288,10 +296,12 @@ static PyObject* NmzToPyNumber(const mpz_class in)
     if (in.fits_slong_p()) {
         return PyLong_FromLong(in.get_si());
     }
+
+    // in Python 2, the first argument to PyLong_FromString is not const, thus
+    // we need to perform a const cast here.
     string    mpz_as_string = in.get_str(16);
     char*     mpz_as_c_string = const_cast< char* >(mpz_as_string.c_str());
-    PyObject* ret_val = PyLong_FromString(mpz_as_c_string, NULL, 16);
-    return ret_val;
+    return PyLong_FromString(mpz_as_c_string, NULL, 16);
 }
 
 static PyObject* NmzToPyNumber(const mpq_class in)
@@ -466,13 +476,10 @@ static bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
 template < typename Integer >
 static bool PyInputToNmz(vector< vector< Integer > >& out, PyObject* in)
 {
-    bool check_input;
-    check_input = PyIntMatrixToNmz(out, in);
-    if (check_input)
+    if (PyIntMatrixToNmz(out, in))
         return true;
     out.resize(1);
-    check_input = PyListToNmz(out[0], in);
-    if (check_input) {
+    if (PyListToNmz(out[0], in)) {
         return true;
     }
     throw PyNormalizInputException(
@@ -1177,21 +1184,17 @@ static PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args)
         return NULL;
     }
 
-    current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
+    TempSignalHandler tmpHandler; // use custom signal handler
+
     if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
-        PyObject*          return_value = NmzHilbertSeries(cone_ptr, args);
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
-        return return_value;
+        return NmzHilbertSeries(cone_ptr, args);
     }
     else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
-        PyObject*          return_value = NmzHilbertSeries(cone_ptr, args);
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
-        return return_value;
+        return NmzHilbertSeries(cone_ptr, args);
     }
     else {
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         PyErr_SetString(PyNormaliz_cppError,
                         "Hilbert series not available for renf cone");
         return NULL;
@@ -1269,8 +1272,6 @@ static PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
 
     FUNC_BEGIN
 
-    current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
-
     PyObject* cone = PyTuple_GetItem(args, 0);
 
     PyObject* result = NULL;
@@ -1279,6 +1280,8 @@ static PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
         PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
         return NULL;
     }
+
+    TempSignalHandler tmpHandler; // use custom signal handler
 
     if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
@@ -1294,8 +1297,6 @@ static PyObject* _NmzCompute_Outer(PyObject* self, PyObject* args)
         result = _NmzCompute(cone_ptr, args);
     }
 #endif
-
-    PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
 
     return result;
 
@@ -1342,14 +1343,14 @@ PyObject* _NmzModify_Outer(PyObject* self, PyObject* args)
 
     FUNC_BEGIN
 
-    current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
-
     PyObject* cone = PyTuple_GetItem(args, 0);
 
     if (!is_cone(cone)) {
         PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
         return NULL;
     }
+
+    TempSignalHandler tmpHandler; // use custom signal handler
 
     if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
@@ -1366,8 +1367,6 @@ PyObject* _NmzModify_Outer(PyObject* self, PyObject* args)
         return _NmzModify_Renf(cone_ptr, nf, args);
     }
 #endif
-
-    PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
 
     Py_RETURN_TRUE;
 
@@ -1510,9 +1509,11 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
 
     libnormaliz::ConeProperty::Enum p = libnormaliz::toConeProperty(prop);
 
-    current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
-    ConeProperties notComputed = C->compute(ConeProperties(p));
-    PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
+    ConeProperties notComputed;
+    {
+    TempSignalHandler tmpHandler; // use custom signal handler
+    notComputed = C->compute(ConeProperties(p));
+    }
 
     if (notComputed.goals().any()) {
         Py_RETURN_NONE;
@@ -1756,9 +1757,7 @@ template < typename Integer >
 static PyObject* NmzSetVerbose(Cone< Integer >* C, PyObject* value)
 {
     FUNC_BEGIN
-    bool old_value;
-    old_value = C->setVerbose(value == Py_True);
-    return BoolToPyBool(old_value);
+    return BoolToPyBool(C->setVerbose(value == Py_True));
     FUNC_END
 }
 
@@ -1817,24 +1816,17 @@ static PyObject* NmzGetPolynomial(PyObject* self, PyObject* args)
         return NULL;
     }
 
-    current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
+    TempSignalHandler tmpHandler; // use custom signal handler
 
     if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
-        PyObject*          return_value =
-            StringToPyUnicode((cone_ptr->getIntData()).getPolynomial());
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
-        return return_value;
+        return StringToPyUnicode((cone_ptr->getIntData()).getPolynomial());
     }
     else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
-        PyObject*          return_value =
-            StringToPyUnicode((cone_ptr->getIntData()).getPolynomial());
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
-        return return_value;
+        return StringToPyUnicode((cone_ptr->getIntData()).getPolynomial());
     }
     else {
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         PyErr_SetString(PyNormaliz_cppError,
                         "Polynomial not available for renf cone");
         return NULL;
@@ -1863,6 +1855,8 @@ static PyObject* NmzSetNrCoeffQuasiPol(PyObject* self, PyObject* args)
 
     PyObject* bound_py = PyTuple_GetItem(args, 1);
 
+    TempSignalHandler tmpHandler; // use custom signal handler
+
     int  overflow;
     long bound = PyLong_AsLongLongAndOverflow(bound_py, &overflow);
     if (is_cone_mpz(cone)) {
@@ -1876,7 +1870,6 @@ static PyObject* NmzSetNrCoeffQuasiPol(PyObject* self, PyObject* args)
         Py_RETURN_TRUE;
     }
     else {
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         PyErr_SetString(PyNormaliz_cppError,
                         "Cannot set quasi polynomial coeffs for renf cone");
         return NULL;
@@ -1903,30 +1896,19 @@ static PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args)
         return NULL;
     }
 
-    current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
+    TempSignalHandler tmpHandler; // use custom signal handler
 
     if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
-        Cone< mpz_class >* symm_cone = &(cone_ptr->getSymmetrizedCone());
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
-        if (symm_cone == 0) {
-            Py_RETURN_NONE;
-        }
-        symm_cone = new Cone< mpz_class >(*symm_cone);
-        return pack_cone(symm_cone);
+        Cone< mpz_class >& symm_cone = cone_ptr->getSymmetrizedCone();
+        return pack_cone(new Cone< mpz_class >(symm_cone));
     }
     else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
-        Cone< long long >* symm_cone = &(cone_ptr->getSymmetrizedCone());
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
-        if (symm_cone == 0) {
-            Py_RETURN_NONE;
-        }
-        symm_cone = new Cone< long long >(*symm_cone);
-        return pack_cone(symm_cone);
+        Cone< long long >& symm_cone = cone_ptr->getSymmetrizedCone();
+        return pack_cone(new Cone< long long >(symm_cone));
     }
     else {
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         PyErr_SetString(PyNormaliz_cppError,
                         "Symmetrized cone not available for renf cone");
         return NULL;
@@ -1962,7 +1944,7 @@ static PyObject* NmzGetHilbertSeriesExpansion(PyObject* self, PyObject* args)
 
     long                       degree = PyLong_AsLong(py_degree);
     libnormaliz::HilbertSeries HS;
-    current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
+    TempSignalHandler tmpHandler; // use custom signal handler
 
     if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
@@ -1973,7 +1955,6 @@ static PyObject* NmzGetHilbertSeriesExpansion(PyObject* self, PyObject* args)
         HS = cone_ptr->getHilbertSeries();
     }
     else {
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         PyErr_SetString(
             PyNormaliz_cppError,
             "Hilbert series expansion not available for renf cone");
@@ -1981,10 +1962,7 @@ static PyObject* NmzGetHilbertSeriesExpansion(PyObject* self, PyObject* args)
     }
 
     HS.set_expansion_degree(degree);
-    PyObject* result = NmzVectorToPyList(HS.getExpansion());
-    PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
-
-    return result;
+    return NmzVectorToPyList(HS.getExpansion());
 
     FUNC_END
 }
@@ -2011,7 +1989,7 @@ static PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* 
 
     long degree = PyLong_AsLong(py_degree);
     pair< libnormaliz::HilbertSeries, mpz_class > ES;
-    current_interpreter_sigint_handler = PyOS_setsig(SIGINT, signal_handler);
+    TempSignalHandler tmpHandler; // use custom signal handler
 
     if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
@@ -2022,7 +2000,6 @@ static PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* 
         ES = cone_ptr->getWeightedEhrhartSeries();
     }
     else {
-        PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
         PyErr_SetString(
             PyNormaliz_cppError,
             "Ehrhart series expansion not available for renf cone");
@@ -2030,10 +2007,7 @@ static PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* 
     }
 
     ES.first.set_expansion_degree(degree);
-    PyObject* result = NmzVectorToPyList(ES.first.getExpansion());
-    PyOS_setsig(SIGINT, current_interpreter_sigint_handler);
-
-    return result;
+    return NmzVectorToPyList(ES.first.getExpansion());
 
     FUNC_END
 }
@@ -2335,8 +2309,6 @@ extern "C" void initPyNormaliz_cpp(void)
 
     PyModule_AddObject(module, "normaliz_error", NormalizError);
     PyModule_AddObject(module, "pynormaliz_error", PyNormaliz_cppError);
-
-    current_interpreter_sigint_handler = PyOS_getsig(SIGINT);
 
 #if PY_MAJOR_VERSION >= 3
     return module;
