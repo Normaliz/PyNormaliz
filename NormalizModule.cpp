@@ -831,13 +831,8 @@ static PyObject* NmzListConeProperties(PyObject* args)
 
     PyObject* return_list = PyList_New(2);
 
-    ConeProperties props;
-    for (int i = 0; i < libnormaliz::ConeProperty::EnumSize; i++) {
-        props.set(static_cast< libnormaliz::ConeProperty::Enum >(i));
-    }
-
-    ConeProperties goals = props.goals();
-    ConeProperties options = props.options();
+    ConeProperties goals = libnormaliz::all_goals();
+    ConeProperties options = libnormaliz::all_options();
     
     int number_goals = goals.count();
     int number_options = options.count();
