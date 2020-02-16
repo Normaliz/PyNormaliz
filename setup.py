@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from distutils.core import setup, Extension
+from setuptools import setup
+from distutils.core import Extension
 from distutils.cmd import Command
 from distutils.command.build_ext import build_ext as _build_ext
 
@@ -24,19 +25,8 @@ else:
 
 from os import path
 import io
-this_directory = path.abspath(path.dirname(__file__))
-with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
 
 setup(
-    name = 'PyNormaliz',
-    version = '2.10',
-    description = 'An interface to Normaliz',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    author = 'Sebastian Gutsche, Richard Sieg',
-    author_email = 'sebastian.gutsche@gmail.com',
-    url = 'https://github.com/Normaliz/PyNormaliz',
     py_modules = [ "PyNormaliz" ],
     ext_modules = [ Extension( "PyNormaliz_cpp",
                               [ "NormalizModule.cpp" ],
