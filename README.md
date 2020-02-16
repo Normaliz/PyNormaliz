@@ -85,7 +85,7 @@ with the expected value
 
     1.4142135623730951
 
-By using Python functions, the functuionality of Normaliz can be extended. For example, 
+By using Python functions, the functionality of Normaliz can be extended. For example, 
     
     def intersection(cone1, cone2):
         intersection_ineq = cone1.SupportHyperplanes()+cone2.SupportHyperplanes()
