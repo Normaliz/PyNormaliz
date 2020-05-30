@@ -1524,8 +1524,21 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
 
 
     switch (p) {
+            
         case libnormaliz::ConeProperty::Triangulation:
             return NmzTriangleListToPyList< Integer >(C->getTriangulation());
+            
+        case libnormaliz::ConeProperty::AllGeneratorsTriangulation:
+            return NmzTriangleListToPyList< Integer >(C->getTriangulation(
+                libnormaliz::ConeProperty::AllGeneratorsTriangulation));
+    
+        case libnormaliz::ConeProperty::LatticePointTriangulation:
+            return NmzTriangleListToPyList< Integer >(C->getTriangulation(
+               libnormaliz::ConeProperty::LatticePointTriangulation));
+
+        case libnormaliz::ConeProperty::UnimodularTriangulation:
+            return NmzTriangleListToPyList< Integer >(C->getTriangulation(
+               libnormaliz::ConeProperty::UnimodularTriangulation));
 
         case libnormaliz::ConeProperty::HilbertSeries: {
             bool is_HSOP = C->isComputed(libnormaliz::ConeProperty::HSOP);
