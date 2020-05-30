@@ -6,7 +6,7 @@ from PyNormaliz_cpp import *
 
 class Cone:
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs): 
         input_list = [k for k in args]
         for i in kwargs:
             current_input = kwargs[i]
