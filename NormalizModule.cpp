@@ -9,10 +9,14 @@
 #include <string>
 using std::string;
 
+/*
 #include <libnormaliz/cone.h>
 #include <libnormaliz/map_operations.h>
 #include <libnormaliz/vector_operations.h>
 #include <libnormaliz/automorph.h>
+*/
+
+#include <libnormaliz/libnormaliz.h>
 
 using libnormaliz::Cone;
 // using libnormaliz::ConeProperty;
@@ -167,11 +171,11 @@ static PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg
 #ifndef NMZ_RELEASE
 static_assert(
     false,
-    "Your Normaliz version (unknown) is to old! Update to 3.8.4 or newer.");
+    "Your Normaliz version (unknown) is to old! Update to 3.8.5 or newer.");
 #endif
-#if NMZ_RELEASE < 30804
+#if NMZ_RELEASE < 30805
 static_assert(false,
-              "Your Normaliz version is to old! Update to 3.8.4 or newer.");
+              "Your Normaliz version is to old! Update to 3.8.5 or newer.");
 #endif
 
 /***************************************************************************
