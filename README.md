@@ -67,9 +67,9 @@ Note that some Normaliz output types must be specially encoded for python. Our H
 
     [[1], [1, 1], 0]
 
-to be read as follows: [1] is the numerator polynomial, [1,1] is the vector of exponents of t that occur in the denominator, which is (1-t)(1-t) in our case, and 0 is the shift.  So the Hilbert series is given by the rational function 1/(1-t)(1-t). (Aoso see ee [this introduction](doc/PyNormaliz_Tutorial.pdf).)
+to be read as follows: [1] is the numerator polynomial, [1,1] is the vector of exponents of t that occur in the denominator, which is (1-t)(1-t) in our case, and 0 is the shift.  So the Hilbert series is given by the rational function 1/(1-t)(1-t). (Also see [this introduction](doc/PyNormaliz_Tutorial.pdf).)
 
-One can also compute several data simultaneously and specify options ("PrimalMode" only added as an example, not because ot is particularly useful here):
+One can also compute several data simultaneously and specify options ("PrimalMode" only added as an example, not because it is particularly useful here):
 
     C.Compute("LatticePoints", "Volume", "PrimalMode")
     
@@ -98,7 +98,7 @@ computes the intersection of two cones. So
     C2 = Cone(cone=[[1,1],[1,3]])
     intersection(C1,C2).ExtremeRays()
     
-yeilds the result
+yields the result
 
     [[1, 1], [1, 2]]
     
