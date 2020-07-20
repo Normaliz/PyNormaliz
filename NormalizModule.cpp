@@ -2029,6 +2029,50 @@ static PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* 
     FUNC_END
 }
 
+static PyObject* NmzGetEhrhartSeriesExpansion(PyObject* self, PyObject* args)
+{
+
+    FUNC_BEGIN
+
+    PyObject* cone = PyTuple_GetItem(args, 0);
+    PyObject* py_degree = PyTuple_GetItem(args, 1);
+
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+
+    if (!PyLong_Check(py_degree)) {
+        PyErr_SetString(PyNormaliz_cppError,
+                        "Second argument must be a long");
+        return NULL;
+    }
+
+    long degree = PyLong_AsLong(py_degree);
+    libnormaliz::HilbertSeries ES;
+    TempSignalHandler tmpHandler; // use custom signal handler
+
+    if (is_cone_mpz(cone)) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        ES = cone_ptr->getEhrhartSeries();
+    }
+    else if (is_cone_long(cone)) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        ES = cone_ptr->getEhrhartSeries();
+    }
+    else {
+        PyErr_SetString(
+            PyNormaliz_cppError,
+            "Ehrhart series expansion not available for renf cone");
+        return NULL;
+    }
+
+    ES.set_expansion_degree(degree);
+    return NmzVectorToPyList(ES.getExpansion());
+
+    FUNC_END
+}
+
 /***************************************************************************
  *
  * Set number of threads
@@ -2244,6 +2288,9 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
     {"NmzGetHilbertSeriesExpansion",
      (PyCFunction)NmzGetHilbertSeriesExpansion, METH_VARARGS,
      "Returns expansion of the hilbert series"},
+    {"NmzGetEhrhartSeriesExpansion",
+     (PyCFunction)NmzGetEhrhartSeriesExpansion, METH_VARARGS,
+     "Returns expansion of the Ehrhart series"},
     {"NmzGetWeightedEhrhartSeriesExpansion",
      (PyCFunction)NmzGetWeightedEhrhartSeriesExpansion, METH_VARARGS,
      "Returns expansion of the weighted Ehrhart series"},

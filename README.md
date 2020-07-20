@@ -12,7 +12,7 @@ For a first example, see [this introduction](doc/PyNormaliz_Tutorial.pdf) by Ric
 ## Requirements
 
 * python 2.7 or higher or python 3.4 or higher
-* Normaliz 3.8.3 or higher <https://github.com/Normaliz/Normaliz/releases>
+* Normaliz 3.8.5 or higher <https://github.com/Normaliz/Normaliz/releases>
 
 The source packages of the Normaliz realeases contain PyNormaliz.
 
@@ -89,7 +89,8 @@ By using Python functions, the functionality of Normaliz can be extended. For ex
     
     def intersection(cone1, cone2):
         intersection_ineq = cone1.SupportHyperplanes()+cone2.SupportHyperplanes()
-        C = Cone(inequalities = intersection_ineq)
+        intersection_eq = cone1.Equations()+cone2.Equations()
+        C = Cone(inequalities = intersection_ineq, equations = intersection_eq)
         return C
         
 computes the intersection of two cones. So
