@@ -228,7 +228,7 @@ static bool PyNumberToNmz(PyObject*, mpz_class&);
 static bool PyNumberToNmz(PyObject* in, mpq_class& out)
 {
     if (PyFloat_Check(in)) {
-        out = mpq_class(PyFloat_AsDouble(in));
+        throw PyNormalizInputException("PyFloat not allowed in PyNormaliz input. Must be ecoded as string.");
         return true;
     }
 #if PY_MAJOR_VERSION < 3
@@ -262,12 +262,9 @@ static bool PyNumberToNmz(PyObject* in, mpq_class& out)
     }
     PyObject*   in_as_string = PyObject_Str(in);
     string      s = PyUnicodeToString(in_as_string);
-    int         check = out.set_str(s.c_str(), 10);
-    if (check == -1) {
-        throw PyNormalizInputException(
-            "coefficient in matrix must be PyFloat, PyInt, PyLong, Sequence, "
-            "must be able to be converted to a valid gmp input string");
-    }
+    // int         check = out.set_str(s.c_str(), 10);
+    libnormaliz::string2coeff(out,s);
+
     return true;
 }
 
@@ -1620,9 +1617,15 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
 
         case libnormaliz::ConeProperty::FVector:
             return NmzVectorToPyList(C->getFVector());
+            
+        case libnormaliz::ConeProperty::DualFVector:
+            return NmzVectorToPyList(C->getDualFVector());
 
         case libnormaliz::ConeProperty::FaceLattice:
             return NmzFacelatticeToPython(C->getFaceLattice());
+            
+        case libnormaliz::ConeProperty::DualFaceLattice:
+            return NmzFacelatticeToPython(C->getDualFaceLattice());
 
         case libnormaliz::ConeProperty::Automorphisms:
             return NmzAutomorphismsToPython(C->getAutomorphismGroup(
