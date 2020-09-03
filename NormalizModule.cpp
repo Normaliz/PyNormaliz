@@ -441,7 +441,8 @@ static bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
             PyObject* current_element = PySequence_GetItem(current_row, j);
             bool      current_res;
             NumberFieldElem current_elem;
-            if (PySequence_Check(current_element)) {
+    
+            if (PyList_CheckExact(current_element) || PyTuple_CheckExact(current_element)) {
                 vector< mpq_class > current_vector;
                 current_res = PyListToNmz(current_vector, current_element);
                 if (!current_res) {
