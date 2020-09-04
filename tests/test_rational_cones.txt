@@ -29,7 +29,9 @@ True
 True
 >>> cube1.AffineDim() == NmzResult(cube2, "AffineDim") == 2
 True
->>> cube1.Volume() == NmzResult(cube2, "Volume") == [8, 1]
+>>> cube1.Volume() == '8'
+True
+>>> NmzResult(cube2, "Volume") == [8,1]
 True
 >>> cube1.IsPointed() == NmzResult(cube2, "IsPointed") == True
 True

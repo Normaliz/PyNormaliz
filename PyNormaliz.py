@@ -18,18 +18,24 @@ def our_renf_handler(list):
         current = list[j]
         if current[0] == '0':
             continue
-        sign =""
-        if current[0] != '-' and out == " ":
-            sign = "+"
-        power = ""
+        sign ="+"
+        if current[0] == '-' or out == "":
+            sign = ""
+        if j>0 and list[j] == "-1":
+                sign ="-"
+        if j == 0:
+            power = ""
         if j == 1:
-            power = "*a"
+            power = "a"
         if j > 1:
-            power = "*a^"+str(j)
+            power = "a^"+str(j)
         coeff = list[j]
-        if coeff == "1" and j > 0:
-            coeff= ""
-        out = out + sign + coeff + power
+        star = "*"
+        if coeff == "1" or coeff == "-1" or  j==0:
+            star = ""
+        if (coeff == "1" or coeff == "-1") and  j>0:
+            coeff = ""
+        out = out + sign + coeff + star +power
     return out
         
 class Cone:
