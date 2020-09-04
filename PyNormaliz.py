@@ -3,20 +3,23 @@
 import PyNormaliz_cpp
 from PyNormaliz_cpp import *
 
-
 class Cone:
 
     def __init__(self, *args, **kwargs): 
         input_list = [k for k in args]
-        for i in kwargs:
-            current_input = kwargs[i]
-            if type(current_input) == list and len(current_input) > 0 and type(current_input[0]) != list:
-                kwargs[i] = [current_input]
+        pop_list = []
+        for entry in kwargs.items():
+            current_input=entry[1];
+            key = entry[0]
+            if type(current_input) == list and len(current_input) > 0 and type(current_input[0]) != list and key != "number_field":
+                kwargs[key] = [current_input]
             elif type(current_input) == bool and current_input == True:
-                kwargs[i] = current_input = [[]]
+                kwargs[key] = current_input = [[]]
             elif type(current_input) == bool and current_input == False:
-                kwargs.pop(i)
+                poplist = pop_list + [key]
         self.cone = PyNormaliz_cpp.NmzCone(input_list,**kwargs)
+        for k in pop_list:
+            kwargs.pop(k)
 
     def __process_keyword_args(self, keywords):
         input_list = []
