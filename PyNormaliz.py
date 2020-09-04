@@ -3,6 +3,35 @@
 import PyNormaliz_cpp
 from PyNormaliz_cpp import *
 
+def our_rat_handler(list):
+    if list[0] == 0:
+        return "0"
+    if list[1] == 1:
+        return str(list[0])
+    return str(list[0])+"/"+str(list[1])
+
+
+def our_renf_handler(list):
+    out = ""
+    for i in range(len(list)):
+        j = len(list) - 1 -i
+        current = list[j]
+        if current[0] == '0':
+            continue
+        sign =""
+        if current[0] != '-' and out == " ":
+            sign = "+"
+        power = ""
+        if j == 1:
+            power = "*a"
+        if j > 1:
+            power = "*a^"+str(j)
+        coeff = list[j]
+        if coeff == "1" and j > 0:
+            coeff= ""
+        out = out + sign + coeff + power
+    return out
+        
 class Cone:
 
     def __init__(self, *args, **kwargs): 
@@ -217,7 +246,7 @@ class Cone:
         input_list = self.__process_keyword_args(kwargs)
         input_list.append(name)
         PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, name)
+        return PyNormaliz_cpp.NmzResult(self.cone, name,RationalHandler = our_rat_handler, NumberfieldElementHandler=our_renf_handler)
 
 
 # Generate getters for a bunch of Normalize properties
