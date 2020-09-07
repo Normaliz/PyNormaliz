@@ -353,12 +353,10 @@ static PyObject* NmzToPyNumber(long long in)
 
 static PyObject* NmzToPyNumber(double in)
 {
-    std::cout << "FFFFF " << in << std::endl;
     PyObject* x = PyFloat_FromDouble(in);
     if(FloatHandler == NULL)
         return x;
-
-    std::cout << "GGGGG " << in << std::endl;    
+ 
     return CallPythonFuncOnOneArg(FloatHandler, x);
 }
 
