@@ -1,7 +1,56 @@
-# encoding=utf8
-
+# encoding=utf8   
+    
 import PyNormaliz_cpp
 from PyNormaliz_cpp import *
+
+def fill_blanks(x,s):
+    t = len(x)
+    if t >= s:
+        return x
+    out = ""
+    for i in range(s-t):
+        out = " " + out
+    out = out + x
+    return out
+
+def pretty_print(M):
+    if  not isinstance(M,list):
+        print("pretty_print applied to non-matrix")
+        return
+    if len(M) == 0:
+        return
+    if not isinstance(M[0],list):
+        print("pretty_print applied to non-matrix")
+        return
+    L0 = len(M[0])
+    CL = []
+    for k in range(len(M[0])):
+        CL = CL + [0]
+    for i in range(len(M)):
+        current = M[i]
+        if  not isinstance(current,list) or len(current) != L0:
+            print("pretty_print applied to non-matrix")
+            return
+        for j in range(len(current)):
+            x = current[j]
+            x = str(x)
+            l = len(x)
+            if l > CL[j]:
+                CL[j] = l
+    for i in range(len(M)):
+        current = M[i]
+        current_line =""
+        for j in range(len(current)):
+            s= 0
+            if j > 0:
+                s= 1
+            x = current[j]
+            x = str(x)
+            x = fill_blanks(x,s+CL[j]) 
+            current_line = current_line + x
+        print(current_line)
+    return
+ 
 
 def our_rat_handler(list):
     if list[0] == 0:
@@ -37,6 +86,9 @@ def our_renf_handler(list):
             coeff = ""
         out = out + sign + coeff + star +power
     return out
+
+def our_float_handler(x):
+    return "{:.4f}".format(x)
         
 class Cone:
 
@@ -252,7 +304,8 @@ class Cone:
         input_list = self.__process_keyword_args(kwargs)
         input_list.append(name)
         PyNormaliz_cpp.NmzCompute(self.cone, input_list)
-        return PyNormaliz_cpp.NmzResult(self.cone, name,RationalHandler = our_rat_handler, NumberfieldElementHandler=our_renf_handler)
+        return PyNormaliz_cpp.NmzResult(self.cone, name,RationalHandler = our_rat_handler, \
+               NumberfieldElementHandler=our_renf_handler, FloatHandler = our_float_handler)
 
 
 # Generate getters for a bunch of Normalize properties

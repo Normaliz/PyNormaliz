@@ -133,6 +133,7 @@ static const char* cone_name_long = "Cone<long long>";
 static const char* cone_name_renf = "Cone<renf_elem>";
 
 static PyObject* RationalHandler = NULL;
+static PyObject* FloatHandler = NULL;
 
 #ifdef ENFNORMALIZ
 static PyObject* NumberfieldElementHandler = NULL;
@@ -171,11 +172,11 @@ static PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg
 #ifndef NMZ_RELEASE
 static_assert(
     false,
-    "Your Normaliz version (unknown) is to old! Update to 3.8.5 or newer.");
+    "Your Normaliz version (unknown) is to old! Update to 3.8.9 or newer.");
 #endif
-#if NMZ_RELEASE < 30805
+#if NMZ_RELEASE < 30809
 static_assert(false,
-              "Your Normaliz version is to old! Update to 3.8.5 or newer.");
+              "Your Normaliz version is to old! Update to 3.8.9 or newer.");
 #endif
 
 /***************************************************************************
@@ -352,7 +353,13 @@ static PyObject* NmzToPyNumber(long long in)
 
 static PyObject* NmzToPyNumber(double in)
 {
-    return PyFloat_FromDouble(in);
+    std::cout << "FFFFF " << in << std::endl;
+    PyObject* x = PyFloat_FromDouble(in);
+    if(FloatHandler == NULL)
+        return x;
+
+    std::cout << "GGGGG " << in << std::endl;    
+    return CallPythonFuncOnOneArg(FloatHandler, x);
 }
 
 template < typename Integer >
@@ -364,18 +371,25 @@ static PyObject* NmzToPyNumber(const renf_elem_class &in)
 {
     vector< mpz_class > output_nums = in.get_num_vector();
     mpz_class           output_den = in.get_den();
-    PyObject*           denom_py = NmzToPyNumber(output_den);
+    vector< mpz_class > denoms(output_nums.size(), output_den);
+    for(size_t i=0; i< output_nums.size(); ++i){
+        mpq_class quot = output_nums[i];
+        quot /= output_den;
+        output_nums[i] = quot.get_num();
+        denoms[i] = quot.get_den();
+    }
+    // PyObject*           denom_py = NmzToPyNumber(output_den);
     PyObject*           out_list = PyList_New(output_nums.size());
     for (size_t i = 0; i < output_nums.size(); i++) {
         PyObject* current = PyList_New(2);
         PyList_SetItem(current, 0, NmzToPyNumber(output_nums[i]));
-        Py_IncRef(denom_py);
-        PyList_SetItem(current, 1, denom_py);
+        // Py_IncRef(denom_py);
+        PyList_SetItem(current, 1, NmzToPyNumber(denoms[i]));
         if (RationalHandler != NULL)
             current = CallPythonFuncOnOneArg(RationalHandler, current);
         PyList_SetItem(out_list, i, current);
     }
-    Py_DecRef(denom_py);
+    // Py_DecRef(denom_py);
     if (NumberfieldElementHandler != NULL)
         out_list =
             CallPythonFuncOnOneArg(NumberfieldElementHandler, out_list);
@@ -1716,6 +1730,7 @@ static PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
 
     if (kwargs) {
         RationalHandler = PyDict_GetItemString(kwargs, "RationalHandler");
+        FloatHandler = PyDict_GetItemString(kwargs, "FloatHandler");
 #ifdef ENFNORMALIZ
         NumberfieldElementHandler =
             PyDict_GetItemString(kwargs, "NumberfieldElementHandler");
