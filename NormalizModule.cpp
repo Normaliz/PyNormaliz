@@ -367,6 +367,7 @@ static PyObject* NmzVectorToPyList(const vector< Integer >& in,
 #ifdef ENFNORMALIZ
 static PyObject* NmzToPyNumber(const renf_elem_class &in)
 {
+    // std::cout << "IIIII " << in << std::endl;
     vector< mpz_class > output_nums = in.get_num_vector();
     mpz_class           output_den = in.get_den();
     vector< mpz_class > denoms(output_nums.size(), output_den);
@@ -376,6 +377,14 @@ static PyObject* NmzToPyNumber(const renf_elem_class &in)
         output_nums[i] = quot.get_num();
         denoms[i] = quot.get_den();
     }
+    /*std::cout << "NNN ";
+    for( size_t i = 0; i< output_nums.size(); ++i)
+        std::cout << output_nums[i] << " ";
+    std::cout << std::endl;
+    std::cout << "DDD ";
+    for( size_t i = 0; i< output_nums.size(); ++i)
+        std::cout << denoms[i] << " ";
+    std::cout << std::endl;*/
     // PyObject*           denom_py = NmzToPyNumber(output_den);
     PyObject*           out_list = PyList_New(output_nums.size());
     for (size_t i = 0; i < output_nums.size(); i++) {
@@ -389,8 +398,7 @@ static PyObject* NmzToPyNumber(const renf_elem_class &in)
     }
     // Py_DecRef(denom_py);
     if (NumberfieldElementHandler != NULL)
-        out_list =
-            CallPythonFuncOnOneArg(NumberfieldElementHandler, out_list);
+        out_list = CallPythonFuncOnOneArg(NumberfieldElementHandler, out_list);
     return out_list;
 }
 #endif
@@ -1705,7 +1713,17 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
 static PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
-    FUNC_BEGIN
+FUNC_BEGIN
+    
+RationalHandler = NULL;
+FloatHandler = NULL;
+
+#ifdef ENFNORMALIZ
+NumberfieldElementHandler = NULL;
+#endif
+
+VectorHandler = NULL;
+MatrixHandler = NULL;
     
     if(PyTuple_Size(args)!=2){
         PyErr_SetString(PyNormaliz_cppError, "Exactly one computation goal required for NmzResult");

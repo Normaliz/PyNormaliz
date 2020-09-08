@@ -54,9 +54,9 @@ def pretty_print(M):
 
 def our_rat_handler(list):
     if list[0] == 0:
-        return "0"
+        return 0
     if list[1] == 1:
-        return str(list[0])
+        return list[0]
     return str(list[0])+"/"+str(list[1])
 
 
@@ -64,21 +64,21 @@ def our_renf_handler(list):
     out = ""
     for i in range(len(list)):
         j = len(list) - 1 -i
-        current = list[j]
+        current = str(list[j])
         if current[0] == '0':
             continue
         sign ="+"
         if current[0] == '-' or out == "":
             sign = ""
-        if j>0 and list[j] == "-1":
+        if j>0 and current == "-1":
                 sign ="-"
         if j == 0:
             power = ""
         if j == 1:
-            power = "a"
+            power = name_of_indeterminate
         if j > 1:
-            power = "a^"+str(j)
-        coeff = list[j]
+            power = name_of_indeterminate + "^"+str(j)
+        coeff = current
         star = "*"
         if coeff == "1" or coeff == "-1" or  j==0:
             star = ""
@@ -89,6 +89,8 @@ def our_renf_handler(list):
 
 def our_float_handler(x):
     return "{:.4f}".format(x)
+
+name_of_indeterminate = ""
         
 class Cone:
 
@@ -100,13 +102,18 @@ class Cone:
             key = entry[0]
             if type(current_input) == list and len(current_input) > 0 and type(current_input[0]) != list and key != "number_field":
                 kwargs[key] = [current_input]
+            if key == "number_field":
+                if type(current_input) != list or len(current_input) < 3:
+                    raise ValueError("Illegal number_field definition!")
+                global name_of_indeterminate
+                name_of_indeterminate = current_input[1]
             elif type(current_input) == bool and current_input == True:
                 kwargs[key] = current_input = [[]]
             elif type(current_input) == bool and current_input == False:
                 poplist = pop_list + [key]
-        self.cone = PyNormaliz_cpp.NmzCone(input_list,**kwargs)
         for k in pop_list:
             kwargs.pop(k)
+        self.cone = PyNormaliz_cpp.NmzCone(input_list,**kwargs)
 
     def __process_keyword_args(self, keywords):
         input_list = []

@@ -29,7 +29,7 @@ True
 True
 >>> cube1.AffineDim() == NmzResult(cube2, "AffineDim") == 2
 True
->>> cube1.Volume() == '8'
+>>> cube1.Volume() == 8
 True
 >>> NmzResult(cube2, "Volume") == [8,1]
 True
@@ -45,7 +45,7 @@ NormalizError: ...
 Traceback (most recent call last):
 ...
 NormalizError: ...
->>> abs(cube1.EuclideanVolume() - 4) < 0.000001
+>>> cube1.EuclideanVolume() == '4.0000'
 True
 >>> abs(NmzResult(cube2, "EuclideanVolume") - 4) < 0.000001
 True
