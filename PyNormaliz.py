@@ -1,4 +1,6 @@
-# encoding=utf8   
+# encoding=utf8 
+
+import sys
     
 import PyNormaliz_cpp
 from PyNormaliz_cpp import *
@@ -212,20 +214,23 @@ class Cone:
 
         """
         def to_sup(s):
-            sups = {u'0': u'\u2070',
-                    u'1': u'\xb9',
-                    u'2': u'\xb2',
-                    u'3': u'\xb3',
-                    u'4': u'\u2074',
-                    u'5': u'\u2075',
-                    u'6': u'\u2076',
-                    u'7': u'\u2077',
-                    u'8': u'\u2078',
-                    u'9': u'\u2079'}
-            if s is 1:
+            if str(s) == '1':
                 return ''
-            # lose the list comprehension
-            return ''.join(sups.get(str(char), str(char)) for char in str(s))
+            if sys.version == 3:
+                sups = {u'0': u'\u2070',
+                        u'1': u'\xb9',
+                        u'2': u'\xb2',
+                        u'3': u'\xb3',
+                        u'4': u'\u2074',
+                        u'5': u'\u2075',
+                        u'6': u'\u2076',
+                        u'7': u'\u2077',
+                        u'8': u'\u2078',
+                        u'9': u'\u2079'}
+                # lose the list comprehension
+                return ''.join(sups.get(str(char), str(char)) for char in str(s))
+
+            return "^"+str(s)
 
         def getNumerator(coefficients):
 
@@ -239,17 +244,21 @@ class Cone:
             for exp, coefficient in enumerate(coefficients):
                 if coefficient is 0:
                     continue
+                coeff_str = str(abs(coefficient))
+                if not exp is 0:
+                    if coeff_str == "1":
+                        coeff_str = " "
                 # Exponent is 0 so keep only the coefficient
                 if exp is 0:
                     numerator += '({}{!s}'.format('-' if not isPositive(coefficient)
-                                                  else '', abs(coefficient))
+                                                  else '',coeff_str)
                 # Only include sign if `coefficient` is negative
                 elif exp is firstNonZero:
                     numerator += '{}{!s}t{}'.format('-' if not isPositive(
-                        coefficient) else '', abs(coefficient), to_sup(exp))
+                        coefficient) else '', coeff_str, to_sup(exp))
                 else:
                     numerator += ' {}{!s}t{}'.format('+ ' if isPositive(
-                        coefficient) else '- ', abs(coefficient), to_sup(exp))
+                        coefficient) else '- ',coeff_str, to_sup(exp))
             numerator += ')'
             return numerator
 
