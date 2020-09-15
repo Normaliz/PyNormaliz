@@ -62,7 +62,7 @@ methods = [
          ]
 
 postprocess = {
-    "Generators": sorted,
+    "TriangulationGenerators": sorted,
     "VerticesOfPolyhedron": sorted,
 }
 
@@ -164,7 +164,7 @@ class Test1(GenericPyNormalizTest):
     ExternalIndex = normaliz_error
     ExtremeRays = []
     GeneratorOfInterior = normaliz_error
-    Generators = [[-3,-2,-1,1], [1,1,-1,1], [1,1,1,1], [-1,1,-1,2]]
+    TriangulationGenerators = [[1, 1, -1, 1], [1, 1, 1, 1], [-1, 1, -1, 2], [-3, -2, -1, 1]]
     Grading = normaliz_error
     GradingDenom = normaliz_error
     HilbertQuasiPolynomial = normaliz_error
@@ -205,8 +205,7 @@ class Test2(GenericPyNormalizTest):
     ExternalIndex = 1
     ExtremeRays = []
     GeneratorOfInterior = normaliz_error
-    Generators = [[2,-1,-1,-2,1], [2,-1,0,-2,1], [2,-1,1,-2,1], [2,0,-1,-2,1],
-            [2,0,0,-2,1], [2,0,1,-2,1], [2,1,-1,-2,1], [2,1,0,-2,1], [2,1,1,-2,1]]
+    TriangulationGenerators = [[2, 0, 0, -2, 1], [2, -1, 0, -2, 1], [2, 0, -1, -2, 1], [2, 0, 1, -2, 1], [2, 1, 0, -2, 1], [2, -1, -1, -2, 1], [2, -1, 1, -2, 1], [2, 1, -1, -2, 1], [2, 1, 1, -2, 1]]
     Grading = normaliz_error
     GradingDenom = normaliz_error
     HilbertQuasiPolynomial = normaliz_error
@@ -224,8 +223,7 @@ class Test2(GenericPyNormalizTest):
     ReesPrimaryMultiplicity = normaliz_error
     RecessionRank = 0
     SupportHyperplanes = [[0,-1,0,0,1],[0,0,-1,0,1],[0,0,1,0,1],[0,1,0,0,1]]
-    Triangulation = [[[0,1,3],1], [[1,2,3],1], [[2,3,4],1], [[2,4,5],1], [[3,4,6], 1],
-            [[4,5,6], 1], [[5,6,7], 1], [[5,7,8], 1]]
+    Triangulation = [[[0, 1, 2], 1], [[0, 1, 3], 1], [[0, 2, 4], 1], [[0, 3, 4], 1], [[1, 2, 5], 1], [[1, 3, 6], 1], [[2, 4, 7], 1], [[3, 4, 8], 1]]
     TriangulationSize = 8
     UnitGroupIndex = normaliz_error
     VerticesOfPolyhedron = [[2,-1,-1,-2,1], [2,-1,1,-2,1], [2,1,-1,-2,1], [2,1,1,-2,1]]
@@ -245,7 +243,7 @@ class Test3(GenericPyNormalizTest):
     EhrhartQuasiPolynomial = [[1], [0], [0], [0], [0], 1]
     Equations = [[1,-2,1,0],[0,5,0,-2]]
 #    Generators = ...
-# apparently not well defined
+# apparently not well defined -- and therefore no longer in use
     Grading = normaliz_error
     HilbertQuasiPolynomial = normaliz_error
     IsInhomogeneous = True
