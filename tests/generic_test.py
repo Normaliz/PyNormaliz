@@ -34,7 +34,7 @@ methods = [
          "ExternalIndex",
          "ExtremeRays",
          "GeneratorOfInterior",
-         "Generators",
+         "TriangulationGenerators",
          "Grading",
          "GradingDenom",
          "HilbertQuasiPolynomial",
@@ -195,7 +195,7 @@ class Test2(GenericPyNormalizTest):
 
     # expected results
     AffineDim = 2
-    Automorphisms = [8, [[[],[]],[]], [[[0,2,1,3], [1,0,3,2]], [[0,1,2,3]]], [[[1,0,3,2], [0,2,1,3]], [[0,1,2,3]]]]
+    Automorphisms = [8, [[], []], [[[0, 2, 1, 3], [1, 0, 3, 2]], [[0, 1, 2, 3]]], [[[1, 0, 3, 2], [0, 2, 1, 3]], [[0, 1, 2, 3]]]]
     Congruences = []
     Dehomogenization = normaliz_error
     EmbeddingDim = 5
