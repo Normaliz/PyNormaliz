@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Normaliz/PyNormaliz.svg)](https://travis-ci.org/Normaliz/PyNormaliz)
+[![Build Status](https://travis-ci.com/Normaliz/PyNormaliz.svg)](https://travis-ci.com/Normaliz/PyNormaliz)
 [![Code Coverage](https://codecov.io/github/Normaliz/PyNormaliz/coverage.svg)](https://codecov.io/gh/Normaliz/PyNormaliz)
 
 # PyNormaliz - A python interface to Normaliz
