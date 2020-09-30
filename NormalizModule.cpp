@@ -1037,7 +1037,7 @@ static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
 
 
     renf_class* renf;
-    // number_field_data contains 4 entries: poly, var, emb
+    // number_field_data contains 3 entries: poly, var, emb
     // All are strings
     string poly = PyUnicodeToString(PySequence_GetItem(number_field_data, 0));
     string var = PyUnicodeToString(PySequence_GetItem(number_field_data, 1));
@@ -1932,6 +1932,98 @@ static PyObject* NmzSetNrCoeffQuasiPol(PyObject* self, PyObject* args)
 
 /***************************************************************************
  *
+ * Polynomial
+ *
+ ***************************************************************************/
+
+static PyObject* NmzSetPolynomial(PyObject* self, PyObject* args)
+{
+
+    FUNC_BEGIN
+
+    PyObject* cone = PyTuple_GetItem(args, 0);
+
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+    
+    TempSignalHandler tmpHandler; // use custom signal handler
+
+    PyObject* poly_pi = PyTuple_GetItem(args, 1);
+    
+    if(!string_check(poly_pi)){
+        PyErr_SetString(PyNormaliz_cppError, "Polynomual must be given as a string");
+        return NULL;
+    }
+    TempSignalHandler tmpHandler1; // use custom signal handler
+    
+    string polynomial = PyUnicodeToString(poly_pi);
+    
+    if (is_cone_mpz(cone)) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        cone_ptr->setPolynomial(polynomial);
+        Py_RETURN_TRUE;
+    }
+    else if (is_cone_long(cone)) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        cone_ptr->setPolynomial(polynomial);
+        Py_RETURN_TRUE;
+    }
+    else {
+        PyErr_SetString(PyNormaliz_cppError,
+                        "Polynomial cannot be set for renf cone");
+        return NULL;
+    }
+
+    FUNC_END
+}
+
+/***************************************************************************
+ *
+ * FaceCodimBound
+ *
+ ***************************************************************************/
+
+static PyObject* NmzSetFaceCodimBound(PyObject* self, PyObject* args)
+{
+
+    FUNC_BEGIN
+
+    PyObject* cone = PyTuple_GetItem(args, 0);
+
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+
+    PyObject* bound_py = PyTuple_GetItem(args, 1);
+
+    TempSignalHandler tmpHandler; // use custom signal handler
+
+    int  overflow;
+    long bound = PyLong_AsLongLongAndOverflow(bound_py, &overflow);
+    if (is_cone_mpz(cone)) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        cone_ptr->setFaceCodimBound(bound);
+        Py_RETURN_TRUE;
+    }
+    else if (is_cone_long(cone)) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        cone_ptr->setFaceCodimBound(bound);
+        Py_RETURN_TRUE;
+    }
+    else {
+         Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
+         cone_ptr->setFaceCodimBound(bound);
+         Py_RETURN_TRUE;
+    }
+
+    FUNC_END
+}
+
+/***************************************************************************
+ *
  * Get Symmetrized cone
  *
  ***************************************************************************/
@@ -2319,7 +2411,11 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      (PyCFunction)NmzSetNumberOfNormalizThreads, METH_VARARGS,
      "Sets the Normaliz thread limit"},
     {"NmzSetNrCoeffQuasiPol", (PyCFunction)NmzSetNrCoeffQuasiPol,
-     METH_VARARGS, "Sets the period bound for the quasi-polynomial"},
+     METH_VARARGS, "Sets the number of computed coefficients for the quasi-polynomial"},
+    {"NmzSetPolynomial", (PyCFunction)NmzSetPolynomial,
+     METH_VARARGS, "Sets the polynomial for integration and weighted series"},
+    {"NmzSetFaceCodimBound", (PyCFunction)NmzSetFaceCodimBound,
+     METH_VARARGS, "Sets the maximal codimension for the computed faces"},
     {"NmzGetHilbertSeriesExpansion",
      (PyCFunction)NmzGetHilbertSeriesExpansion, METH_VARARGS,
      "Returns expansion of the hilbert series"},

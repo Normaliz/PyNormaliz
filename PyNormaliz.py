@@ -116,6 +116,9 @@ class Cone:
         for k in pop_list:
             kwargs.pop(k)
         self.cone = PyNormaliz_cpp.NmzCone(input_list,**kwargs)
+        
+    def ModifyCone(self, *args):
+        PyNormaliz_cpp.NmzModifyCone(self.cone, *args)
 
     def __process_keyword_args(self, keywords):
         input_list = []
@@ -141,6 +144,11 @@ class Cone:
 
     def Compute(self, *args):
         return PyNormaliz_cpp.NmzCompute(self.cone, args)
+    
+    def IsComputed(self, *args):
+        if len(args) != 1:
+            raise ValueError("IsComputed must have exactly one argument")
+        return PyNormaliz_cpp.NmzIsComputed(self.cone, args[0])
 
     def setVerbose(self, verbose=True):
         return NmzSetVerbose(self.cone, verbose)
@@ -167,8 +175,17 @@ class Cone:
     def Polynomial(self, **kwargs):
         return PyNormaliz_cpp.NmzGetPolynomial(self.cone)
 
-    def NrCoeffQuasiPol(self, bound=-1):
+    def SetNrCoeffQuasiPol(self, bound=-1):
         return PyNormaliz_cpp.NmzSetNrCoeffQuasiPol(self.cone, bound)
+    
+    def SetFaceCodimBound(self, bound=-1):
+        return PyNormaliz_cpp.NmzSetFaceCodimBound(self.cone, bound)
+    
+    def SetPolynomial(self, poly =""):
+        return PyNormaliz_cpp.NmzSetPolynomial(self.cone, poly)    
+    
+    def SetGrading(self, grading):
+        return PyNormaliz_cpp.NmzSetGrading(self.cone, grading)
 
     def SymmetrizedCone(self, **kwargs):
         new_inner_cone = PyNormaliz_cpp.NmzSymmetrizedCone(self.cone)
