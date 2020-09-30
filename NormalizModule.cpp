@@ -2012,12 +2012,14 @@ static PyObject* NmzSetFaceCodimBound(PyObject* self, PyObject* args)
         Cone< long long >* cone_ptr = get_cone_long(cone);
         cone_ptr->setFaceCodimBound(bound);
         Py_RETURN_TRUE;
-    }
+    }7
+#ifdef ENFNORMALIZ
     else {
          Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
          cone_ptr->setFaceCodimBound(bound);
          Py_RETURN_TRUE;
     }
+#endif
 
     FUNC_END
 }
