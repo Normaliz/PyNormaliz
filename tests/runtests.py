@@ -20,7 +20,7 @@ if not PyNormaliz.NmzHasEAntic():
     skip.add("vertex_denom-37.txt")
     skip.add("modify_cone_renf.txt")
     
-if not PyNormaliz.Nmz.HasCocoa():
+if not PyNormaliz.NmzHasCocoa():
     skip.add("test_rational_cones.txt")
 
 # run doctests
