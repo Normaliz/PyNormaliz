@@ -97,6 +97,27 @@ True
 True
 >>> cube1.TriangulationGenerators() == [[0, 0, 1], [-1, 0, 1], [0, -1, 1], [0, 1, 1], [1, 0, 1], [-1, -1, 1], [-1, 1, 1], [1, -1, 1], [1, 1, 1]]
 True
+>>> cube1.SetPolynomial("x[1] + x[2] +1") == True
+True
+>>> cube1.Polynomial() == 'x[1] + x[2] +1'
+True
+>>> cube1.Integral() == 4
+True
+>>> cube1.EuclideanIntegral() == '4.0000'
+True
+>>> cube1.VirtualMultiplicity() == 0
+True
+>>> cube1.WeightedEhrhartSeries() == [[1, 6, 1], [1, 1, 1], 0, 1]
+True
+>>> cube1.EhrhartSeries() == [[1, 6, 1], [1, 1, 1], 0]
+True
+
+
+
+
+
+
+
 
 
 
