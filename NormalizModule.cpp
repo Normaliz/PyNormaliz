@@ -605,6 +605,28 @@ static PyObject* NmzWeightedEhrhartQuasiPolynomialToPyList(
 
 template < typename Integer >
 static PyObject* NmzTriangleListToPyList(
+    const pair<vector<libnormaliz::SHORTSIMPLEX<Integer> >, libnormaliz::Matrix<Integer> >& in)
+{
+    const size_t n = in.first.size();
+    PyObject*    M = PyList_New(n);
+    for (size_t i = 0; i < n; ++i) {
+        // convert the pair
+        PyObject* triple = PyList_New(3);
+        PyList_SetItem(triple, 0,
+                       NmzVectorToPyList< libnormaliz::key_t >(in.first[i].key));
+        PyList_SetItem(triple, 1, NmzToPyNumber(in.first[i].vol));
+        PyList_SetItem(triple, 2, NmzToPyNumber(libnormaliz::bool_to_bitset(in.first[i].Excluded)));
+        PyList_SetItem(M, i, triple);
+    }
+    
+    PyObject* Tr = PyList_New(2);
+    PyList_SetItem(Tr, 0,M);
+    PyList_SetItem(Tr, 1,NmzMatrixToPyList(in.second.get_elements()));
+    return Tr;
+}
+
+template < typename Integer >
+static PyObject* NmzPairVectorToPyList(
     const vector< pair< vector< libnormaliz::key_t >, Integer > >& in)
 {
     const size_t n = in.size();
@@ -634,17 +656,20 @@ NmzStanleyDataToPyList(const libnormaliz::STANLEYDATA< Integer >& StanleyData)
 
 template < typename Integer >
 static PyObject* NmzStanleyDecToPyList(
-    const std::list< libnormaliz::STANLEYDATA< Integer > >& StanleyDec)
+    const std::pair<std::list<libnormaliz::STANLEYDATA<Integer> >, libnormaliz::Matrix<Integer> > & StanleyDec)
 {
-    const size_t n = StanleyDec.size();
+    const size_t n = StanleyDec.first.size();
     PyObject*    M = PyList_New(n);
     typename std::list< libnormaliz::STANLEYDATA< Integer > >::const_iterator S =
-        StanleyDec.begin();
+        StanleyDec.first.begin();
     for (size_t i = 0; i < n; ++i) {
         PyList_SetItem(M, i, NmzStanleyDataToPyList(*S));
         ++S;
     }
-    return M;
+    PyObject*  St=PyList_New(2);
+    PyList_SetItem(St,0, M);
+    PyList_SetItem(St, 1, NmzMatrixToPyList(StanleyDec.second.get_elements()) );
+    return St;
 }
 
 template < typename Integer >
@@ -1544,11 +1569,15 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
     // Handle standard cases
     libnormaliz::OutputType::Enum outputtype = libnormaliz::output_type(p);
 
-
     switch (p) {
-            
-        case libnormaliz::ConeProperty::Triangulation:
+                  
+        case libnormaliz::ConeProperty::Triangulation:{
             return NmzTriangleListToPyList< Integer >(C->getTriangulation());
+        }
+        
+        case libnormaliz::ConeProperty::ConeDecomposition:{
+            return NmzTriangleListToPyList< Integer >(C->getConeDecomposition());
+        }
             
         case libnormaliz::ConeProperty::AllGeneratorsTriangulation:
             return NmzTriangleListToPyList< Integer >(C->getTriangulation(
@@ -1573,8 +1602,7 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
         }
 
         case libnormaliz::ConeProperty::WeightedEhrhartSeries:
-            return NmzWeightedEhrhartSeriesToPyList(
-                C->getWeightedEhrhartSeries());
+            return NmzWeightedEhrhartSeriesToPyList( C->getWeightedEhrhartSeries());
 
         // though Grading has the return type vector<Integer> we make it
         // a complex struture within PyNormaliz since we want to combine it
@@ -1592,7 +1620,7 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
             return NmzStanleyDecToPyList(C->getStanleyDec());
 
         case libnormaliz::ConeProperty::InclusionExclusionData:
-            return NmzTriangleListToPyList< long >(
+            return NmzPairVectorToPyList< long >(
                 C->getInclusionExclusionData());
 
         /* returned as a matrix, no need to make it a complex property

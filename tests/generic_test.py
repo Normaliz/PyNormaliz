@@ -34,7 +34,6 @@ methods = [
          "ExternalIndex",
          "ExtremeRays",
          "GeneratorOfInterior",
-         "TriangulationGenerators",
          "Grading",
          "GradingDenom",
          "HilbertQuasiPolynomial",
@@ -62,7 +61,6 @@ methods = [
          ]
 
 postprocess = {
-    "TriangulationGenerators": sorted,
     "VerticesOfPolyhedron": sorted,
 }
 
@@ -164,7 +162,6 @@ class Test1(GenericPyNormalizTest):
     ExternalIndex = normaliz_error
     ExtremeRays = []
     GeneratorOfInterior = normaliz_error
-    TriangulationGenerators = [[1, 1, -1, 1], [1, 1, 1, 1], [-1, 1, -1, 2], [-3, -2, -1, 1]]
     Grading = normaliz_error
     GradingDenom = normaliz_error
     HilbertQuasiPolynomial = normaliz_error
@@ -181,7 +178,7 @@ class Test1(GenericPyNormalizTest):
     RecessionRank = 0
     ReesPrimaryMultiplicity = normaliz_error
     SupportHyperplanes = [[-3,4,0,-1], [1,-3,0,2], [3,-4,5,6], [7,-6,-5,4]]
-    Triangulation = [[[0,1,2,3], 10]]
+    Triangulation = [[[[0, 1, 2, 3], 10, []]], [[-3, -2, -1, 1], [1, 1, -1, 1], [1, 1, 1, 1], [-1, 1, -1, 2]]]
     TriangulationSize = 1
     UnitGroupIndex = normaliz_error
     VerticesOfPolyhedron = [[-3,-2,-1,1], [-1,1,-1,2], [1,1,-1,1], [1,1,1,1]]
@@ -205,7 +202,6 @@ class Test2(GenericPyNormalizTest):
     ExternalIndex = 1
     ExtremeRays = []
     GeneratorOfInterior = normaliz_error
-    TriangulationGenerators = [[2, 0, 0, -2, 1], [2, -1, 0, -2, 1], [2, 0, -1, -2, 1], [2, 0, 1, -2, 1], [2, 1, 0, -2, 1], [2, -1, -1, -2, 1], [2, -1, 1, -2, 1], [2, 1, -1, -2, 1], [2, 1, 1, -2, 1]]
     Grading = normaliz_error
     GradingDenom = normaliz_error
     HilbertQuasiPolynomial = normaliz_error
@@ -223,7 +219,7 @@ class Test2(GenericPyNormalizTest):
     ReesPrimaryMultiplicity = normaliz_error
     RecessionRank = 0
     SupportHyperplanes = [[0,-1,0,0,1],[0,0,-1,0,1],[0,0,1,0,1],[0,1,0,0,1]]
-    Triangulation = [[[0, 1, 2], 1], [[0, 1, 3], 1], [[0, 2, 4], 1], [[0, 3, 4], 1], [[1, 2, 5], 1], [[1, 3, 6], 1], [[2, 4, 7], 1], [[3, 4, 8], 1]]
+    Triangulation = [[[[0, 1, 3], 1, []], [[1, 2, 3], 1, []], [[2, 3, 4], 1, []], [[2, 4, 5], 1, []], [[3, 4, 6], 1, []], [[4, 5, 6], 1, []], [[5, 6, 7], 1, []], [[5, 7, 8], 1, []]], [[2, -1, -1, -2, 1], [2, -1, 0, -2, 1], [2, -1, 1, -2, 1], [2, 0, -1, -2, 1], [2, 0, 0, -2, 1], [2, 0, 1, -2, 1], [2, 1, -1, -2, 1], [2, 1, 0, -2, 1], [2, 1, 1, -2, 1]]] 
     TriangulationSize = 8
     UnitGroupIndex = normaliz_error
     VerticesOfPolyhedron = [[2,-1,-1,-2,1], [2,-1,1,-2,1], [2,1,-1,-2,1], [2,1,1,-2,1]]

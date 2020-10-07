@@ -11,5 +11,5 @@ Segfault reported in https://github.com/Normaliz/PyNormaliz/issues/23
 True
 >>> NmzResult(cube2, "Volume") == [8,1]
 True
->>> len(cube1.Triangulation()) == 8
+>>> len(cube1.Triangulation()[0]) == 8
 True
