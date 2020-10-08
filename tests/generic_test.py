@@ -178,7 +178,7 @@ class Test1(GenericPyNormalizTest):
     RecessionRank = 0
     ReesPrimaryMultiplicity = normaliz_error
     SupportHyperplanes = [[-3,4,0,-1], [1,-3,0,2], [3,-4,5,6], [7,-6,-5,4]]
-    Triangulation = [[[[0, 1, 2, 3], 10, []]], [[-3, -2, -1, 1], [1, 1, -1, 1], [1, 1, 1, 1], [-1, 1, -1, 2]]]
+    Triangulation = [[[[0, 1, 2, 3], 10, []]], [[-3, -2, -1, 1], [-1, 1, -1, 2], [1, 1, -1, 1], [1, 1, 1, 1]]]
     TriangulationSize = 1
     UnitGroupIndex = normaliz_error
     VerticesOfPolyhedron = [[-3,-2,-1,1], [-1,1,-1,2], [1,1,-1,1], [1,1,1,1]]
