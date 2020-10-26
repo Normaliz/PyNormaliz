@@ -172,11 +172,11 @@ static PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg
 #ifndef NMZ_RELEASE
 static_assert(
     false,
-    "Your Normaliz version (unknown) is to old! Update to 3.8.9 or newer.");
+    "Your Normaliz version (unknown) is to old! Update to 3.8.10 or newer.");
 #endif
-#if NMZ_RELEASE < 30809
+#if NMZ_RELEASE < 30810
 static_assert(false,
-              "Your Normaliz version is to old! Update to 3.8.9 or newer.");
+              "Your Normaliz version is to old! Update to 3.8.10 or newer.");
 #endif
 
 /***************************************************************************
@@ -473,6 +473,9 @@ static bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
             if (string_check(current_element)) {
                 current_elem = NumberFieldElem(*nf);
                 current_elem = PyUnicodeToString(current_element);
+            }
+            if (PyFloat_Check(current_element)){
+                throw PyNormalizInputException("Nonintegral numbers must be given as strings"); 
             }
             if (PyLong_Check(current_element)) {
                 mpq_class tmp;
@@ -1193,6 +1196,7 @@ static PyObject* _NmzConeCopy(PyObject* self, PyObject* args)
  *
  ***************************************************************************/
 
+/* SUPERFLUOUS
 template < typename Integer >
 static PyObject* NmzHilbertSeries(Cone< Integer >* C, PyObject* args)
 {
@@ -1248,6 +1252,7 @@ static PyObject* NmzHilbertSeries_Outer(PyObject* self, PyObject* args)
     }
     FUNC_END
 }
+*/
 
 /***************************************************************************
  *
@@ -2431,8 +2436,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      "Set verbosity of cone"},
     {"NmzListConeProperties", (PyCFunction)NmzListConeProperties, METH_NOARGS,
      "List all available properties"},
-    {"NmzHilbertSeries", (PyCFunction)NmzHilbertSeries_Outer, METH_VARARGS,
-     "Returns Hilbert series, either HSOP or not"},
+    // {"NmzHilbertSeries", (PyCFunction)NmzHilbertSeries_Outer, METH_VARARGS,
+    // "Returns Hilbert series, either HSOP or not"},
     {"NmzGetPolynomial", (PyCFunction)NmzGetPolynomial, METH_VARARGS,
      "Returns grading polynomial"},
     {"NmzSymmetrizedCone", (PyCFunction)NmzSymmetrizedCone, METH_VARARGS,

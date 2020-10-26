@@ -15,9 +15,40 @@ def fill_blanks(x,s):
     out = out + x
     return out
 
-def pretty_print(M):
+def print_perms_and_orbits(data, name):
+    print("permutations of ", name)
+    for i in range(len(data[0])):
+        print(i, ": ", data[0][i])
+    print("orbits of ", name)
+    for i in range(len(data[1])):
+        print(i, ": ", data[1][i])
+    return
+    
+
+def print_automs(Automs):
+    print("order ", Automs[0])
+    if len(Automs[1][0]) >0:
+        print_perms_and_orbits(Automs[1],"extreme rays of (recession) cone")
+    if len(Automs[2][0]) >0:
+        print_perms_and_orbits(Automs[2],"vertices of polyhedron")
+    if len(Automs[3][0]) >0:
+        print_perms_and_orbits(Automs[3],"support hyperplanes")
+    return
+
+def print_Stanley_dec(dec):
+    print("generators")
+    print_matrix(dec[1])
+    print("simlices and offsets")
+    for i in range(len(dec[0])):
+        print(dec[0][i][0])
+        print()
+        print_matrix(dec[0][i][1])
+        print("-----------")
+    return
+
+def print_matrix(M):
     if  not isinstance(M,list):
-        print("pretty_print applied to non-matrix")
+        print("print_matrix applied to non-matrix")
         return
     if len(M) == 0:
         return
@@ -64,11 +95,17 @@ def our_rat_handler(list):
 
 def our_renf_handler(list):
     out = ""
+    non_zero = False
     for i in range(len(list)):
         j = len(list) - 1 -i
         current = str(list[j])
         if current[0] == '0':
-            continue
+            if non_zero or j !=0:
+                continue
+            else:
+                out="0"
+                return out
+        non_zero = True
         sign ="+"
         if current[0] == '-' or out == "":
             sign = ""
@@ -91,6 +128,150 @@ def our_renf_handler(list):
 
 def our_float_handler(x):
     return "{:.4f}".format(x)
+
+def PrettyPolynomialTuple(numCoefficients, denCoefficients):
+    """
+    Strings for numerator and denominator of the a hilbert series.
+
+    Parameters
+    ----------
+    numCoefficients : list
+        The coefficients for the numerator.
+    denCofficients : list
+        The coefficients for the denominator where the value represents the
+        exponent of 't' and the frequency indicates the outer coefficient.
+
+    Returns
+    -------
+    PrettyPolynomialTuple: tuple of strings
+
+    Examples
+    --------
+
+    >>> numCoefficients = [3, 7, 4, -4, -6, 5]
+    >>> denCoefficients = [1, 1, 2, 2, 2, 4]
+    >>> PrettyPolynomialTuple(numCoefficients,denCoefficients)
+
+    ('(3 + 7t + 4t² - 4t³ - 6t⁴ + 5t⁵)', '(1 - t)² (1 - t²)³ (1 - t⁴)')
+
+    """
+    def to_sup(s):
+        if str(s) == '1':
+            return ''
+        if sys.version == 3:
+            sups = {u'0': u'\u2070',
+                    u'1': u'\xb9',
+                    u'2': u'\xb2',
+                    u'3': u'\xb3',
+                    u'4': u'\u2074',
+                    u'5': u'\u2075',
+                    u'6': u'\u2076',
+                    u'7': u'\u2077',
+                    u'8': u'\u2078',
+                    u'9': u'\u2079'}
+            # lose the list comprehension
+            return ''.join(sups.get(str(char), str(char)) for char in str(s))
+
+        return "^"+str(s)
+
+    def getNumerator(coefficients):
+
+        numerator = ''
+
+        def isPositive(x):
+            return x > 0
+
+        firstNonZero = next(
+            (i for i, x in enumerate(coefficients) if x != 0), 0)
+        for exp, coefficient in enumerate(coefficients):
+            if coefficient is 0:
+                continue
+            coeff_str = str(abs(coefficient))
+            if not exp is 0:
+                if coeff_str == "1":
+                    coeff_str = " "
+            # Exponent is 0 so keep only the coefficient
+            if exp is 0:
+                numerator += '({}{!s}'.format('-' if not isPositive(coefficient)
+                                                else '',coeff_str)
+            # Only include sign if `coefficient` is negative
+            elif exp is firstNonZero:
+                numerator += '{}{!s}t{}'.format('-' if not isPositive(
+                    coefficient) else '', coeff_str, to_sup(exp))
+            else:
+                numerator += ' {}{!s}t{}'.format('+ ' if isPositive(
+                    coefficient) else '- ',coeff_str, to_sup(exp))
+        numerator += ')'
+        return numerator
+
+    def getDenominator(coefficients):
+        exponents = [(inner, coefficients.count(inner))
+                        for inner in set(coefficients)]
+        denominator = ' '.join('(1 - t{}){}'. format(to_sup(x[0]) if x[0] is not 1 else '', to_sup(x[1]) if x[1] is not 1 else '') for x in exponents)
+        return denominator
+
+    num = getNumerator(numCoefficients)
+    den = getDenominator(denCoefficients)
+    prettyPolynomial = (num, den)
+    return prettyPolynomial
+
+def PrintPrettyHilbertSeries(numCoefficients, denCoefficients):
+    """
+    Make a pretty hilbert series string
+
+    Parameters
+    ----------
+    numCoefficients : list of ints
+        The coefficients for the numerator.
+    denCofficients : list of ints
+        The coefficients for the denominator where the value represents
+        the exponent of 't' and the frequency indicates the outer
+        coefficient.
+
+    Returns
+    -------
+    PrintPrettyHilbertSeries : string
+
+    Examples
+    --------
+
+    >>> numCoefficients = [3, 7, 4, -4, -6, 5]
+    >>> deCoefficients = [1, 1, 2, 2, 2, 4]
+    >>> PrintPrettyHilbertSeries(numCoefficients,deCoefficients)
+
+    (3 + 7t + 4t² - 4t³ - 6t⁴ + 5t⁵)
+    --------------------------------
+        (1 - t)² (1 - t²)³ (1 - t⁴)
+
+    """
+    num, den = PrettyPolynomialTuple(numCoefficients, denCoefficients)
+    prettyPolynomial = '{:^}\n{:-^{width}}\n{:^{width}}'.format(
+        num, '', den, width=max(len(den),len(num)))
+    return prettyPolynomial
+
+def print_series(series):
+    shift=series[2]
+    Shift = []
+    if shift >= 0:
+        Shift=[ 0 for x in range(1,shift) ]
+    numerator=Shift+series[0]
+    denominator=series[1]
+    print(PrintPrettyHilbertSeries(numerator,denominator))
+    if shift < 0:
+        print("shift ", shift)
+    if len(series) > 3 and series[3] !=1:
+        print("dvide numerator by ",series[3])
+    return
+
+def print_quasipol(poly):
+    pp = []
+    for i in range(len(poly)-1):
+        pp = pp + [poly[i]]
+    print_matrix(pp)
+    if poly[len(poly)-1] != 1:
+           print ("divide all coefficients by ", poly[len(poly)-1])
+    return
+
 
 name_of_indeterminate = ""
         
@@ -131,10 +312,11 @@ class Cone:
         props = PyNormaliz_cpp.NmzListConeProperties()
         goals = props[0]
         for x in goals:
+            if x == "Generators":
+                continue
             if (PyNormaliz_cpp.NmzIsComputed(self.cone, x)):
                 print(x + ":")
                 print(PyNormaliz_cpp.NmzResult(self.cone, x))
-                print("\n")
 
     def __str__(self):
         return "<Normaliz Cone>"
@@ -150,29 +332,35 @@ class Cone:
             raise ValueError("IsComputed must have exactly one argument")
         return PyNormaliz_cpp.NmzIsComputed(self.cone, args[0])
 
-    def setVerbose(self, verbose=True):
+    def SetVerbose(self, verbose=True):
         return NmzSetVerbose(self.cone, verbose)
 
     # This one is not like the others!
-    def IntegerHull(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("IntegerHull")
+    def IntegerHull(self):
+        input_list=["IntegerHull"]
         PyNormaliz_cpp.NmzCompute(self.cone, input_list)
         new_inner_cone = PyNormaliz_cpp.NmzResult(self.cone, "IntegerHull")
         return_cone = Cone.__new__(Cone)
         return_cone.cone = new_inner_cone
         return return_cone
 
-    def ProjectCone(self, **kwargs):
-        input_list = self.__process_keyword_args(kwargs)
-        input_list.append("ProjectCone")
+    def ProjectCone(self):
+        input_list=["ProjectCone"]
         PyNormaliz_cpp.NmzCompute(self.cone, input_list)
         new_inner_cone = PyNormaliz_cpp.NmzResult(self.cone, "ProjectCone")
         return_cone = Cone.__new__(Cone)
         return_cone.cone = new_inner_cone
         return return_cone
+    
+    def SymmetrizedCone(self, **kwargs):
+        new_inner_cone = PyNormaliz_cpp.NmzSymmetrizedCone(self.cone)
+        if new_inner_cone == None:
+            return None
+        return_cone = Cone.__new__(Cone)
+        return_cone.cone = new_inner_cone
+        return return_cone
 
-    def Polynomial(self, **kwargs):
+    def Polynomial(self):
         return PyNormaliz_cpp.NmzGetPolynomial(self.cone)
 
     def SetNrCoeffQuasiPol(self, bound=-1):
@@ -187,14 +375,6 @@ class Cone:
     def SetGrading(self, grading):
         return PyNormaliz_cpp.NmzSetGrading(self.cone, grading)
 
-    def SymmetrizedCone(self, **kwargs):
-        new_inner_cone = PyNormaliz_cpp.NmzSymmetrizedCone(self.cone)
-        if new_inner_cone == None:
-            return None
-        return_cone = Cone.__new__(Cone)
-        return_cone.cone = new_inner_cone
-        return return_cone
-
     def HilbertSeriesExpansion(self,degree):
         return NmzGetHilbertSeriesExpansion(self.cone,degree)
     
@@ -203,135 +383,9 @@ class Cone:
 
     def WeightedEhrhartSeriesExpansion(self,degree):
         return NmzGetWeightedEhrhartSeriesExpansion(self.cone,degree)
-
-    def PrettyPolynomialTuple(self, numCoefficients, denCoefficients):
-        """
-        Strings for numerator and denominator of the a hilbert series.
-
-        Parameters
-        ----------
-        numCoefficients : list
-            The coefficients for the numerator.
-        denCofficients : list
-            The coefficients for the denominator where the value represents the
-            exponent of 't' and the frequency indicates the outer coefficient.
-
-        Returns
-        -------
-        PrettyPolynomialTuple: tuple of strings
-
-        Examples
-        --------
-
-        >>> numCoefficients = [3, 7, 4, -4, -6, 5]
-        >>> denCoefficients = [1, 1, 2, 2, 2, 4]
-        >>> PrettyPolynomialTuple(numCoefficients,denCoefficients)
-
-        ('(3 + 7t + 4t² - 4t³ - 6t⁴ + 5t⁵)', '(1 - t)² (1 - t²)³ (1 - t⁴)')
-
-        """
-        def to_sup(s):
-            if str(s) == '1':
-                return ''
-            if sys.version == 3:
-                sups = {u'0': u'\u2070',
-                        u'1': u'\xb9',
-                        u'2': u'\xb2',
-                        u'3': u'\xb3',
-                        u'4': u'\u2074',
-                        u'5': u'\u2075',
-                        u'6': u'\u2076',
-                        u'7': u'\u2077',
-                        u'8': u'\u2078',
-                        u'9': u'\u2079'}
-                # lose the list comprehension
-                return ''.join(sups.get(str(char), str(char)) for char in str(s))
-
-            return "^"+str(s)
-
-        def getNumerator(coefficients):
-
-            numerator = ''
-
-            def isPositive(x):
-                return x > 0
-
-            firstNonZero = next(
-                (i for i, x in enumerate(coefficients) if x != 0), 0)
-            for exp, coefficient in enumerate(coefficients):
-                if coefficient is 0:
-                    continue
-                coeff_str = str(abs(coefficient))
-                if not exp is 0:
-                    if coeff_str == "1":
-                        coeff_str = " "
-                # Exponent is 0 so keep only the coefficient
-                if exp is 0:
-                    numerator += '({}{!s}'.format('-' if not isPositive(coefficient)
-                                                  else '',coeff_str)
-                # Only include sign if `coefficient` is negative
-                elif exp is firstNonZero:
-                    numerator += '{}{!s}t{}'.format('-' if not isPositive(
-                        coefficient) else '', coeff_str, to_sup(exp))
-                else:
-                    numerator += ' {}{!s}t{}'.format('+ ' if isPositive(
-                        coefficient) else '- ',coeff_str, to_sup(exp))
-            numerator += ')'
-            return numerator
-
-        def getDenominator(coefficients):
-            exponents = [(inner, coefficients.count(inner))
-                         for inner in set(coefficients)]
-            denominator = ' '.join('(1 - t{}){}'. format(to_sup(x[0]) if x[0] is not 1 else '', to_sup(x[1]) if x[1] is not 1 else '') for x in exponents)
-            return denominator
-
-        num = getNumerator(numCoefficients)
-        den = getDenominator(denCoefficients)
-        prettyPolynomial = (num, den)
-        return prettyPolynomial
-
-    def PrintPrettyHilbertSeries(self, numCoefficients, denCoefficients):
-        """
-        Make a pretty hilbert series string
-
-        Parameters
-        ----------
-        numCoefficients : list of ints
-            The coefficients for the numerator.
-        denCofficients : list of ints
-            The coefficients for the denominator where the value represents
-            the exponent of 't' and the frequency indicates the outer
-            coefficient.
-
-        Returns
-        -------
-        PrintPrettyHilbertSeries : string
-
-        Examples
-        --------
-
-        >>> numCoefficients = [3, 7, 4, -4, -6, 5]
-        >>> deCoefficients = [1, 1, 2, 2, 2, 4]
-        >>> PrintPrettyHilbertSeries(numCoefficients,deCoefficients)
-
-        (3 + 7t + 4t² - 4t³ - 6t⁴ + 5t⁵)
-        --------------------------------
-           (1 - t)² (1 - t²)³ (1 - t⁴)
-
-        """
-        num, den = self.PrettyPolynomialTuple(numCoefficients, denCoefficients)
-        prettyPolynomial = '{:^}\n{:-^{width}}\n{:^{width}}'.format(
-            num, '', den, width=max(len(den),len(num)))
-        return prettyPolynomial
-
-    def PrintHilbertSeries(self):
-        hilbert_series=self.HilbertSeries()
-        shift=hilbert_series[2]
-        shift=[ 0 for x in range(1,shift) ]
-        numerator=shift+hilbert_series[0]
-        denominator=hilbert_series[1]
-        print(self.PrintPrettyHilbertSeries(numerator,denominator))
-        return None
+    
+    def WriteOutputFile(self, project):
+        return NmzWriteOutputFile(self.cone, project)
 
     def _generic_getter(self, name, **kwargs):
         input_list = self.__process_keyword_args(kwargs)
@@ -339,7 +393,6 @@ class Cone:
         PyNormaliz_cpp.NmzCompute(self.cone, input_list)
         return PyNormaliz_cpp.NmzResult(self.cone, name,RationalHandler = our_rat_handler, \
                NumberfieldElementHandler=our_renf_handler, FloatHandler = our_float_handler)
-
 
 # Generate getters for a bunch of Normalize properties
 def add_dyn_getter(name):

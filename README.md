@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/Normaliz/PyNormaliz.svg)](https://travis-ci.com/Normaliz/PyNormaliz)
+[![Build Status](https://travis-ci.org/Normaliz/PyNormaliz.svg)](https://travis-ci.org/Normaliz/PyNormaliz)
 [![Code Coverage](https://codecov.io/github/Normaliz/PyNormaliz/coverage.svg)](https://codecov.io/gh/Normaliz/PyNormaliz)
 
 # PyNormaliz - A python interface to Normaliz
@@ -12,9 +12,9 @@ For a first example, see [this introduction](doc/PyNormaliz_Tutorial.pdf) by Ric
 ## Requirements
 
 * python 2.7 or higher or python 3.4 or higher
-* Normaliz 3.8.9 or higher <https://github.com/Normaliz/Normaliz/releases>
+* Normaliz 3.8.10 or higher <https://github.com/Normaliz/Normaliz/releases>
 
-(The current version of PyNormaliz is under construction. Normaliz 3.8.9 not yet released. Use current master of Normaliz for current master of PyNormaliz.) The source packages of the Normaliz realeases contain PyNormaliz.
+(The current version of PyNormaliz is under construction. Normaliz 3.8.10 not yet released. Use current master of Normaliz for current master of PyNormaliz.) The source packages of the Normaliz realeases contain PyNormaliz.
 
 ## Installation
 
@@ -67,7 +67,16 @@ Note that some Normaliz output types must be specially encoded for python. Our H
 
     [[1], [1, 1], 0]
 
-to be read as follows: [1] is the numerator polynomial, [1,1] is the vector of exponents of t that occur in the denominator, which is (1-t)(1-t) in our case, and 0 is the shift.  So the Hilbert series is given by the rational function 1/(1-t)(1-t). (Aoso see ee [this introduction](doc/PyNormaliz_Tutorial.pdf).)
+to be read as follows: [1] is the numerator polynomial, [1,1] is the vector of exponents of t that occur in the denominator, which is (1-t)(1-t) in our case, and 0 is the shift.  So the Hilbert series is given by the rational function 1/(1-t)(1-t). (Aoso see ee [this introduction](doc/PyNormaliz_Tutorial.pdf).) But we can use
+
+    print_series(C.HilbertSeries(HSOP = True))
+    
+with the result
+
+        (1)
+    ---------
+    (1 - t)^2
+
 
 One can also compute several data simultaneously and specify options ("PrimalMode" only added as an example, not because ot is particularly useful here):
 
@@ -93,6 +102,13 @@ Floating point numbers are formatted with 4 decimal places and returned as strin
 
     NmzResult(C.cone,"EuclideanVolume")
     1.4142135623730951
+    
+One can find out whether a single goal has been computed by asking
+
+    C.IsComputed("Automorphisms")
+    False
+    
+If you use Compute instead of IsComputed, then Normaliz tries to compute the goal, and there are situations in which the computation is undesirable.
 
 Algebraic polyhedra can be computed by PyNormaliz as well:
 
@@ -107,14 +123,14 @@ It is important to note that fractions and algebraic numbers must be encoded as 
 
 Very hard to read! Somewhat better:
 
-    pretty_print(S)
+    print_matrix(S)
     
               -1470/433*a+280/433 -1
     -32204/555417*a-668233/555417 -1
 
 But we can also get floating point approximations:
 
-    pretty_print(D.SuppHypsFloat())
+    print_matrix(D.SuppHypsFloat())
 
     -4.1545 -1.0000
     -1.2851 -1.0000
