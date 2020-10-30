@@ -933,68 +933,12 @@ static PyObject* NmzListConeProperties(PyObject* args)
  ***************************************************************************/
 
 template < typename Integer >
-static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
+static PyObject* _NmzConeIntern(PyObject* kwargs)
 {
     map< InputType, vector< vector< mpq_class > > > input;
 
-    PyObject* input_list;
-
     bool   grading_polynomial = false;
     string polynomial;
-
-    if (PyTuple_Size(args) == 1) {
-        input_list = PyTuple_GetItem(args, 0);
-        if (!PySequence_Check(input_list)) {
-            PyErr_SetString(PyNormaliz_cppError,
-                            "Single argument must be a list");
-            return NULL;
-        }
-        input_list = PyList_AsTuple(input_list);
-    }
-    else {
-        input_list = args;
-    }
-
-    const int n = PyTuple_Size(input_list);
-    if (n & 1) {
-        PyErr_SetString(PyNormaliz_cppError,
-                        "Number of arguments must be even");
-        return NULL;
-    }
-    for (int i = 0; i < n; i += 2) {
-        PyObject* type = PyTuple_GetItem(input_list, i);
-        if (!string_check(type)) {
-            PyErr_SetString(PyNormaliz_cppError,
-                            "Odd entries must be strings");
-            return NULL;
-        }
-
-        string type_str = PyUnicodeToString(type);
-
-        if (type_str.compare("polynomial") == 0) {
-            PyObject* M = PyTuple_GetItem(input_list, i + 1);
-            polynomial = PyUnicodeToString(M);
-            grading_polynomial = true;
-            continue;
-        }
-
-        PyObject* M = PyTuple_GetItem(input_list, i + 1);
-        if (M == Py_None)
-            continue;
-        vector< vector< mpq_class > > Mat;
-        try {
-            PyInputToNmz(Mat, M);
-        }
-        catch (PyNormalizInputException& e) {
-            PyErr_SetString(
-                PyNormaliz_cppError,
-                (string("When parsing ") + type_str + ": " + e.what_message())
-                    .c_str());
-            return NULL;
-        }
-
-        input[libnormaliz::to_type(type_str)] = Mat;
-    }
 
     if (kwargs != NULL) {
         PyObject* keys = PyDict_Keys(kwargs);
@@ -1041,7 +985,7 @@ static PyObject* _NmzConeIntern(PyObject* args, PyObject* kwargs)
 }
 
 #ifdef ENFNORMALIZ
-static PyObject* _NmzConeIntern_renf(PyObject* args, PyObject* kwargs)
+static PyObject* _NmzConeIntern_renf(PyObject* kwargs)
 {
 
     FUNC_BEGIN
@@ -1141,15 +1085,15 @@ static PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
     if (kwargs != NULL && PyDict_Contains(kwargs, create_as_long_long) == 1) {
         create_as_long_long = PyDict_GetItem(kwargs, create_as_long_long);
         if (create_as_long_long == Py_True) {
-            return _NmzConeIntern< long long >(args, kwargs);
+            return _NmzConeIntern< long long >(kwargs);
         }
     }
 #ifdef ENFNORMALIZ
     else if (kwargs != NULL && PyDict_Contains(kwargs, create_as_renf) == 1) {
-        return _NmzConeIntern_renf(args, kwargs);
+        return _NmzConeIntern_renf(kwargs);
     }
 #endif
-    return _NmzConeIntern< mpz_class >(args, kwargs);
+    return _NmzConeIntern< mpz_class >(kwargs);
     FUNC_END
 }
 
@@ -1488,18 +1432,34 @@ static PyObject* NmzIsComputed_Outer(PyObject* self, PyObject* args)
  ***************************************************************************/
 
 template < typename Integer >
-static PyObject* NmzSetGrading_inner(Cone< Integer >* cone, PyObject* list)
+static PyObject* NmzSetGrading_inner(Cone< Integer >* cone, PyObject* grad)
 {
-    vector< Integer > list_c;
-    bool              result = PyListToNmz(list_c, list);
+    vector< Integer > grad_c;
+    bool result = PyListToNmz(grad_c, grad);
     if (!result) {
         PyErr_SetString(PyNormaliz_cppError,
                         "grading argument is not an integer list");
         return NULL;
     }
-    cone->resetGrading(list_c);
+    cone->resetGrading(grad_c);
     Py_RETURN_NONE;
 }
+
+#ifdef ENFNORMALIZ
+template <>
+PyObject* NmzSetGrading_inner(Cone< renf_elem_class >* cone, PyObject* grad)
+{
+    vector< renf_elem_class > grad_renf;
+    vector<vector< renf_elem_class> > grad_mat; // a cheap way to convert vectors
+    PyObject*  PyHelpMat = PyList_New(1);     // better: rebuild conversion to renf
+    PyList_SetItem(PyHelpMat, 0, grad);    
+    prepare_nf_input(grad_mat, PyHelpMat,cone->getRenf());
+    grad_renf = grad_mat[0];
+
+    cone->resetGrading(grad_renf);
+    Py_RETURN_NONE;
+}
+#endif
 
 static PyObject* NmzSetGrading(PyObject* self, PyObject* args)
 {
@@ -1514,11 +1474,88 @@ static PyObject* NmzSetGrading(PyObject* self, PyObject* args)
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         return NmzSetGrading_inner(cone_ptr, grading_py);
     }
-    else {
+     if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         return NmzSetGrading_inner(cone_ptr, grading_py);
     }
+#ifdef ENFNORMALIZ
+     if (is_cone_renf(cone)) {
+        Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
+        return NmzSetGrading_inner(cone_ptr, grading_py);
+    }
+#endif
     FUNC_END
+    
+    Py_RETURN_NONE;
+}
+
+/***************************************************************************
+ *
+ * NmzSetProjectionCoords
+ *
+ ***************************************************************************/
+
+template < typename Integer >
+static PyObject* NmzSetProjectionCoords_inner(Cone< Integer >* cone, PyObject* coords)
+{
+    vector< Integer > coords_c;
+    bool  result = PyListToNmz(coords_c, coords);
+    if (!result) {
+        PyErr_SetString(PyNormaliz_cppError,
+                        " is not an integer list");
+        return NULL;
+    }
+    for(size_t i=0; i< coords_c.size(); ++i){
+        if(coords_c[i]!=0 && coords_c[i]!=1)
+            PyErr_SetString(PyNormaliz_cppError, "Projection coordinates must be 0 or 1");
+    }
+            
+    cone->resetProjectionCoords(coords_c);
+    Py_RETURN_NONE;
+}
+
+#ifdef ENFNORMALIZ
+template <>
+PyObject* NmzSetProjectionCoords_inner(Cone< renf_elem_class >* cone, PyObject* coords)
+{
+    vector< renf_elem_class > coords_renf;
+    vector<vector< renf_elem_class> > coords_mat; // a cheap way to convert vectors
+    PyObject*  PyHelpMat = PyList_New(1);     // better: rebuild conversion to renf
+    PyList_SetItem(PyHelpMat, 0, coords);    
+    prepare_nf_input(coords_mat, PyHelpMat,cone->getRenf());
+    coords_renf = coords_mat[0];
+
+    cone->resetGrading(coords_renf);
+    Py_RETURN_NONE;
+}
+#endif
+
+
+static PyObject* NmzSetProjectionCoords(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+    PyObject* cone = PyTuple_GetItem(args, 0);
+    PyObject* coords_py = PyTuple_GetItem(args, 1);
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+    if (is_cone_long(cone)) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        return NmzSetProjectionCoords_inner(cone_ptr, coords_py);
+    }
+    if (is_cone_mpz(cone)) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        return NmzSetProjectionCoords_inner(cone_ptr, coords_py);
+    }
+#ifdef ENFNORMALIZ
+    if (is_cone_renf(cone)) {
+        Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
+        return NmzSetProjectionCoords_inner(cone_ptr, coords_py);
+    }
+#endif
+    FUNC_END
+    Py_RETURN_NONE;
 }
 
 /***************************************************************************
@@ -2186,8 +2223,12 @@ static PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* 
     }
 
     ES.first.set_expansion_degree(degree);
-    return NmzVectorToPyList(ES.first.getExpansion());
 
+    PyObject* return_list = PyList_New(2);
+    PyList_SetItem(return_list, 0, NmzVectorToPyList(ES.first.getExpansion()));
+        PyList_SetItem(return_list, 1, NmzToPyNumber(ES.second));
+    return return_list;
+    
     FUNC_END
 }
 
@@ -2379,12 +2420,12 @@ static PyObject* NmzGetRenfInfo(PyObject* self, PyObject* args)
         );
         return NULL;
     }
-
     renf_class* renf = get_cone_renf_renf(cone_py);
-    double a_double = renf->gen().get_d();
+    std::string minpoly_str;
+    minpoly_str = fmpq_poly_get_str_pretty(renf->get_renf()->nf->pol, renf->gen_name.c_str());
     std::string res1 = arb_get_str(renf->get_renf()->emb, 64, 0);
-    long prec = renf->get_renf()->prec;
-    return PyTuple_Pack(3,PyFloat_FromDouble(a_double),StringToPyUnicode(res1),PyLong_FromLong(prec));
+    // long prec = renf->get_renf()->prec;
+    return PyTuple_Pack(2, StringToPyUnicode(minpoly_str), StringToPyUnicode(res1));
 #else
     return NULL;
 #endif
@@ -2428,6 +2469,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      "Check if property is computed "},
     {"NmzSetGrading", (PyCFunction)NmzSetGrading, METH_VARARGS,
      "Reset the grading of a cone"},
+    {"NmzSetProjectionCoords", (PyCFunction)NmzSetProjectionCoords, METH_VARARGS,
+     "Reset the projection coordinates"},
     {"NmzResult", (PyCFunction)_NmzResult, METH_VARARGS | METH_KEYWORDS,
      "Return cone property"},
     {"NmzSetVerboseDefault", (PyCFunction)NmzSetVerboseDefault, METH_VARARGS,

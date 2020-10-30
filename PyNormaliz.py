@@ -277,8 +277,7 @@ name_of_indeterminate = ""
         
 class Cone:
 
-    def __init__(self, *args, **kwargs): 
-        input_list = [k for k in args]
+    def __init__(self,**kwargs): 
         pop_list = []
         for entry in kwargs.items():
             current_input=entry[1];
@@ -296,7 +295,7 @@ class Cone:
                 poplist = pop_list + [key]
         for k in pop_list:
             kwargs.pop(k)
-        self.cone = PyNormaliz_cpp.NmzCone(input_list,**kwargs)
+        self.cone = PyNormaliz_cpp.NmzCone(**kwargs)
         
     def ModifyCone(self, *args):
         PyNormaliz_cpp.NmzModifyCone(self.cone, *args)
@@ -386,6 +385,9 @@ class Cone:
     
     def WriteOutputFile(self, project):
         return NmzWriteOutputFile(self.cone, project)
+    
+    def NumberFieldData(self):
+        return NmzGetRenfInfo(self.cone)
 
     def _generic_getter(self, name, **kwargs):
         input_list = self.__process_keyword_args(kwargs)
