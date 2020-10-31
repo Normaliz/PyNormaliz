@@ -8,6 +8,8 @@ PyNormaliz provides an interface to [Normaliz](https://www.normaliz.uni-osnabrue
 It offers the complete functionality of Normaliz, and can be used interactively from python.
 For a first example, see [this introduction](doc/PyNormaliz_Tutorial.pdf) by Richard Sieg (Slighty outdated: for the installation follow the instructions below).
 
+A full documentation is conatined in [Appendix E](doc/PyNormaliz.pdf) of the Normaliz manial.
+
 
 ## Requirements
 
@@ -25,9 +27,6 @@ The PyNormaliz install script assumes that you have executed
 within the Normaliz directory. To install PyNormaliz navigate to the Normaliz directory and type
 
     ./install_pynormaliz.sh --user
-
-Also see Appendix E of the
-[Normaliz manual](https://github.com/Normaliz/Normaliz/blob/master/doc/Normaliz.pdf).
 
 ## Usage
 
