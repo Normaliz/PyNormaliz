@@ -1,0 +1,37 @@
+name: Run tests
+
+on:
+  - push
+  - pull_request
+
+jobs:
+
+  e3antic-nauty:
+    runs-on: ubuntu-latest
+      env: 
+        EANTIC: yes
+        NAUTY: yes
+        COCOALIB: no
+    steps:
+      - uses: actions/checkout@v2
+      - name: "Install prerequisites and Normaliz"
+        run: |
+          sudo apt-get install libgmp-dev libflint-dev    
+          export PIP=$(which pip) # workaround so that sudo uses correct pip
+          pip install coverage
+          /.ci-install-normaliz.sh
+      - name: "Install PyNormaliz"
+        run: |
+          export CFLAGS="$CFLAGS --coverage"
+          export PYTHONPATH="$PWD"
+          python setup.py build_ext --inplace
+      - name: "Run tests"
+        run: |
+          export OMP_NUM_THREADS=4
+          coverage run tests/runtests.py
+          sudo $PIP install --no-index --no-deps -v dist/PyNormaliz-*.tar.gz
+          python -c "import PyNormaliz"
+      - name: "Upload coverage data to Codecov"
+        uses: codecov/codecov-action@v1
+          
+    
