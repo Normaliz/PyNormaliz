@@ -30,7 +30,7 @@ jobs:
       - name: "Run tests"
         run: |
           export OMP_NUM_THREADS=4
-          coverage run tests/runtests.py
+          # coverage run tests/runtests.py
           sudo $PIP install --no-index --no-deps -v dist/PyNormaliz-*.tar.gz
           python -c "import PyNormaliz"
       - name: "Upload coverage data to Codecov"
