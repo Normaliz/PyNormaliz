@@ -19,11 +19,13 @@ jobs:
           sudo apt-get install libgmp-dev libflint-dev    
           export PIP=$(which pip) # workaround so that sudo uses correct pip
           pip install coverage
-          ./.ci-install-normaliz.sh
+          /.ci-install-normaliz.sh
       - name: "Install PyNormaliz"
         run: |
           export CFLAGS="$CFLAGS --coverage"
           export PYTHONPATH="$PWD"
+          export NMZ_PREFIX=${PWD}/local
+          export NORMALIZ_LOCAL_DIR=${NMZ_PREFIX}
           python setup.py build_ext --inplace
       - name: "Run tests"
         run: |
