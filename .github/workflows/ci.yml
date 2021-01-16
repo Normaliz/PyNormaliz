@@ -8,10 +8,10 @@ jobs:
 
   e3antic-nauty:
     runs-on: ubuntu-latest
-      env: 
-        EANTIC: yes
-        NAUTY: yes
-        COCOALIB: no
+    env: 
+      EANTIC: yes
+      NAUTY: yes
+      COCOALIB: no
     steps:
       - uses: actions/checkout@v2
       - name: "Install prerequisites and Normaliz"
