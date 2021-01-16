@@ -3,14 +3,15 @@
 set -e  # exit on error
 set -x  # print command before execution
 
+export NMZ_PREFIX=${PWD}/local
+export NORMALIZ_LOCAL_DIR=${NMZ_PREFIX}
+
 # don't pollute the PyNormaliz directory
 cd /tmp
 
 git clone --depth=1 https://github.com/Normaliz/Normaliz
 cd Normaliz
 
-export NMZ_PREFIX=${PWD}/local
-export NORMALIZ_LOCAL_DIR=${NMZ_PREFIX}
 export MAKEFLAGS="-j2"
 
 # install dependencies
