@@ -9,6 +9,10 @@ cd /tmp
 git clone --depth=1 https://github.com/Normaliz/Normaliz
 cd Normaliz
 
+export NMZ_PREFIX=${PWD}/local
+export NORMALIZ_LOCAL_DIR=${NMZ_PREFIX}
+export MAKEFLAGS="-j2"
+
 # install dependencies
 
 [ "$COCOALIB" == "yes" ] && ./install_scripts_opt/install_nmz_cocoa.sh && echo "cocoalib complete!"
@@ -23,5 +27,7 @@ export CPPFLAGS="${CPPFLAGS} -I${NMZ_PREFIX}/include"
 export LDFLAGS="${LDFLAGS} -L${NMZ_PREFIX}/lib"
 ./configure --prefix=${NMZ_PREFIX}
 make
+echo "//////"
+echo ${NMZ_PREFIX}
 make install
 cd ..
