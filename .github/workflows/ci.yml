@@ -5,8 +5,27 @@ on:
   - pull_request
 
 jobs:
+  our-installation:
+    runs-on: ubuntu-latest
+    env: 
+      EANTIC: yes
+      NAUTY: yes
+      COCOALIB: yes
+    steps:
+      - uses: actions/checkout@v2
+      - name: "Install prerequisites and Normaliz"
+        run: |
+          sudo apt-get install libgmp-dev libflint-dev  automake 
+          pip install coverage
+          ./.ci-install-normaliz.sh
+      - name: "Install PyNormaliz"
+        run: |
+          ./.install_our_PyNormaliz.sh
+      - name: "Run tests"
+        run: |
+          ./.run_our_tests.sh          
 
-  e3antic-nauty:
+  eantic-nauty:
     runs-on: ubuntu-latest
     env: 
       EANTIC: yes
@@ -31,7 +50,7 @@ jobs:
         run: |
           export OMP_NUM_THREADS=4
           # coverage run tests/runtests.py
-          tests/runtests.py
+          python tests/runtests.py
           #sudo $PIP install --no-index --no-deps -v dist/PyNormaliz-*.tar.gz
           sudo $PIP install --no-deps -v dist/PyNormaliz-*.tar.gz
           python -c "import PyNormaliz"
