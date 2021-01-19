@@ -18,9 +18,11 @@ cd Normaliz
 
 echo "%%%%%%%%%"
 ls
+echo "%%%%%%%%%"
+ls PyNormaliz
 
 export MAKEFLAGS="-j2"
 
-./install_pynormaliz.h --user
+./install_pynormaliz.sh --user
 
 
