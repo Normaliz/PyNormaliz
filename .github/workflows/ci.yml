@@ -17,6 +17,9 @@ jobs:
         run: |
           sudo apt-get install libgmp-dev libflint-dev  automake 
           pip install coverage
+          pip3 install coverage
+          pip install setuptools
+          pip3 install setuptools
           ./.ci-install-normaliz.sh
       - name: "Install PyNormaliz"
         run: |
@@ -38,6 +41,9 @@ jobs:
           sudo apt-get install libgmp-dev libflint-dev    
           export PIP=$(which pip) # workaround so that sudo uses correct pip
           pip install coverage
+          pip3 install coverage
+          pip install setuptools
+          pip3 install setuptools
           ./.ci-install-normaliz.sh
       - name: "Install PyNormaliz"
         run: |
