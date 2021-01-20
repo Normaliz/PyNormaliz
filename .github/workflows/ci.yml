@@ -57,8 +57,11 @@ jobs:
       EANTIC: yes
       NAUTY: yes
       COCOALIB: yes
-    steps:    
+    steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
       - name: "Setup compiler and build automake"
         run: |
           brew reinstall llvm  automake
