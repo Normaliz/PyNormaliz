@@ -50,6 +50,40 @@ jobs:
       - name: "Run tests"
         run: |
           ./.run_our_tests.sh
+          
+  mac-os:
+    runs-on: macos-latest
+    env:
+      EANTIC: yes
+      NAUTY: yes
+      COCOALIB: yes
+    steps:    
+      - uses: actions/checkout@v2
+      - name: "Setup compiler and build automake"
+        run: |
+          brew reinstall llvm  automake
+      - name: "Install prerequisites"
+        run: |
+          ./install_scripts_opt/install_nmz_mpfr.sh
+          ./install_scripts_opt/install_nmz_flint.sh
+          ./install_scripts_opt/install_nmz_nauty.sh
+          ./install_scripts_opt/install_nmz_arb.sh
+          ./install_scripts_opt/install_nmz_e-antic.sh
+          ./install_scripts_opt/install_nmz_cocoa.sh
+      - name: "Install Python prerequisites"
+        run: |
+          pip install coverage
+          pip3 install coverage
+          pip install setuptools
+          pip3 install setuptools
+      - name: "Install Normaliz"
+          ./.ci-install-normaliz.sh
+      - name: "Install PyNormaliz"
+        run: |
+          ./.install_our_PyNormaliz.sh
+      - name: "Run tests"
+        run: |
+          ./.run_our_tests.sh
 
 #  eantic-nauty:
 #    runs-on: ubuntu-latest

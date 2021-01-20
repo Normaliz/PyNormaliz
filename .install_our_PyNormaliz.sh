@@ -16,6 +16,10 @@ cp -r * /tmp/Normaliz/PyNormaliz
 cd /tmp
 cd Normaliz
 
+if [[ $OSTYPE == darwin* ]]; then ## sets paths etc. for Homebrew LLVM
+    source install_scripts_opt/common.sh
+fi
+
 echo "%%%%%%%%%"
 ls
 echo "%%%%%%%%%"
