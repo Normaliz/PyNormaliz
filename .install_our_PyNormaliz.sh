@@ -29,6 +29,8 @@ export MAKEFLAGS="-j2"
 
 ./install_pynormaliz.sh --user
 
+export -p
+
 if [[ $OSTYPE != darwin* ]]; then
     cd PyNormaliz
     python setup.py sdist
