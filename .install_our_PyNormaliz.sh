@@ -31,13 +31,10 @@ export MAKEFLAGS="-j2"
 
 export -p
 
-export CPPFLAGS=
-export LDFLAGS=
-
-#if [[ $OSTYPE != darwin* ]]; then
+if [[ $OSTYPE != darwin* ]]; then
     cd PyNormaliz
     python setup.py sdist
     sudo pip install --no-index --no-deps -v dist/PyNormaliz-*.tar.gz
     python -c "import PyNormaliz"
-#fi
+fi
 
