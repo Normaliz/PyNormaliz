@@ -29,8 +29,8 @@ export MAKEFLAGS="-j2"
 
 ./install_pynormaliz.sh --user
 
-python setup.py dist
 cd PyNormaliz
+python setup.py dist
 sudo pip install --no-index --no-deps -v dist/PyNormaliz-*.tar.gz
 python -c "import PyNormaliz"
 
