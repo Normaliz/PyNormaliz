@@ -20,21 +20,15 @@ if [[ $OSTYPE == darwin* ]]; then ## sets paths etc. for Homebrew LLVM
     source install_scripts_opt/common.sh
 fi
 
-echo "%%%%%%%%%"
-ls
-echo "%%%%%%%%%"
-ls PyNormaliz
-
-export MAKEFLAGS="-j2"
-
 ./install_pynormaliz.sh --user
 
-export -p
+echo "#######"
+pip --version
 
-#if [[ $OSTYPE != darwin* ]]; then
+if [[ $OSTYPE != darwin* ]]; then
     cd PyNormaliz
     python setup.py sdist
     sudo pip install --no-index --no-deps --force-reinstal -v dist/PyNormaliz-*.tar.gz
     python -c "import PyNormaliz"
-#fi
+fi
 
