@@ -23,10 +23,10 @@ jobs:
           ./.ci-install-normaliz.sh
       - name: "Install PyNormaliz"
         run: |
-          ./.install_our_PyNormaliz.sh
+          ./.ci-install-pynormaliz.sh
       - name: "Run tests"
         run: |
-          ./.run_our_tests.sh
+          ./.ci-run-tests.sh
           
   no-eantic:
     runs-on: ubuntu-latest
@@ -46,10 +46,10 @@ jobs:
           ./.ci-install-normaliz.sh
       - name: "Install PyNormaliz"
         run: |
-          ./.install_our_PyNormaliz.sh
+          ./.ci-install-pynormaliz.sh
       - name: "Run tests"
         run: |
-          ./.run_our_tests.sh
+          ./.ci-run-tests.sh
           
   mac-os:
     runs-on: macos-latest
@@ -76,10 +76,10 @@ jobs:
           ./.ci-install-normaliz.sh
       - name: "Install PyNormaliz"
         run: |
-          ./.install_our_PyNormaliz.sh
+          ./.ci-install-pynormaliz.sh
       - name: "Run tests"
         run: |
-          ./.run_our_tests.sh
+          ./.ci-run-tests.sh
 
 #  eantic-nauty:
 #    runs-on: ubuntu-latest
