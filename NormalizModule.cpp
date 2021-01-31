@@ -18,6 +18,9 @@ using std::string;
 
 #include <libnormaliz/libnormaliz.h>
 
+using eantic::renf_elem_class;
+using eantic::renf_class;
+
 using libnormaliz::Cone;
 // using libnormaliz::ConeProperty;
 using libnormaliz::ConeProperties;
@@ -468,11 +471,10 @@ static bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
                 if (!current_res) {
                     return false;
                 }
-                current_elem = NumberFieldElem(*nf, current_vector);
+                current_elem = renf_elem_class(nf->shared_from_this(),current_vector);
             }
             if (string_check(current_element)) {
-                current_elem = NumberFieldElem(*nf);
-                current_elem = PyUnicodeToString(current_element);
+                current_elem =renf_elem_class(nf->shared_from_this(),PyUnicodeToString(current_element));
             }
             if (PyFloat_Check(current_element)){
                 throw PyNormalizInputException("Nonintegral numbers must be given as strings"); 
@@ -1008,13 +1010,14 @@ static PyObject* _NmzConeIntern_renf(PyObject* kwargs)
     }
 
 
-    renf_class* renf;
     // number_field_data contains 3 entries: poly, var, emb
     // All are strings
     string poly = PyUnicodeToString(PySequence_GetItem(number_field_data, 0));
     string var = PyUnicodeToString(PySequence_GetItem(number_field_data, 1));
     string emb = PyUnicodeToString(PySequence_GetItem(number_field_data, 2));
-    renf = new renf_class(poly.c_str(), var.c_str(), emb.c_str());
+    std::shared_ptr<const renf_class>* renf = new std::shared_ptr<const renf_class>;    
+    *renf = renf_class::make(poly, var, emb);
+    const renf_class* my_renf = renf->get();
 
     map< InputType, vector< vector< renf_elem_class > > > input;
 
@@ -1036,7 +1039,7 @@ static PyObject* _NmzConeIntern_renf(PyObject* kwargs)
                 continue;
             vector< vector< renf_elem_class > > Mat;
             try {
-                prepare_nf_input(Mat, current_value, renf);
+                prepare_nf_input(Mat, current_value, my_renf);
             }
             catch (PyNormalizInputException& e) {
                 PyErr_SetString(PyNormaliz_cppError,
@@ -1050,7 +1053,7 @@ static PyObject* _NmzConeIntern_renf(PyObject* kwargs)
     }
 
     Cone< renf_elem_class >* C = new Cone< renf_elem_class >(input);
-    C->setRenf(renf);
+    C->setRenf(my_renf);
 
     PyObject* return_container = pack_cone(C, renf);
 
@@ -2422,7 +2425,7 @@ static PyObject* NmzGetRenfInfo(PyObject* self, PyObject* args)
     }
     renf_class* renf = get_cone_renf_renf(cone_py);
     std::string minpoly_str;
-    minpoly_str = fmpq_poly_get_str_pretty(renf->get_renf()->nf->pol, renf->gen_name.c_str());
+    minpoly_str = fmpq_poly_get_str_pretty(renf->get_renf()->nf->pol, renf->gen_name().c_str());
     std::string res1 = arb_get_str(renf->get_renf()->emb, 64, 0);
     // long prec = renf->get_renf()->prec;
     return PyTuple_Pack(2, StringToPyUnicode(minpoly_str), StringToPyUnicode(res1));
