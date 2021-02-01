@@ -18,8 +18,10 @@ using std::string;
 
 #include <libnormaliz/libnormaliz.h>
 
+#ifdef ENFNORMALIZ
 using eantic::renf_elem_class;
 using eantic::renf_class;
+#endif 
 
 using libnormaliz::Cone;
 // using libnormaliz::ConeProperty;
