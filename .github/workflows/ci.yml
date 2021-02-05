@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: "Install prerequisites and Normaliz"
         run: |
-          sudo apt-get install libgmp-dev libflint-dev
+          sudo apt-get install libgmp-dev
           pip install coverage
           pip3 install coverage
           pip install setuptools

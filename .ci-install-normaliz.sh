@@ -24,6 +24,7 @@ fi
 
 [ "$COCOALIB" == "yes" ] && ./install_scripts_opt/install_nmz_cocoa.sh && echo "cocoalib complete!"
 [ "$FLINT" == "yes" ] && ./install_scripts_opt/install_nmz_flint.sh && echo "flint complete!"
+[ "$EANTIC" == "yes" ] && ./install_scripts_opt/install_nmz_flint.sh && echo "flint complete!"
 [ "$EANTIC" == "yes" ] && ./install_scripts_opt/install_nmz_arb.sh && echo "arb complete!"
 [ "$EANTIC" == "yes" ] && ./install_scripts_opt/install_nmz_e-antic.sh && echo "e-antic complete!"
 [ "$NAUTY" == "yes" ] && ./install_scripts_opt/install_nmz_nauty.sh && echo "nauty complete!"
