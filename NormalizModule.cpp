@@ -18,6 +18,11 @@ using std::string;
 
 #include <libnormaliz/libnormaliz.h>
 
+#ifdef ENFNORMALIZ
+using eantic::renf_elem_class;
+using eantic::renf_class;
+#endif 
+
 using libnormaliz::Cone;
 // using libnormaliz::ConeProperty;
 using libnormaliz::ConeProperties;
@@ -468,11 +473,10 @@ static bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
                 if (!current_res) {
                     return false;
                 }
-                current_elem = NumberFieldElem(*nf, current_vector);
+                current_elem = renf_elem_class(nf->shared_from_this(),current_vector);
             }
             if (string_check(current_element)) {
-                current_elem = NumberFieldElem(*nf);
-                current_elem = PyUnicodeToString(current_element);
+                current_elem =renf_elem_class(nf->shared_from_this(),PyUnicodeToString(current_element));
             }
             if (PyFloat_Check(current_element)){
                 throw PyNormalizInputException("Nonintegral numbers must be given as strings"); 
@@ -742,7 +746,7 @@ NmzAutomorphismsToPython(const AutomorphismGroup< Integer >& grp)
 
 #ifdef ENFNORMALIZ
 struct NumberFieldCone {
-    renf_class*              nf;
+    const renf_class*              nf;
     Cone< renf_elem_class >* cone;
 };
 #endif
@@ -791,7 +795,7 @@ static Cone< renf_elem_class >* get_cone_renf(PyObject* cone)
     return cone_ptr->cone;
 }
 
-static renf_class* get_cone_renf_renf(PyObject* cone)
+static const renf_class* get_cone_renf_renf(PyObject* cone)
 {
     NumberFieldCone* cone_ptr = reinterpret_cast< NumberFieldCone* >(
         PyCapsule_GetPointer(cone, cone_name_renf));
@@ -799,23 +803,23 @@ static renf_class* get_cone_renf_renf(PyObject* cone)
 }
 #endif
 
-static PyObject* pack_cone(Cone< mpz_class >* C, void* dummy = nullptr)
+static PyObject* pack_cone(Cone< mpz_class >* C, const void* dummy = nullptr)
 {
     return PyCapsule_New(reinterpret_cast< void* >(C), cone_name,
                          &delete_cone_mpz);
 }
 
-static PyObject* pack_cone(Cone< long long >* C, void* dummy = nullptr)
+static PyObject* pack_cone(Cone< long long >* C, const void* dummy = nullptr)
 {
     return PyCapsule_New(reinterpret_cast< void* >(C), cone_name_long,
                          &delete_cone_long);
 }
 
 #ifdef ENFNORMALIZ
-static PyObject* pack_cone(Cone< renf_elem_class >* C, void* nf)
+static PyObject* pack_cone(Cone< renf_elem_class >* C, const void* nf)
 {
     NumberFieldCone* cone_ptr = new NumberFieldCone();
-    cone_ptr->nf = reinterpret_cast< renf_class* >(nf);
+    cone_ptr->nf = reinterpret_cast< const renf_class* >(nf);
     cone_ptr->cone = C;
     return PyCapsule_New(reinterpret_cast< void* >(cone_ptr), cone_name_renf,
                          &delete_cone_renf);
@@ -1008,13 +1012,14 @@ static PyObject* _NmzConeIntern_renf(PyObject* kwargs)
     }
 
 
-    renf_class* renf;
     // number_field_data contains 3 entries: poly, var, emb
     // All are strings
     string poly = PyUnicodeToString(PySequence_GetItem(number_field_data, 0));
     string var = PyUnicodeToString(PySequence_GetItem(number_field_data, 1));
     string emb = PyUnicodeToString(PySequence_GetItem(number_field_data, 2));
-    renf = new renf_class(poly.c_str(), var.c_str(), emb.c_str());
+    // std::shared_ptr<const renf_class>* renf = new std::shared_ptr<const renf_class>; 
+    std::shared_ptr<const renf_class> renf = renf_class::make(poly, var, emb);
+    const renf_class* my_renf = renf.get();
 
     map< InputType, vector< vector< renf_elem_class > > > input;
 
@@ -1036,7 +1041,7 @@ static PyObject* _NmzConeIntern_renf(PyObject* kwargs)
                 continue;
             vector< vector< renf_elem_class > > Mat;
             try {
-                prepare_nf_input(Mat, current_value, renf);
+                prepare_nf_input(Mat, current_value, my_renf);
             }
             catch (PyNormalizInputException& e) {
                 PyErr_SetString(PyNormaliz_cppError,
@@ -1050,9 +1055,9 @@ static PyObject* _NmzConeIntern_renf(PyObject* kwargs)
     }
 
     Cone< renf_elem_class >* C = new Cone< renf_elem_class >(input);
-    C->setRenf(renf);
-
-    PyObject* return_container = pack_cone(C, renf);
+    C->setRenf(my_renf);
+    
+    PyObject* return_container = pack_cone(C, my_renf);
 
     return return_container;
     FUNC_END
@@ -1320,7 +1325,7 @@ PyObject* _NmzModify(Cone<Integer>* cone, PyObject* args)
 }
 
 #ifdef ENFNORMALIZ
-PyObject* _NmzModify_Renf(Cone<renf_elem_class>* cone, renf_class* nf, PyObject* args)
+PyObject* _NmzModify_Renf(Cone<renf_elem_class>* cone, const renf_class* nf, PyObject* args)
 {
     string property = PyUnicodeToString( PyTuple_GetItem(args, 1) );
     PyObject* matrix_py = PyTuple_GetItem(args,2);
@@ -1359,7 +1364,7 @@ PyObject* _NmzModify_Outer(PyObject* self, PyObject* args)
 #ifdef ENFNORMALIZ
     else if (is_cone_renf(cone)) {
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
-        renf_class* nf = get_cone_renf_renf(cone);
+        const renf_class* nf = get_cone_renf_renf(cone);
         return _NmzModify_Renf(cone_ptr, nf, args);
     }
 #endif
@@ -1591,7 +1596,7 @@ second is the projection third is the annihilator.
 
 template < typename Integer >
 static PyObject*
-_NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
+_NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, const void* nf = nullptr)
 {
 
     string prop = PyUnicodeToString(prop_obj);
@@ -1840,7 +1845,7 @@ MatrixHandler = NULL;
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
         result = _NmzResultImpl(
             cone_ptr, prop,
-            reinterpret_cast< void* >(get_cone_renf_renf(cone)));
+            reinterpret_cast< const void* >(get_cone_renf_renf(cone)));
     }
 #endif
 
@@ -2420,9 +2425,9 @@ static PyObject* NmzGetRenfInfo(PyObject* self, PyObject* args)
         );
         return NULL;
     }
-    renf_class* renf = get_cone_renf_renf(cone_py);
+    const renf_class* renf = get_cone_renf_renf(cone_py);
     std::string minpoly_str;
-    minpoly_str = fmpq_poly_get_str_pretty(renf->get_renf()->nf->pol, renf->gen_name.c_str());
+    minpoly_str = fmpq_poly_get_str_pretty(renf->get_renf()->nf->pol, renf->gen_name().c_str());
     std::string res1 = arb_get_str(renf->get_renf()->emb, 64, 0);
     // long prec = renf->get_renf()->prec;
     return PyTuple_Pack(2, StringToPyUnicode(minpoly_str), StringToPyUnicode(res1));
