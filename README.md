@@ -137,7 +137,8 @@ By using Python functions, the functionality of Normaliz can be extended. For ex
     
     def intersection(cone1, cone2):
         intersection_ineq = cone1.SupportHyperplanes()+cone2.SupportHyperplanes()
-        C = Cone(inequalities = intersection_ineq)
+        intersection_equat = cone1.Equations()+cone2.Equations()
+        C = Cone(inequalities = intersection_ineq, equations = intersection_equat)
         return C
         
 computes the intersection of two cones. So
