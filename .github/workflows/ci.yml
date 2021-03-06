@@ -16,9 +16,10 @@ jobs:
       - name: "Install prerequisites and Normaliz"
         run: |
           sudo apt-get install libgmp-dev
-          pip2 install coverage
-          pip3 install coverage
-          pip2 install setuptools
+          # pip2 install coverage
+          # pip3 install coverage
+          # pip install setuptools
+          apt install python-setuptools
           pip3 install setuptools
           ./.ci-install-normaliz.sh
       - name: "Install PyNormaliz"
@@ -39,9 +40,10 @@ jobs:
       - name: "Install prerequisites and Normaliz"
         run: |
           sudo apt-get install libgmp-dev 
-          pip install coverage
-          pip3 install coverage
-          pip install setuptools
+          # pip2 install coverage
+          # pip3 install coverage
+          # pip install setuptools
+          apt install python-setuptools
           pip3 install setuptools
           ./.ci-install-normaliz.sh
       - name: "Install PyNormaliz"
