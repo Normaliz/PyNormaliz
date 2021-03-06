@@ -16,6 +16,8 @@ jobs:
       - name: "Install prerequisites and Normaliz"
         run: |
           sudo apt-get install libgmp-dev
+          sudo apt-get install libpython2-dev
+          sudo apt-get install libpython3-dev
           # pip2 install coverage
           # pip3 install coverage
           # pip install setuptools
@@ -39,7 +41,9 @@ jobs:
       - uses: actions/checkout@v2
       - name: "Install prerequisites and Normaliz"
         run: |
-          sudo apt-get install libgmp-dev 
+          sudo apt-get install libgmp-dev
+          sudo apt-get install libpython2-dev
+          sudo apt-get install libpython3-dev
           # pip2 install coverage
           # pip3 install coverage
           # pip install setuptools
