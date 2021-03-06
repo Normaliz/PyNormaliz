@@ -19,7 +19,7 @@ jobs:
           # pip2 install coverage
           # pip3 install coverage
           # pip install setuptools
-          apt install python-setuptools
+          sudo apt-get install python-setuptools
           pip3 install setuptools
           ./.ci-install-normaliz.sh
       - name: "Install PyNormaliz"
@@ -43,7 +43,7 @@ jobs:
           # pip2 install coverage
           # pip3 install coverage
           # pip install setuptools
-          apt install python-setuptools
+          sudo apt-get install python-setuptools
           pip3 install setuptools
           ./.ci-install-normaliz.sh
       - name: "Install PyNormaliz"
