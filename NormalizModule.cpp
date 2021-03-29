@@ -710,26 +710,55 @@ static PyObject*
 NmzAutomorphismsToPython(const AutomorphismGroup< Integer >& grp)
 {
 
-    PyObject* list = PyList_New(4);
+    PyObject* list = PyList_New(6);
 
     PyList_SetItem(list, 0, NmzToPyNumber(grp.getOrder()));
+    PyList_SetItem(list, 1, BoolToPyBool(grp.IsIntegralityChecked()));
+    PyList_SetItem(list, 2, BoolToPyBool(grp.IsIntegral())); 
+    
+    if(grp.IsInput() || grp.IsAmbient()){
+        PyObject* current = PyList_New(2);        
+        PyList_SetItem(current, 0, NmzMatrixToPyList(grp.getGensPerms()));
+        PyList_SetItem(current, 1, NmzMatrixToPyList(grp.getGensOrbits()));
+        PyList_SetItem(list, 3, current);
+        
+        current = PyList_New(2);
+        vector<vector<long> > Empty;
+        PyList_SetItem(current, 0, NmzMatrixToPyList(Empty));
+        PyList_SetItem(current, 1, NmzMatrixToPyList(Empty));
+        PyList_SetItem(list, 4, current);
+        
+        if(grp.IsAmbient()){
+            current = PyList_New(2);
+            PyList_SetItem(current, 0, NmzMatrixToPyList(grp.getLinFormsPerms()));
+            PyList_SetItem(current, 1, NmzMatrixToPyList(grp.getLinFormsOrbits()));
+            PyList_SetItem(list, 5, current);            
+        }
+        else{
+            vector<vector<long> > Empty;
+            PyList_SetItem(current, 0, NmzMatrixToPyList(Empty));
+            PyList_SetItem(current, 1, NmzMatrixToPyList(Empty));
+            PyList_SetItem(list, 5, current);            
+        }        
+    }    
+    else{
+        PyObject* current = PyList_New(2);
+        PyList_SetItem(current, 0, NmzMatrixToPyList(grp.getExtremeRaysPerms()));
+        PyList_SetItem(current, 1, NmzMatrixToPyList(grp.getExtremeRaysOrbits()));
+        PyList_SetItem(list, 3, current);
 
-    PyObject* current = PyList_New(2);
-    PyList_SetItem(current, 0, NmzMatrixToPyList(grp.getExtremeRaysPerms()));
-    PyList_SetItem(current, 1, NmzMatrixToPyList(grp.getExtremeRaysOrbits()));
-    PyList_SetItem(list, 1, current);
+        current = PyList_New(2);
+        PyList_SetItem(current, 0, NmzMatrixToPyList(grp.getVerticesPerms()));
+        PyList_SetItem(current, 1, NmzMatrixToPyList(grp.getVerticesOrbits()));
+        PyList_SetItem(list, 4, current);
 
-    current = PyList_New(2);
-    PyList_SetItem(current, 0, NmzMatrixToPyList(grp.getVerticesPerms()));
-    PyList_SetItem(current, 1, NmzMatrixToPyList(grp.getVerticesOrbits()));
-    PyList_SetItem(list, 2, current);
-
-    current = PyList_New(2);
-    PyList_SetItem(current, 0,
-                   NmzMatrixToPyList(grp.getSupportHyperplanesPerms()));
-    PyList_SetItem(current, 1,
-                   NmzMatrixToPyList(grp.getSupportHyperplanesOrbits()));
-    PyList_SetItem(list, 3, current);
+        current = PyList_New(2);
+        PyList_SetItem(current, 0,
+                    NmzMatrixToPyList(grp.getSupportHyperplanesPerms()));
+        PyList_SetItem(current, 1,
+                    NmzMatrixToPyList(grp.getSupportHyperplanesOrbits()));
+        PyList_SetItem(list, 5, current);    
+    }
 
     return list;
 }
@@ -1725,6 +1754,10 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, void* nf = nullptr)
         case libnormaliz::ConeProperty::AmbientAutomorphisms:
             return NmzAutomorphismsToPython(C->getAutomorphismGroup(
                 libnormaliz::ConeProperty::AmbientAutomorphisms));
+            
+        case libnormaliz::ConeProperty::InputAutomorphisms:
+            return NmzAutomorphismsToPython(C->getAutomorphismGroup(
+                libnormaliz::ConeProperty::InputAutomorphisms));
 
         case libnormaliz::ConeProperty::CombinatorialAutomorphisms:
             return NmzAutomorphismsToPython(C->getAutomorphismGroup(
