@@ -27,12 +27,31 @@ def print_perms_and_orbits(data, name):
 
 def print_automs(Automs):
     print("order ", Automs[0])
-    if len(Automs[1][0]) >0:
-        print_perms_and_orbits(Automs[1],"extreme rays of (recession) cone")
-    if len(Automs[2][0]) >0:
-        print_perms_and_orbits(Automs[2],"vertices of polyhedron")
+    if Automs[1]:
+        if Automs[2]:
+            print("automorphisms are integral")
+        else:
+            print("automorphisms are not integral")
+    else:
+        print("integrality of automorphisms unknown")
+        
+    gen_name ="extreme rays of (recession) cone"
+    if len(Automs) == 7:
+        gen_name = "input vectors";        
+    lf_name = "support hyperplanes"
+    if len(Automs) == 7:
+        lf_name = "coordinates"
+
     if len(Automs[3][0]) >0:
-        print_perms_and_orbits(Automs[3],"support hyperplanes")
+        print_perms_and_orbits(Automs[3],gen_name)
+    if len(Automs[4][0]) >0:
+        print_perms_and_orbits(Automs[4],"vertices of polyhedron")
+    if len(Automs[5][0]) >0:
+        print_perms_and_orbits(Automs[5],lf_name)
+    
+    if len(Automs) == 7:
+        print("input vectors")
+        print_matrix(Automs[6])
     return
 
 def print_Stanley_dec(dec):

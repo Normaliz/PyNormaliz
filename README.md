@@ -13,9 +13,9 @@ A full documentation is conatined in [Appendix E](doc/PyNormaliz.pdf) of the Nor
 ## Requirements
 
 * python 2.7 or higher or python 3.4 or higher
-* Normaliz 3.8.10 or higher <https://github.com/Normaliz/Normaliz/releases>
+* Normaliz 3.9.0 or higher <https://github.com/Normaliz/Normaliz/releases>
 
-(The current version of PyNormaliz is under construction. Normaliz 3.8.10 not yet released. Use current master of Normaliz for current master of PyNormaliz.) The source packages of the Normaliz realeases contain PyNormaliz.
+(The current version of PyNormaliz is under construction. Normaliz 3.9.0 not yet released. Use current master of Normaliz for current master of PyNormaliz.) The source packages of the Normaliz realeases contain PyNormaliz.
 
 ## Installation
 

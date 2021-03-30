@@ -172,11 +172,11 @@ static PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg
 #ifndef NMZ_RELEASE
 static_assert(
     false,
-    "Your Normaliz version (unknown) is to old! Update to 3.8.10 or newer.");
+    "Your Normaliz version (unknown) is to old! Update to 3.9.0 or newer.");
 #endif
-#if NMZ_RELEASE < 30810
+#if NMZ_RELEASE < 30900
 static_assert(false,
-              "Your Normaliz version is to old! Update to 3.8.10 or newer.");
+              "Your Normaliz version is to old! Update to 3.9.0 or newer.");
 #endif
 
 /***************************************************************************
@@ -709,14 +709,18 @@ template < typename Integer >
 static PyObject*
 NmzAutomorphismsToPython(const AutomorphismGroup< Integer >& grp)
 {
+    int list_size = 6;
+    if(grp.IsInput() || grp.IsAmbient())
+        list_size =7;    
 
-    PyObject* list = PyList_New(6);
+    PyObject* list = PyList_New(list_size);
 
     PyList_SetItem(list, 0, NmzToPyNumber(grp.getOrder()));
     PyList_SetItem(list, 1, BoolToPyBool(grp.IsIntegralityChecked()));
-    PyList_SetItem(list, 2, BoolToPyBool(grp.IsIntegral())); 
+    PyList_SetItem(list, 2, BoolToPyBool(grp.IsIntegral()));
     
     if(grp.IsInput() || grp.IsAmbient()){
+        PyList_SetItem(list, 6, NmzMatrixToPyList(grp.getGens().get_elements()));
         PyObject* current = PyList_New(2);        
         PyList_SetItem(current, 0, NmzMatrixToPyList(grp.getGensPerms()));
         PyList_SetItem(current, 1, NmzMatrixToPyList(grp.getGensOrbits()));
