@@ -387,6 +387,9 @@ class Cone:
     def SetFaceCodimBound(self, bound=-1):
         return PyNormaliz_cpp.NmzSetFaceCodimBound(self.cone, bound)
     
+    def SetDecimalDigits(self, digits=100):
+        return PyNormaliz_cpp.NmzSetDecimalDigits(self.cone, digits)
+    
     def SetPolynomial(self, poly =""):
         return PyNormaliz_cpp.NmzSetPolynomial(self.cone, poly)    
     
