@@ -2138,6 +2138,45 @@ static PyObject* NmzSetFaceCodimBound(PyObject* self, PyObject* args)
     FUNC_END
 }
 
+static PyObject* NmzSetDecimalDigits(PyObject* self, PyObject* args)
+{
+
+    FUNC_BEGIN
+
+    PyObject* cone = PyTuple_GetItem(args, 0);
+
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+
+    PyObject* digits_py = PyTuple_GetItem(args, 1);
+
+    TempSignalHandler tmpHandler; // use custom signal handler
+
+    int  overflow;
+    long digits = PyLong_AsLongLongAndOverflow(digits_py, &overflow);
+    if (is_cone_mpz(cone)) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        cone_ptr->setDecimalDigits(digits);
+        Py_RETURN_TRUE;
+    }
+    else if (is_cone_long(cone)) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        cone_ptr->setDecimalDigits(digits);
+        Py_RETURN_TRUE;
+    }
+#ifdef ENFNORMALIZ
+    else {
+         Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
+         cone_ptr->setDecimalDigits(digits);
+         Py_RETURN_TRUE;
+    }
+#endif
+
+    FUNC_END
+}
+
 /***************************************************************************
  *
  * Get Symmetrized cone
@@ -2533,7 +2572,9 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      (PyCFunction)NmzSetNumberOfNormalizThreads, METH_VARARGS,
      "Sets the Normaliz thread limit"},
     {"NmzSetNrCoeffQuasiPol", (PyCFunction)NmzSetNrCoeffQuasiPol,
-     METH_VARARGS, "Sets the number of computed coefficients for the quasi-polynomial"},
+     METH_VARARGS, "Sets the number of computed coefficients for the quasi-polynomial"},     
+    {"NmzSetDecimalDigits", (PyCFunction)NmzSetDecimalDigits,
+     METH_VARARGS, "Sets the number of decimal digits for fixed precision"},
     {"NmzSetPolynomial", (PyCFunction)NmzSetPolynomial,
      METH_VARARGS, "Sets the polynomial for integration and weighted series"},
     {"NmzSetFaceCodimBound", (PyCFunction)NmzSetFaceCodimBound,
