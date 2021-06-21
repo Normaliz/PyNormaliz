@@ -30,7 +30,7 @@ setup(
     py_modules = [ "PyNormaliz" ],
     ext_modules = [ Extension( "PyNormaliz_cpp",
                               [ "NormalizModule.cpp" ],
-                              extra_compile_args=['-std=c++11'],
+                              extra_compile_args=['-std=c++14'],
                               libraries=[ 'normaliz' ],
                               **extra_kwds) ],
     
