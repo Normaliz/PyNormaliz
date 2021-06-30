@@ -5,3 +5,4 @@ dist
 MANIFEST
 *.pyc
 *~
+PyNormaliz.egg-info/*
