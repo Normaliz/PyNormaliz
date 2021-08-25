@@ -12,10 +12,10 @@ A full documentation is conatined in [Appendix E](doc/PyNormaliz.pdf) of the Nor
 
 ## Requirements
 
-* python 2.7 or higher or python 3.4 or higher
+* python 3.4 or higher
 * Normaliz 3.9.0 or higher <https://github.com/Normaliz/Normaliz/releases>
 
-(The current version of PyNormaliz is under construction. Normaliz 3.9.0 not yet released. Use current master of Normaliz for current master of PyNormaliz.) The source packages of the Normaliz realeases contain PyNormaliz.
+The source packages of the Normaliz realeases contain PyNormaliz.
 
 ## Installation
 
@@ -32,8 +32,6 @@ within the Normaliz directory. To install PyNormaliz navigate to the Normaliz di
 The command Cone creates a cone (and a lattice), and the member functions
 of Cone compute its properties. For a full list of input and output
 properties, see the Normaliz manual.
-
-We assume that you are running python 3.
 
 Start by
 
