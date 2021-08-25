@@ -21,7 +21,7 @@ using std::string;
 #ifdef ENFNORMALIZ
 using eantic::renf_elem_class;
 using eantic::renf_class;
-#endif 
+#endif
 
 using libnormaliz::Cone;
 // using libnormaliz::ConeProperty;
@@ -198,7 +198,7 @@ static string PyUnicodeToString(PyObject* in)
     }
 #if PY_MAJOR_VERSION >= 3
     string out = "";
-    int    length = PyUnicode_GET_SIZE(in);
+    int    length = PyUnicode_GET_LENGTH(in);
     for (int i = 0; i < length; i++) {
         out += PyUnicode_READ_CHAR(in, i);
     }
@@ -361,7 +361,7 @@ static PyObject* NmzToPyNumber(double in)
     PyObject* x = PyFloat_FromDouble(in);
     if(FloatHandler == NULL)
         return x;
- 
+
     return CallPythonFuncOnOneArg(FloatHandler, x);
 }
 
@@ -466,7 +466,7 @@ static bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
             PyObject* current_element = PySequence_GetItem(current_row, j);
             bool      current_res;
             NumberFieldElem current_elem;
-    
+
             if (PyList_CheckExact(current_element) || PyTuple_CheckExact(current_element)) {
                 vector< mpq_class > current_vector;
                 current_res = PyListToNmz(current_vector, current_element);
@@ -480,7 +480,7 @@ static bool prepare_nf_input(vector< vector< NumberFieldElem > >& out,
                 // current_elem = PyUnicodeToString(current_element);
             }
             if (PyFloat_Check(current_element)){
-                throw PyNormalizInputException("Nonintegral numbers must be given as strings"); 
+                throw PyNormalizInputException("Nonintegral numbers must be given as strings");
             }
             if (PyLong_Check(current_element)) {
                 mpq_class tmp;
@@ -626,7 +626,7 @@ static PyObject* NmzTriangleListToPyList(
         PyList_SetItem(triple, 2, NmzToPyNumber(libnormaliz::bool_to_bitset(in.first[i].Excluded)));
         PyList_SetItem(M, i, triple);
     }
-    
+
     PyObject* Tr = PyList_New(2);
     PyList_SetItem(Tr, 0,M);
     PyList_SetItem(Tr, 1,NmzMatrixToPyList(in.second.get_elements()));
@@ -716,40 +716,40 @@ NmzAutomorphismsToPython(const AutomorphismGroup< Integer >& grp)
 {
     int list_size = 6;
     if(grp.IsInput() || grp.IsAmbient())
-        list_size =7;    
+        list_size =7;
 
     PyObject* list = PyList_New(list_size);
 
     PyList_SetItem(list, 0, NmzToPyNumber(grp.getOrder()));
     PyList_SetItem(list, 1, BoolToPyBool(grp.IsIntegralityChecked()));
     PyList_SetItem(list, 2, BoolToPyBool(grp.IsIntegral()));
-    
+
     if(grp.IsInput() || grp.IsAmbient()){
         PyList_SetItem(list, 6, NmzMatrixToPyList(grp.getGens().get_elements()));
-        PyObject* current = PyList_New(2);        
+        PyObject* current = PyList_New(2);
         PyList_SetItem(current, 0, NmzMatrixToPyList(grp.getGensPerms()));
         PyList_SetItem(current, 1, NmzMatrixToPyList(grp.getGensOrbits()));
         PyList_SetItem(list, 3, current);
-        
+
         current = PyList_New(2);
         vector<vector<long> > Empty;
         PyList_SetItem(current, 0, NmzMatrixToPyList(Empty));
         PyList_SetItem(current, 1, NmzMatrixToPyList(Empty));
         PyList_SetItem(list, 4, current);
-        
+
         if(grp.IsAmbient()){
             current = PyList_New(2);
             PyList_SetItem(current, 0, NmzMatrixToPyList(grp.getLinFormsPerms()));
             PyList_SetItem(current, 1, NmzMatrixToPyList(grp.getLinFormsOrbits()));
-            PyList_SetItem(list, 5, current);            
+            PyList_SetItem(list, 5, current);
         }
         else{
             vector<vector<long> > Empty;
             PyList_SetItem(current, 0, NmzMatrixToPyList(Empty));
             PyList_SetItem(current, 1, NmzMatrixToPyList(Empty));
-            PyList_SetItem(list, 5, current);            
-        }        
-    }    
+            PyList_SetItem(list, 5, current);
+        }
+    }
     else{
         PyObject* current = PyList_New(2);
         PyList_SetItem(current, 0, NmzMatrixToPyList(grp.getExtremeRaysPerms()));
@@ -766,7 +766,7 @@ NmzAutomorphismsToPython(const AutomorphismGroup< Integer >& grp)
                     NmzMatrixToPyList(grp.getSupportHyperplanesPerms()));
         PyList_SetItem(current, 1,
                     NmzMatrixToPyList(grp.getSupportHyperplanesOrbits()));
-        PyList_SetItem(list, 5, current);    
+        PyList_SetItem(list, 5, current);
     }
 
     return list;
@@ -928,7 +928,7 @@ static PyObject* NmzListConeProperties(PyObject* args)
 
     ConeProperties goals = libnormaliz::all_goals();
     ConeProperties options = libnormaliz::all_options();
-    
+
     int number_goals = goals.count();
     int number_options = options.count();
 
@@ -1050,7 +1050,7 @@ static PyObject* _NmzConeIntern_renf(PyObject* kwargs)
     string poly = PyUnicodeToString(PySequence_GetItem(number_field_data, 0));
     string var = PyUnicodeToString(PySequence_GetItem(number_field_data, 1));
     string emb = PyUnicodeToString(PySequence_GetItem(number_field_data, 2));
-    // boost::intrusive_ptr<const renf_class>* renf = new boost::intrusive_ptr<const renf_class>; 
+    // boost::intrusive_ptr<const renf_class>* renf = new boost::intrusive_ptr<const renf_class>;
     boost::intrusive_ptr<const renf_class> renf = renf_class::make(poly, var, emb);
     const renf_class* my_renf = renf.get();
 
@@ -1089,7 +1089,7 @@ static PyObject* _NmzConeIntern_renf(PyObject* kwargs)
 
     Cone< renf_elem_class >* C = new Cone< renf_elem_class >(input);
     C->setRenf(my_renf);
-    
+
     PyObject* return_container = pack_cone(C, my_renf);
 
     return return_container;
@@ -1490,7 +1490,7 @@ PyObject* NmzSetGrading_inner(Cone< renf_elem_class >* cone, PyObject* grad)
     vector< renf_elem_class > grad_renf;
     vector<vector< renf_elem_class> > grad_mat; // a cheap way to convert vectors
     PyObject*  PyHelpMat = PyList_New(1);     // better: rebuild conversion to renf
-    PyList_SetItem(PyHelpMat, 0, grad);    
+    PyList_SetItem(PyHelpMat, 0, grad);
     prepare_nf_input(grad_mat, PyHelpMat,cone->getRenf());
     grad_renf = grad_mat[0];
 
@@ -1523,7 +1523,7 @@ static PyObject* NmzSetGrading(PyObject* self, PyObject* args)
     }
 #endif
     FUNC_END
-    
+
     Py_RETURN_NONE;
 }
 
@@ -1547,7 +1547,7 @@ static PyObject* NmzSetProjectionCoords_inner(Cone< Integer >* cone, PyObject* c
         if(coords_c[i]!=0 && coords_c[i]!=1)
             PyErr_SetString(PyNormaliz_cppError, "Projection coordinates must be 0 or 1");
     }
-            
+
     cone->resetProjectionCoords(coords_c);
     Py_RETURN_NONE;
 }
@@ -1559,7 +1559,7 @@ PyObject* NmzSetProjectionCoords_inner(Cone< renf_elem_class >* cone, PyObject* 
     vector< renf_elem_class > coords_renf;
     vector<vector< renf_elem_class> > coords_mat; // a cheap way to convert vectors
     PyObject*  PyHelpMat = PyList_New(1);     // better: rebuild conversion to renf
-    PyList_SetItem(PyHelpMat, 0, coords);    
+    PyList_SetItem(PyHelpMat, 0, coords);
     prepare_nf_input(coords_mat, PyHelpMat,cone->getRenf());
     coords_renf = coords_mat[0];
 
@@ -1650,19 +1650,19 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, const void* nf = nullptr)
     libnormaliz::OutputType::Enum outputtype = libnormaliz::output_type(p);
 
     switch (p) {
-                  
+
         case libnormaliz::ConeProperty::Triangulation:{
             return NmzTriangleListToPyList< Integer >(C->getTriangulation());
         }
-        
+
         case libnormaliz::ConeProperty::ConeDecomposition:{
             return NmzTriangleListToPyList< Integer >(C->getConeDecomposition());
         }
-            
+
         case libnormaliz::ConeProperty::AllGeneratorsTriangulation:
             return NmzTriangleListToPyList< Integer >(C->getTriangulation(
                 libnormaliz::ConeProperty::AllGeneratorsTriangulation));
-    
+
         case libnormaliz::ConeProperty::LatticePointTriangulation:
             return NmzTriangleListToPyList< Integer >(C->getTriangulation(
                libnormaliz::ConeProperty::LatticePointTriangulation));
@@ -1740,19 +1740,19 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, const void* nf = nullptr)
         case libnormaliz::ConeProperty::WeightedEhrhartQuasiPolynomial:
             return NmzWeightedEhrhartQuasiPolynomialToPyList< mpz_class >(
                 C->getIntData());
-            
+
         case libnormaliz::ConeProperty::ClassGroup:
             return NmzVectorToPyList(C->getClassGroup());
 
         case libnormaliz::ConeProperty::FVector:
             return NmzVectorToPyList(C->getFVector());
-            
+
         case libnormaliz::ConeProperty::DualFVector:
             return NmzVectorToPyList(C->getDualFVector());
 
         case libnormaliz::ConeProperty::FaceLattice:
             return NmzFacelatticeToPython(C->getFaceLattice());
-            
+
         case libnormaliz::ConeProperty::DualFaceLattice:
             return NmzFacelatticeToPython(C->getDualFaceLattice());
 
@@ -1763,7 +1763,7 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, const void* nf = nullptr)
         case libnormaliz::ConeProperty::AmbientAutomorphisms:
             return NmzAutomorphismsToPython(C->getAutomorphismGroup(
                 libnormaliz::ConeProperty::AmbientAutomorphisms));
-            
+
         case libnormaliz::ConeProperty::InputAutomorphisms:
             return NmzAutomorphismsToPython(C->getAutomorphismGroup(
                 libnormaliz::ConeProperty::InputAutomorphisms));
@@ -1826,7 +1826,7 @@ static PyObject* _NmzResult(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
 FUNC_BEGIN
-    
+
 RationalHandler = NULL;
 FloatHandler = NULL;
 
@@ -1836,10 +1836,10 @@ NumberfieldElementHandler = NULL;
 
 VectorHandler = NULL;
 MatrixHandler = NULL;
-    
+
     if(PyTuple_Size(args)!=2){
         PyErr_SetString(PyNormaliz_cppError, "Exactly one computation goal required for NmzResult");
-        return NULL;        
+        return NULL;
     }
 
     PyObject* cone = PyTuple_GetItem(args, 0);
@@ -2059,19 +2059,19 @@ static PyObject* NmzSetPolynomial(PyObject* self, PyObject* args)
         PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
         return NULL;
     }
-    
+
     TempSignalHandler tmpHandler; // use custom signal handler
 
     PyObject* poly_pi = PyTuple_GetItem(args, 1);
-    
+
     if(!string_check(poly_pi)){
         PyErr_SetString(PyNormaliz_cppError, "Polynomual must be given as a string");
         return NULL;
     }
     TempSignalHandler tmpHandler1; // use custom signal handler
-    
+
     string polynomial = PyUnicodeToString(poly_pi);
-    
+
     if (is_cone_mpz(cone)) {
         Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
         cone_ptr->setPolynomial(polynomial);
@@ -2309,7 +2309,7 @@ static PyObject* NmzGetWeightedEhrhartSeriesExpansion(PyObject* self, PyObject* 
     PyList_SetItem(return_list, 0, NmzVectorToPyList(ES.first.getExpansion()));
         PyList_SetItem(return_list, 1, NmzToPyNumber(ES.second));
     return return_list;
-    
+
     FUNC_END
 }
 
@@ -2570,7 +2570,7 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      (PyCFunction)NmzSetNumberOfNormalizThreads, METH_VARARGS,
      "Sets the Normaliz thread limit"},
     {"NmzSetNrCoeffQuasiPol", (PyCFunction)NmzSetNrCoeffQuasiPol,
-     METH_VARARGS, "Sets the number of computed coefficients for the quasi-polynomial"},     
+     METH_VARARGS, "Sets the number of computed coefficients for the quasi-polynomial"},
     {"NmzSetDecimalDigits", (PyCFunction)NmzSetDecimalDigits,
      METH_VARARGS, "Sets the number of decimal digits for fixed precision"},
     {"NmzSetPolynomial", (PyCFunction)NmzSetPolynomial,

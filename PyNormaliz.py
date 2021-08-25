@@ -1,7 +1,7 @@
-# encoding=utf8 
+# encoding=utf8
 
 import sys
-    
+
 import PyNormaliz_cpp
 from PyNormaliz_cpp import *
 
@@ -23,7 +23,7 @@ def print_perms_and_orbits(data, name):
     for i in range(len(data[1])):
         print(i, ": ", data[1][i])
     return
-    
+
 
 def print_automs(Automs):
     print("order ", Automs[0])
@@ -34,10 +34,10 @@ def print_automs(Automs):
             print("automorphisms are not integral")
     else:
         print("integrality of automorphisms unknown")
-        
+
     gen_name ="extreme rays of (recession) cone"
     if len(Automs) == 7:
-        gen_name = "input vectors";        
+        gen_name = "input vectors";
     lf_name = "support hyperplanes"
     if len(Automs) == 7:
         lf_name = "coordinates"
@@ -48,7 +48,7 @@ def print_automs(Automs):
         print_perms_and_orbits(Automs[4],"vertices of polyhedron")
     if len(Automs[5][0]) >0:
         print_perms_and_orbits(Automs[5],lf_name)
-    
+
     if len(Automs) == 7:
         print("input vectors")
         print_matrix(Automs[6])
@@ -98,11 +98,11 @@ def print_matrix(M):
                 s= 1
             x = current[j]
             x = str(x)
-            x = fill_blanks(x,s+CL[j]) 
+            x = fill_blanks(x,s+CL[j])
             current_line = current_line + x
         print(current_line)
     return
- 
+
 
 def our_rat_handler(list):
     if list[0] == 0:
@@ -203,14 +203,14 @@ def PrettyPolynomialTuple(numCoefficients, denCoefficients):
         firstNonZero = next(
             (i for i, x in enumerate(coefficients) if x != 0), 0)
         for exp, coefficient in enumerate(coefficients):
-            if coefficient is 0:
+            if coefficient == 0:
                 continue
             coeff_str = str(abs(coefficient))
-            if not exp is 0:
+            if exp != 0:
                 if coeff_str == "1":
                     coeff_str = " "
             # Exponent is 0 so keep only the coefficient
-            if exp is 0:
+            if exp == 0:
                 numerator += '({}{!s}'.format('-' if not isPositive(coefficient)
                                                 else '',coeff_str)
             # Only include sign if `coefficient` is negative
@@ -293,10 +293,10 @@ def print_quasipol(poly):
 
 
 name_of_indeterminate = ""
-        
+
 class Cone:
 
-    def __init__(self,**kwargs): 
+    def __init__(self,**kwargs):
         pop_list = []
         for entry in kwargs.items():
             current_input=entry[1];
@@ -315,7 +315,7 @@ class Cone:
         for k in pop_list:
             kwargs.pop(k)
         self.cone = PyNormaliz_cpp.NmzCone(**kwargs)
-        
+
     def ModifyCone(self, *args):
         PyNormaliz_cpp.NmzModifyCone(self.cone, *args)
 
@@ -344,7 +344,7 @@ class Cone:
 
     def Compute(self, *args):
         return PyNormaliz_cpp.NmzCompute(self.cone, args)
-    
+
     def IsComputed(self, *args):
         if len(args) != 1:
             raise ValueError("IsComputed must have exactly one argument")
@@ -369,7 +369,7 @@ class Cone:
         return_cone = Cone.__new__(Cone)
         return_cone.cone = new_inner_cone
         return return_cone
-    
+
     def SymmetrizedCone(self, **kwargs):
         new_inner_cone = PyNormaliz_cpp.NmzSymmetrizedCone(self.cone)
         if new_inner_cone == None:
@@ -383,31 +383,31 @@ class Cone:
 
     def SetNrCoeffQuasiPol(self, bound=-1):
         return PyNormaliz_cpp.NmzSetNrCoeffQuasiPol(self.cone, bound)
-    
+
     def SetFaceCodimBound(self, bound=-1):
         return PyNormaliz_cpp.NmzSetFaceCodimBound(self.cone, bound)
-    
+
     def SetDecimalDigits(self, digits=100):
         return PyNormaliz_cpp.NmzSetDecimalDigits(self.cone, digits)
-    
+
     def SetPolynomial(self, poly =""):
-        return PyNormaliz_cpp.NmzSetPolynomial(self.cone, poly)    
-    
+        return PyNormaliz_cpp.NmzSetPolynomial(self.cone, poly)
+
     def SetGrading(self, grading):
         return PyNormaliz_cpp.NmzSetGrading(self.cone, grading)
 
     def HilbertSeriesExpansion(self,degree):
         return NmzGetHilbertSeriesExpansion(self.cone,degree)
-    
+
     def EhrhartSeriesExpansion(self,degree):
         return NmzGetEhrhartSeriesExpansion(self.cone,degree)
 
     def WeightedEhrhartSeriesExpansion(self,degree):
         return NmzGetWeightedEhrhartSeriesExpansion(self.cone,degree)
-    
+
     def WriteOutputFile(self, project):
         return NmzWriteOutputFile(self.cone, project)
-    
+
     def NumberFieldData(self):
         return NmzGetRenfInfo(self.cone)
 
