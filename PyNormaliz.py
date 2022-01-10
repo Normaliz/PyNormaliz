@@ -296,25 +296,20 @@ name_of_indeterminate = ""
 
 class Cone:
 
-    def __init__(self,**kwargs):
+    def __init__(self,**kwargs):                
+        global name_of_indeterminate
         pop_list = []
         for entry in kwargs.items():
             current_input=entry[1];
             key = entry[0]
-            if type(current_input) == list and len(current_input) > 0 and type(current_input[0]) != list and key != "number_field":
-                kwargs[key] = [current_input]
-            if key == "number_field":
-                if type(current_input) != list or len(current_input) < 3:
-                    raise ValueError("Illegal number_field definition!")
-                global name_of_indeterminate
-                name_of_indeterminate = current_input[1]
-            elif type(current_input) == bool and current_input == True:
+            if type(current_input) == bool and current_input == True:
                 kwargs[key] = current_input = [[]]
             elif type(current_input) == bool and current_input == False:
                 poplist = pop_list + [key]
         for k in pop_list:
             kwargs.pop(k)
         self.cone = PyNormaliz_cpp.NmzCone(**kwargs)
+        name_of_indeterminate = PyNormaliz_cpp.NmzFieldGenName(self.cone)
 
     def ModifyCone(self, *args):
         PyNormaliz_cpp.NmzModifyCone(self.cone, *args)
@@ -341,6 +336,9 @@ class Cone:
 
     def __repr__(self):
         return "<Normaliz Cone>"
+    
+    def GetFieldGenName(self):
+        return PyNormaliz_cpp.NmzFieldGenName(self.cone)
 
     def Compute(self, *args):
         return PyNormaliz_cpp.NmzCompute(self.cone, args)
@@ -407,6 +405,9 @@ class Cone:
 
     def WriteOutputFile(self, project):
         return NmzWriteOutputFile(self.cone, project)
+
+    def WritePrecompData(self, project):
+        return NmzWritePrecompData(self.cone, project)
 
     def NumberFieldData(self):
         return NmzGetRenfInfo(self.cone)

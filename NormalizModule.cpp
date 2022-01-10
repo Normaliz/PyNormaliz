@@ -45,6 +45,8 @@ using std::vector;
 
 typedef int py_size_t;
 
+#include <fstream>
+
 /***************************************************************************
  *
  * Macros for exception handling
@@ -177,11 +179,11 @@ static PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg
 #ifndef NMZ_RELEASE
 static_assert(
     false,
-    "Your Normaliz version (unknown) is to old! Update to 3.9.0 or newer.");
+    "Your Normaliz version (unknown) is too old! Update to 3.9.2 or newer.");
 #endif
-#if NMZ_RELEASE < 30900
+#if NMZ_RELEASE < 30902
 static_assert(false,
-              "Your Normaliz version is to old! Update to 3.9.0 or newer.");
+              "Your Normaliz version is too old! Update to 3.9.2 or newer.");
 #endif
 
 /***************************************************************************
@@ -1097,6 +1099,61 @@ static PyObject* _NmzConeIntern_renf(PyObject* kwargs)
 }
 #endif
 
+static PyObject* _NmzConeFromFile(PyObject* kwargs)
+{
+    
+    static const char* from_file = "file";
+    PyObject* create_from_file = StringToPyUnicode(from_file);    
+    PyObject* FileName = PyDict_GetItem(kwargs, create_from_file);
+    string project(PyUnicodeToString(FileName));
+    
+    std::string name_in = project + ".in";
+    const char* file_in = name_in.c_str();
+
+#ifdef ENFNORMALIZ    
+    std::ifstream in;
+    in.open(file_in, std::ifstream::in);
+    if (!in.is_open()) {
+        string message = "error: Failed to open file " + name_in;
+        throw libnormaliz::BadInputException(message);
+    }
+    bool number_field_in_input = false;
+    std::string poly, var, emb;
+    std::string test;
+    while(in.good()){
+        in >> test;
+        if(test == "number_field"){
+            number_field_in_input = true;
+            libnormaliz::read_number_field_strings(in, poly, var, emb);
+            break;
+        }
+    }
+    in.close();
+    
+    if(number_field_in_input){
+        boost::intrusive_ptr<const renf_class> renf = renf_class::make(poly, var, emb);
+        const renf_class* my_renf = renf.get();
+        Cone< renf_elem_class >* C = new Cone< renf_elem_class >(project);
+        PyObject* return_container = pack_cone(C, my_renf);
+        return return_container;
+    }  
+#endif
+
+    static const char* string_for_long_long = "CreateAsLongLong";
+    PyObject* create_as_long_long = StringToPyUnicode(string_for_long_long);
+    
+    if (PyDict_Contains(kwargs, create_as_long_long) == 1) {
+        Cone< long long >* C = new Cone< long long >(project);
+        PyObject* return_container = pack_cone(C);
+        return return_container;
+    }
+    else{
+        Cone< mpz_class >* C = new Cone< mpz_class >(project);
+        PyObject* return_container = pack_cone(C);
+        return return_container;        
+    }
+}
+
 /*
 @Name NmzCone
 @Arguments <keywords>
@@ -1112,7 +1169,12 @@ to machine integers instead of arbitrary precision numbers.
 static PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     FUNC_BEGIN
-
+    static const char* from_file = "file";
+    PyObject* create_from_file = StringToPyUnicode(from_file);
+    if (kwargs != NULL && PyDict_Contains(kwargs, create_from_file) == 1) {
+        return _NmzConeFromFile(kwargs);
+    }
+    
     static const char* string_for_long = "CreateAsLongLong";
     PyObject* create_as_long_long = StringToPyUnicode(string_for_long);
 #ifdef ENFNORMALIZ
@@ -2479,7 +2541,50 @@ static PyObject* NmzWriteOutputFile(PyObject* self, PyObject* args)
 
 /***************************************************************************
  *
- * Get renf precision
+ * Write file with precomputed data
+ *
+ ***************************************************************************/
+
+static PyObject* NmzWritePrecompData(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+
+    if ((!PyTuple_Check(args)) || (PyTuple_Size(args) != 2)) {
+        throw PyNormalizInputException(
+            "The arguments must be a cone and a string");
+        return NULL;
+    }
+
+    PyObject* cone_py = PyTuple_GetItem(args, 0);
+    PyObject* filename_py = PyTuple_GetItem(args, 1);
+
+    string filename = PyUnicodeToString(filename_py);
+
+    if (is_cone_mpz(cone_py)) {
+        Cone< mpz_class >* cone = get_cone_mpz(cone_py);
+        cone->write_precomp_for_input(filename);
+        Py_RETURN_TRUE;
+    }
+    if (is_cone_long(cone_py)) {
+        Cone< long long >* cone = get_cone_long(cone_py);
+        cone->write_precomp_for_input(filename);
+        Py_RETURN_TRUE;
+    }
+#ifdef ENFNORMALIZ
+    if (is_cone_renf(cone_py)) {
+        Cone< renf_elem_class >* cone = get_cone_renf(cone_py);
+        cone->write_precomp_for_input(filename);
+        Py_RETURN_TRUE;
+    }
+#endif
+    Py_RETURN_FALSE;
+
+    FUNC_END
+}
+
+/***************************************************************************
+ *
+ * Get renf minpoly and precision
  *
  ***************************************************************************/
 
@@ -2501,6 +2606,7 @@ static PyObject* NmzGetRenfInfo(PyObject* self, PyObject* args)
         );
         return NULL;
     }
+    
     const renf_class* renf = get_cone_renf_renf(cone_py);
     std::string minpoly_str;
     minpoly_str = fmpq_poly_get_str_pretty(renf->get_renf()->nf->pol, renf->gen_name().c_str());
@@ -2509,6 +2615,44 @@ static PyObject* NmzGetRenfInfo(PyObject* self, PyObject* args)
     return PyTuple_Pack(2, StringToPyUnicode(minpoly_str), StringToPyUnicode(res1));
 #else
     return NULL;
+#endif
+
+    FUNC_END
+}
+
+/***************************************************************************
+ *
+ * Get name of field generator
+ *
+ ***************************************************************************/
+
+static PyObject* NmzFieldGenName(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+
+    if( (!PyTuple_Check(args)) || (PyTuple_Size(args) != 1) ){
+        throw PyNormalizInputException(
+            "Only one argument allowed"
+        );
+        return NULL;
+    }
+    PyObject* cone_py = PyTuple_GetItem(args, 0);
+    
+    std::string gen_name_string = "";
+    
+    if (is_cone_mpz(cone_py)) {
+        return PyUnicode_FromString(gen_name_string.c_str());
+    }
+    if (is_cone_long(cone_py)) {
+        return PyUnicode_FromString(gen_name_string.c_str());
+    }
+#ifdef ENFNORMALIZ
+    if (is_cone_renf(cone_py)) {
+        Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone_py);
+        gen_name_string = cone_ptr->getRenfGenerator();
+        return PyUnicode_FromString(gen_name_string.c_str());
+    }    
+ 
 #endif
 
     FUNC_END
@@ -2598,8 +2742,14 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
 
     {"NmzWriteOutputFile", (PyCFunction)NmzWriteOutputFile, METH_VARARGS,
      "Prints the Normaliz cone output into a file"},
+    {"NmzWritePrecompData", (PyCFunction)NmzWritePrecompData, METH_VARARGS,
+     "Prints the Normaliz cone precomputed data for further input"},
+     
     {"NmzGetRenfInfo", (PyCFunction)NmzGetRenfInfo, METH_VARARGS,
      "Outputs info of the number field associated to a renf cone"},
+    {"NmzFieldGenName", (PyCFunction)NmzFieldGenName, METH_VARARGS,
+     "Returns name of field generator"},
+     
     {"NmzModifyCone", (PyCFunction)_NmzModify_Outer, METH_VARARGS,
      "Modifies a given input property of a cone using a new matrix"},
     {
