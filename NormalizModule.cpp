@@ -181,7 +181,7 @@ static_assert(
     false,
     "Your Normaliz version (unknown) is too old! Update to 3.9.2 or newer.");
 #endif
-#if NMZ_RELEASE < 30902
+#if NMZ_RELEASE < 30904
 static_assert(false,
               "Your Normaliz version is too old! Update to 3.9.2 or newer.");
 #endif
@@ -2153,6 +2153,106 @@ static PyObject* NmzSetPolynomial(PyObject* self, PyObject* args)
     FUNC_END
 }
 
+static PyObject* NmzSetPolynomialEquations(PyObject* self, PyObject* args)
+{
+
+    FUNC_BEGIN
+
+    PyObject* cone = PyTuple_GetItem(args, 0);
+
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+
+    TempSignalHandler tmpHandler; // use custom signal handler
+
+    PyObject* polys_py = PyTuple_GetItem(args, 1);
+    if(!PyList_CheckExact(polys_py)) {
+         PyErr_SetString(PyNormaliz_cppError, "Second argument must be a list");
+         return NULL;
+    }
+    
+    TempSignalHandler tmpHandler1; // use custom signal handler
+    
+    size_t nr_polys = PySequence_Size(polys_py);
+    vector<string> PolyEquations;
+    for(size_t i = 0; i < nr_polys; ++i){
+        if(!string_check(PyList_GetItem(polys_py,i))) {
+            PyErr_SetString(PyNormaliz_cppError, "Polynomual must be given as a string");
+            return NULL;
+        }
+        string equ = PyUnicodeToString( PyList_GetItem(polys_py,i));
+        PolyEquations.push_back(equ);
+    }
+
+    if (is_cone_mpz(cone)) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        cone_ptr->setPolynomialEquations(PolyEquations);
+        Py_RETURN_TRUE;
+    }
+    if (is_cone_long(cone)) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        cone_ptr->setPolynomialEquations(PolyEquations);
+        Py_RETURN_TRUE;
+    }
+    Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
+    cone_ptr->setPolynomialEquations(PolyEquations);
+    Py_RETURN_TRUE;
+
+    FUNC_END
+}
+
+static PyObject* NmzSetPolynomialInequalities(PyObject* self, PyObject* args)
+{
+
+    FUNC_BEGIN
+
+    PyObject* cone = PyTuple_GetItem(args, 0);
+
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+
+    TempSignalHandler tmpHandler; // use custom signal handler
+
+    PyObject* polys_py = PyTuple_GetItem(args, 1);
+    if(!PyList_CheckExact(polys_py)) {
+         PyErr_SetString(PyNormaliz_cppError, "Second argument must be a list");
+         return NULL;
+    }
+    
+    TempSignalHandler tmpHandler1; // use custom signal handler
+    
+    size_t nr_polys = PySequence_Size(polys_py);
+    vector<string> PolyInequalities;
+    for(size_t i = 0; i < nr_polys; ++i){
+        if(!string_check(PyList_GetItem(polys_py,i))) {
+            PyErr_SetString(PyNormaliz_cppError, "Polynomual must be given as a string");
+            return NULL;
+        }
+        string inequ = PyUnicodeToString( PyList_GetItem(polys_py,i));
+        PolyInequalities.push_back(inequ);
+    }
+
+    if (is_cone_mpz(cone)) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        cone_ptr->setPolynomialInequalities(PolyInequalities);
+        Py_RETURN_TRUE;
+    }
+    if (is_cone_long(cone)) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        cone_ptr->setPolynomialInequalities(PolyInequalities);
+        Py_RETURN_TRUE;
+    }
+    Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
+    cone_ptr->setPolynomialInequalities(PolyInequalities);
+    Py_RETURN_TRUE;
+
+    FUNC_END
+}
+
 /***************************************************************************
  *
  * FaceCodimBound
@@ -2655,6 +2755,8 @@ static PyObject* NmzFieldGenName(PyObject* self, PyObject* args)
  
 #endif
 
+    return NULL; // to kmake gcc happy
+
     FUNC_END
 }
 
@@ -2719,6 +2821,10 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      METH_VARARGS, "Sets the number of decimal digits for fixed precision"},
     {"NmzSetPolynomial", (PyCFunction)NmzSetPolynomial,
      METH_VARARGS, "Sets the polynomial for integration and weighted series"},
+    {"NmzSetPolynomialEquations", (PyCFunction)NmzSetPolynomialEquations,
+     METH_VARARGS, "Sets the polynomial equations for lattice points"},
+    {"NmzSetPolynomialInequalities", (PyCFunction)NmzSetPolynomialInequalities,
+     METH_VARARGS, "Sets the polynomial inequalities for lattice points"},
     {"NmzSetFaceCodimBound", (PyCFunction)NmzSetFaceCodimBound,
      METH_VARARGS, "Sets the maximal codimension for the computed faces"},
     {"NmzGetHilbertSeriesExpansion",

@@ -390,6 +390,12 @@ class Cone:
 
     def SetPolynomial(self, poly =""):
         return PyNormaliz_cpp.NmzSetPolynomial(self.cone, poly)
+    
+    def SetPolynomialEquations(self, polys =[]):
+        return PyNormaliz_cpp.NmzSetPolynomialEquations(self.cone, polys)
+    
+    def SetPolynomialInequalities(self, polys =[]):
+        return PyNormaliz_cpp.NmzSetPolynomialInequalities(self.cone, polys)
 
     def SetGrading(self, grading):
         return PyNormaliz_cpp.NmzSetGrading(self.cone, grading)
