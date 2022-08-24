@@ -2196,9 +2196,11 @@ static PyObject* NmzSetPolynomialEquations(PyObject* self, PyObject* args)
         cone_ptr->setPolynomialEquations(PolyEquations);
         Py_RETURN_TRUE;
     }
+#ifdef ENFNORMALIZ
     Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
     cone_ptr->setPolynomialEquations(PolyEquations);
     Py_RETURN_TRUE;
+#endif
 
     FUNC_END
 }
@@ -2246,10 +2248,12 @@ static PyObject* NmzSetPolynomialInequalities(PyObject* self, PyObject* args)
         cone_ptr->setPolynomialInequalities(PolyInequalities);
         Py_RETURN_TRUE;
     }
+#ifdef ENFNORMALIZ
     Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
     cone_ptr->setPolynomialInequalities(PolyInequalities);
     Py_RETURN_TRUE;
-
+#endif
+    
     FUNC_END
 }
 
