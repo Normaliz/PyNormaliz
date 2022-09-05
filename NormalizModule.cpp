@@ -179,11 +179,11 @@ static PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg
 #ifndef NMZ_RELEASE
 static_assert(
     false,
-    "Your Normaliz version (unknown) is too old! Update to 3.9.2 or newer.");
+    "Your Normaliz version (unknown) is too old! Update to 3.9.4 or newer.");
 #endif
 #if NMZ_RELEASE < 30904
 static_assert(false,
-              "Your Normaliz version is too old! Update to 3.9.2 or newer.");
+              "Your Normaliz version is too old! Update to 3.9.4 or newer.");
 #endif
 
 /***************************************************************************
