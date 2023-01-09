@@ -296,7 +296,7 @@ name_of_indeterminate = ""
 
 class Cone:
 
-    def __init__(self,**kwargs):                
+    def __init__(self,**kwargs):
         global name_of_indeterminate
         pop_list = []
         for entry in kwargs.items():
@@ -336,7 +336,7 @@ class Cone:
 
     def __repr__(self):
         return "<Normaliz Cone>"
-    
+
     def GetFieldGenName(self):
         return PyNormaliz_cpp.NmzFieldGenName(self.cone)
 
@@ -385,15 +385,21 @@ class Cone:
     def SetFaceCodimBound(self, bound=-1):
         return PyNormaliz_cpp.NmzSetFaceCodimBound(self.cone, bound)
 
+    def SetGBDegreeBound(self, bound=-1):
+        return PyNormaliz_cpp.NmzSetGBDegreeBound(self.cone, bound)
+
+    def SetGBMinDegree(self, bound=-1):
+        return PyNormaliz_cpp.NmzSetGBGBMinDegree(self.cone, bound)
+
     def SetDecimalDigits(self, digits=100):
         return PyNormaliz_cpp.NmzSetDecimalDigits(self.cone, digits)
 
     def SetPolynomial(self, poly =""):
         return PyNormaliz_cpp.NmzSetPolynomial(self.cone, poly)
-    
+
     def SetPolynomialEquations(self, polys =[]):
         return PyNormaliz_cpp.NmzSetPolynomialEquations(self.cone, polys)
-    
+
     def SetPolynomialInequalities(self, polys =[]):
         return PyNormaliz_cpp.NmzSetPolynomialInequalities(self.cone, polys)
 

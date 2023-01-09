@@ -179,11 +179,11 @@ static PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg
 #ifndef NMZ_RELEASE
 static_assert(
     false,
-    "Your Normaliz version (unknown) is too old! Update to 3.9.2 or newer.");
+    "Your Normaliz version (unknown) is too old! Update to 3.10.0 or newer.");
 #endif
-#if NMZ_RELEASE < 30904
+#if NMZ_RELEASE < 31000
 static_assert(false,
-              "Your Normaliz version is too old! Update to 3.9.2 or newer.");
+              "Your Normaliz version is too old! Update to 3.10.0 or newer.");
 #endif
 
 /***************************************************************************
@@ -1101,16 +1101,16 @@ static PyObject* _NmzConeIntern_renf(PyObject* kwargs)
 
 static PyObject* _NmzConeFromFile(PyObject* kwargs)
 {
-    
+
     static const char* from_file = "file";
-    PyObject* create_from_file = StringToPyUnicode(from_file);    
+    PyObject* create_from_file = StringToPyUnicode(from_file);
     PyObject* FileName = PyDict_GetItem(kwargs, create_from_file);
     string project(PyUnicodeToString(FileName));
-    
+
     std::string name_in = project + ".in";
     const char* file_in = name_in.c_str();
 
-#ifdef ENFNORMALIZ    
+#ifdef ENFNORMALIZ
     std::ifstream in;
     in.open(file_in, std::ifstream::in);
     if (!in.is_open()) {
@@ -1129,19 +1129,19 @@ static PyObject* _NmzConeFromFile(PyObject* kwargs)
         }
     }
     in.close();
-    
+
     if(number_field_in_input){
         boost::intrusive_ptr<const renf_class> renf = renf_class::make(poly, var, emb);
         const renf_class* my_renf = renf.get();
         Cone< renf_elem_class >* C = new Cone< renf_elem_class >(project);
         PyObject* return_container = pack_cone(C, my_renf);
         return return_container;
-    }  
+    }
 #endif
 
     static const char* string_for_long_long = "CreateAsLongLong";
     PyObject* create_as_long_long = StringToPyUnicode(string_for_long_long);
-    
+
     if (PyDict_Contains(kwargs, create_as_long_long) == 1) {
         Cone< long long >* C = new Cone< long long >(project);
         PyObject* return_container = pack_cone(C);
@@ -1150,7 +1150,7 @@ static PyObject* _NmzConeFromFile(PyObject* kwargs)
     else{
         Cone< mpz_class >* C = new Cone< mpz_class >(project);
         PyObject* return_container = pack_cone(C);
-        return return_container;        
+        return return_container;
     }
 }
 
@@ -1174,7 +1174,7 @@ static PyObject* _NmzCone(PyObject* self, PyObject* args, PyObject* kwargs)
     if (kwargs != NULL && PyDict_Contains(kwargs, create_from_file) == 1) {
         return _NmzConeFromFile(kwargs);
     }
-    
+
     static const char* string_for_long = "CreateAsLongLong";
     PyObject* create_as_long_long = StringToPyUnicode(string_for_long);
 #ifdef ENFNORMALIZ
@@ -2172,9 +2172,9 @@ static PyObject* NmzSetPolynomialEquations(PyObject* self, PyObject* args)
          PyErr_SetString(PyNormaliz_cppError, "Second argument must be a list");
          return NULL;
     }
-    
+
     TempSignalHandler tmpHandler1; // use custom signal handler
-    
+
     size_t nr_polys = PySequence_Size(polys_py);
     vector<string> PolyEquations;
     for(size_t i = 0; i < nr_polys; ++i){
@@ -2224,9 +2224,9 @@ static PyObject* NmzSetPolynomialInequalities(PyObject* self, PyObject* args)
          PyErr_SetString(PyNormaliz_cppError, "Second argument must be a list");
          return NULL;
     }
-    
+
     TempSignalHandler tmpHandler1; // use custom signal handler
-    
+
     size_t nr_polys = PySequence_Size(polys_py);
     vector<string> PolyInequalities;
     for(size_t i = 0; i < nr_polys; ++i){
@@ -2253,7 +2253,7 @@ static PyObject* NmzSetPolynomialInequalities(PyObject* self, PyObject* args)
     cone_ptr->setPolynomialInequalities(PolyInequalities);
     Py_RETURN_TRUE;
 #endif
-    
+
     FUNC_END
 }
 
@@ -2296,6 +2296,81 @@ static PyObject* NmzSetFaceCodimBound(PyObject* self, PyObject* args)
          Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
          cone_ptr->setFaceCodimBound(bound);
          Py_RETURN_TRUE;
+    }
+#endif
+
+    FUNC_END
+}
+
+static PyObject* NmzSetGBDegreeBound(PyObject* self, PyObject* args)
+{
+
+    FUNC_BEGIN
+
+    PyObject* cone = PyTuple_GetItem(args, 0);
+
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+
+    PyObject* bound_py = PyTuple_GetItem(args, 1);
+
+    TempSignalHandler tmpHandler; // use custom signal handler
+
+    int  overflow;
+    long bound = PyLong_AsLongLongAndOverflow(bound_py, &overflow);
+    if (is_cone_mpz(cone)) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        cone_ptr->setGBDegreeBound(bound);
+        Py_RETURN_TRUE;
+    }
+    else if (is_cone_long(cone)) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        cone_ptr->setGBDegreeBound(bound);
+        Py_RETURN_TRUE;
+    }
+#ifdef ENFNORMALIZ
+    else {
+        PyErr_SetString(PyNormaliz_cppError, "GB degree bound not defined for algebraic polyhedra");
+        return NULL;
+    }
+#endif
+
+    FUNC_END
+}
+
+static PyObject* NmzSetGBMinDegree(PyObject* self, PyObject* args)
+{
+
+    FUNC_BEGIN
+
+    PyObject* cone = PyTuple_GetItem(args, 0);
+
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+
+    PyObject* bound_py = PyTuple_GetItem(args, 1);
+
+    TempSignalHandler tmpHandler; // use custom signal handler
+
+    int  overflow;
+    long bound = PyLong_AsLongLongAndOverflow(bound_py, &overflow);
+    if (is_cone_mpz(cone)) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        cone_ptr->setGBMinDegree(bound);
+        Py_RETURN_TRUE;
+    }
+    else if (is_cone_long(cone)) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        cone_ptr->setGBMinDegree(bound);
+    }
+#ifdef ENFNORMALIZ
+    else {
+        PyErr_SetString(PyNormaliz_cppError, "GB min degree not defined for algebraic polyhedra");
+        return NULL;
     }
 #endif
 
@@ -2710,7 +2785,7 @@ static PyObject* NmzGetRenfInfo(PyObject* self, PyObject* args)
         );
         return NULL;
     }
-    
+
     const renf_class* renf = get_cone_renf_renf(cone_py);
     std::string minpoly_str;
     minpoly_str = fmpq_poly_get_str_pretty(renf->get_renf()->nf->pol, renf->gen_name().c_str());
@@ -2741,9 +2816,9 @@ static PyObject* NmzFieldGenName(PyObject* self, PyObject* args)
         return NULL;
     }
     PyObject* cone_py = PyTuple_GetItem(args, 0);
-    
+
     std::string gen_name_string = "";
-    
+
     if (is_cone_mpz(cone_py)) {
         return PyUnicode_FromString(gen_name_string.c_str());
     }
@@ -2755,8 +2830,8 @@ static PyObject* NmzFieldGenName(PyObject* self, PyObject* args)
         Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone_py);
         gen_name_string = cone_ptr->getRenfGenerator();
         return PyUnicode_FromString(gen_name_string.c_str());
-    }    
- 
+    }
+
 #endif
 
     return NULL; // to kmake gcc happy
@@ -2831,6 +2906,10 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      METH_VARARGS, "Sets the polynomial inequalities for lattice points"},
     {"NmzSetFaceCodimBound", (PyCFunction)NmzSetFaceCodimBound,
      METH_VARARGS, "Sets the maximal codimension for the computed faces"},
+    {"NmzSetGBDegreeBound", (PyCFunction)NmzSetGBDegreeBound,
+     METH_VARARGS, "Sets the maximal degree for binomials in Gröbner and Markov bases"},
+    {"NmzSetGBMinDegree", (PyCFunction)NmzSetGBMinDegree,
+     METH_VARARGS, "Sets the minimal degree for binomials in Gröbner and Markov bases"},
     {"NmzGetHilbertSeriesExpansion",
      (PyCFunction)NmzGetHilbertSeriesExpansion, METH_VARARGS,
      "Returns expansion of the hilbert series"},
@@ -2854,12 +2933,12 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      "Prints the Normaliz cone output into a file"},
     {"NmzWritePrecompData", (PyCFunction)NmzWritePrecompData, METH_VARARGS,
      "Prints the Normaliz cone precomputed data for further input"},
-     
+
     {"NmzGetRenfInfo", (PyCFunction)NmzGetRenfInfo, METH_VARARGS,
      "Outputs info of the number field associated to a renf cone"},
     {"NmzFieldGenName", (PyCFunction)NmzFieldGenName, METH_VARARGS,
      "Returns name of field generator"},
-     
+
     {"NmzModifyCone", (PyCFunction)_NmzModify_Outer, METH_VARARGS,
      "Modifies a given input property of a cone using a new matrix"},
     {
