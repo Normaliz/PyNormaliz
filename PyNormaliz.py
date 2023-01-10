@@ -389,7 +389,7 @@ class Cone:
         return PyNormaliz_cpp.NmzSetGBDegreeBound(self.cone, bound)
 
     def SetGBMinDegree(self, bound=-1):
-        return PyNormaliz_cpp.NmzSetGBGBMinDegree(self.cone, bound)
+        return PyNormaliz_cpp.NmzSetGBMinDegree(self.cone, bound)
 
     def SetDecimalDigits(self, digits=100):
         return PyNormaliz_cpp.NmzSetDecimalDigits(self.cone, digits)
