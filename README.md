@@ -5,9 +5,9 @@
 
 PyNormaliz provides an interface to [Normaliz](https://www.normaliz.uni-osnabrueck.de) via libNormaliz.
 It offers the complete functionality of Normaliz, and can be used interactively from python.
-For a first example, see [this introduction](doc/PyNormaliz_Tutorial.pdf) by Richard Sieg (Slighty outdated: for the installation follow the instructions below).
+For a first example, see [this introduction](doc/PyNormaliz_Tutorial.pdf) by Richard Sieg (Slightly outdated: for the installation follow the instructions below).
 
-A full documentation is conatined in [Appendix E](doc/PyNormaliz.pdf) of the Normaliz manial.
+A full documentation is contained in [Appendix E](doc/PyNormaliz.pdf) of the Normaliz manual.
 
 
 ## Requirements
@@ -15,7 +15,7 @@ A full documentation is conatined in [Appendix E](doc/PyNormaliz.pdf) of the Nor
 * python 3.4 or higher
 * Normaliz 3.9.0 or higher <https://github.com/Normaliz/Normaliz/releases>
 
-The source packages of the Normaliz realeases contain PyNormaliz.
+The source packages of the Normaliz releases contain PyNormaliz.
 
 ## Installation
 
@@ -53,7 +53,7 @@ returns what its name says:
 
     [[0, 1], [1, 0]]
 
-is the matrix of the two Hilbert basis vectors. The ouput matrices of PyNormaliz can be used also in Normaliz input files.
+is the matrix of the two Hilbert basis vectors. The output matrices of PyNormaliz can be used also in Normaliz input files.
 
 One can pass options to the compute functions as in
 
@@ -63,7 +63,7 @@ Note that some Normaliz output types must be specially encoded for python. Our H
 
     [[1], [1, 1], 0]
 
-to be read as follows: [1] is the numerator polynomial, [1,1] is the vector of exponents of t that occur in the denominator, which is (1-t)(1-t) in our case, and 0 is the shift.  So the Hilbert series is given by the rational function 1/(1-t)(1-t). (Aoso see ee [this introduction](doc/PyNormaliz_Tutorial.pdf).) But we can use
+to be read as follows: [1] is the numerator polynomial, [1,1] is the vector of exponents of t that occur in the denominator, which is (1-t)(1-t) in our case, and 0 is the shift.  So the Hilbert series is given by the rational function 1/(1-t)(1-t). (Also see [this introduction](doc/PyNormaliz_Tutorial.pdf).) But we can use
 
     print_series(C.HilbertSeries(HSOP = True))
     
@@ -74,7 +74,7 @@ with the result
     (1 - t)^2
 
 
-One can also compute several data simultaneously and specify options ("PrimalMode" only added as an example, not because ot is particularly useful here):
+One can also compute several data simultaneously and specify options ("PrimalMode" only added as an example, not because it is particularly useful here):
 
     C.Compute("LatticePoints", "Volume", "PrimalMode")
     
@@ -94,7 +94,7 @@ with the expected value
 
     '1.4142'
     
-Floating point numbers are formatted with 4 decimal places and returned as strings (may change). If you want the euclideal volume at the maximum floating point precision, you can use the low level interface which is intermediate between the class Cone and libnormaliz:
+Floating point numbers are formatted with 4 decimal places and returned as strings (may change). If you want the euclidean volume at the maximum floating point precision, you can use the low level interface which is intermediate between the class Cone and libnormaliz:
 
     NmzResult(C.cone,"EuclideanVolume")
     1.4142135623730951
@@ -145,10 +145,10 @@ computes the intersection of two cones. So
     C2 = Cone(cone=[[1,1],[1,3]])
     intersection(C1,C2).ExtremeRays()
     
-yeilds the result
+yields the result
 
     [[1, 1], [1, 2]]
     
-If you want to see what Normaliz is doing (especually in longer computations) activate the terminal output by
+If you want to see what Normaliz is doing (especially in longer computations) activate the terminal output by
 
     C.setVerbose(True)
