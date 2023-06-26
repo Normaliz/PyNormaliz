@@ -236,7 +236,7 @@ static bool PyNumberToNmz(PyObject*, mpz_class&);
 static bool PyNumberToNmz(PyObject* in, mpq_class& out)
 {
     if (PyFloat_Check(in)) {
-        throw PyNormalizInputException("PyFloat not allowed in PyNormaliz input. Must be ecoded as string.");
+        throw PyNormalizInputException("PyFloat not allowed in PyNormaliz input. Must be encoded as string.");
         return true;
     }
 #if PY_MAJOR_VERSION < 3
@@ -1674,7 +1674,7 @@ properties are available. Here are some special outputs that might differ from
 Normaliz:
 * HilbertSeries and WeightedEhrhartSeries
   The returned object is a list with three entries: The first one describes
-the numerator of the hilbert series, the second one the denominator, and the
+the numerator of the Hilbert series, the second one the denominator, and the
 last one is the shift. If you pass the HSOP option, output will be done in
 HSOP format.
 * Grading
@@ -1747,7 +1747,7 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, const void* nf = nullptr)
             return NmzWeightedEhrhartSeriesToPyList( C->getWeightedEhrhartSeries());
 
         // though Grading has the return type vector<Integer> we make it
-        // a complex struture within PyNormaliz since we want to combine it
+        // a complex structure within PyNormaliz since we want to combine it
         // with the grading denominator
         case libnormaliz::ConeProperty::Grading: {
             vector< Integer > grad = C->getGrading();
@@ -2127,7 +2127,7 @@ static PyObject* NmzSetPolynomial(PyObject* self, PyObject* args)
     PyObject* poly_pi = PyTuple_GetItem(args, 1);
 
     if(!string_check(poly_pi)){
-        PyErr_SetString(PyNormaliz_cppError, "Polynomual must be given as a string");
+        PyErr_SetString(PyNormaliz_cppError, "Polynomial must be given as a string");
         return NULL;
     }
     TempSignalHandler tmpHandler1; // use custom signal handler
@@ -2179,7 +2179,7 @@ static PyObject* NmzSetPolynomialEquations(PyObject* self, PyObject* args)
     vector<string> PolyEquations;
     for(size_t i = 0; i < nr_polys; ++i){
         if(!string_check(PyList_GetItem(polys_py,i))) {
-            PyErr_SetString(PyNormaliz_cppError, "Polynomual must be given as a string");
+            PyErr_SetString(PyNormaliz_cppError, "Polynomial must be given as a string");
             return NULL;
         }
         string equ = PyUnicodeToString( PyList_GetItem(polys_py,i));
@@ -2231,7 +2231,7 @@ static PyObject* NmzSetPolynomialInequalities(PyObject* self, PyObject* args)
     vector<string> PolyInequalities;
     for(size_t i = 0; i < nr_polys; ++i){
         if(!string_check(PyList_GetItem(polys_py,i))) {
-            PyErr_SetString(PyNormaliz_cppError, "Polynomual must be given as a string");
+            PyErr_SetString(PyNormaliz_cppError, "Polynomial must be given as a string");
             return NULL;
         }
         string inequ = PyUnicodeToString( PyList_GetItem(polys_py,i));
@@ -2457,7 +2457,7 @@ static PyObject* NmzSymmetrizedCone(PyObject* self, PyObject* args)
 
 /***************************************************************************
  *
- * Get expanded hilbert series
+ * Get expanded Hilbert series
  *
  ***************************************************************************/
 
@@ -2834,7 +2834,7 @@ static PyObject* NmzFieldGenName(PyObject* self, PyObject* args)
 
 #endif
 
-    return NULL; // to kmake gcc happy
+    return NULL; // to make gcc happy
 
     FUNC_END
 }
