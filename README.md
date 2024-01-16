@@ -13,7 +13,7 @@ A full documentation is contained in [Appendix E](doc/PyNormaliz.pdf) of the Nor
 ## Requirements
 
 * python 3.4 or higher
-* Normaliz 3.9.0 or higher <https://github.com/Normaliz/Normaliz/releases>
+* Normaliz 3.10.0 or higher <https://github.com/Normaliz/Normaliz/releases>
 
 The source packages of the Normaliz releases contain PyNormaliz.
 
