@@ -150,7 +150,7 @@ def our_float_handler(x):
 
 def PrettyPolynomialTuple(numCoefficients, denCoefficients):
     """
-    Strings for numerator and denominator of the a hilbert series.
+    Strings for numerator and denominator of the a Hilbert series.
 
     Parameters
     ----------
@@ -236,7 +236,7 @@ def PrettyPolynomialTuple(numCoefficients, denCoefficients):
 
 def PrintPrettyHilbertSeries(numCoefficients, denCoefficients):
     """
-    Make a pretty hilbert series string
+    Make a pretty Hilbert series string
 
     Parameters
     ----------
