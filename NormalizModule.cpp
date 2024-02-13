@@ -29,6 +29,7 @@ using libnormaliz::ConeProperties;
 using libnormaliz::Sublattice_Representation;
 using libnormaliz::Type::InputType;
 using libnormaliz::AutomorphismGroup;
+using libnormaliz::Matrix;
 
 #ifdef LIBNORMALIZ_DYNAMIC_BITSET_H
 using libnormaliz::dynamic_bitset;
@@ -179,11 +180,11 @@ static PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg
 #ifndef NMZ_RELEASE
 static_assert(
     false,
-    "Your Normaliz version (unknown) is too old! Update to 3.10.0 or newer.");
+    "Your Normaliz version (unknown) is too old! Update to 3.10.2 or newer.");
 #endif
 #if NMZ_RELEASE < 31000
 static_assert(false,
-              "Your Normaliz version is too old! Update to 3.10.0 or newer.");
+              "Your Normaliz version is too old! Update to 3.10.2 or newer.");
 #endif
 
 /***************************************************************************
@@ -773,6 +774,26 @@ NmzAutomorphismsToPython(const AutomorphismGroup< Integer >& grp)
 
     return list;
 }
+
+template < typename Integer >
+static PyObject*
+NmzFusionDataToPython(const vector<vector<Matrix<Integer> > >& FusData)
+{
+    int outer_list_size = FusData.size();
+
+    PyObject* outer_list = PyList_New(outer_list_size);
+
+    for(int ring = 0; ring < outer_list_size; ring++){
+        int inner_list_size = FusData[ring].size();
+        PyObject* inner_list = PyList_New(inner_list_size);
+        for(int mat = 0; mat < inner_list_size; mat++){
+            PyList_SetItem(inner_list, mat, NmzMatrixToPyList(FusData[ring][mat].get_elements()));
+        }
+        PyList_SetItem(outer_list, ring, inner_list);
+    }
+    return outer_list;
+}
+
 
 /***************************************************************************
  *
@@ -1809,14 +1830,26 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, const void* nf = nullptr)
         case libnormaliz::ConeProperty::FVector:
             return NmzVectorToPyList(C->getFVector());
 
+       case libnormaliz::ConeProperty::FVectorOrbits:
+            return NmzVectorToPyList(C->getFVectorOrbits());
+
         case libnormaliz::ConeProperty::DualFVector:
             return NmzVectorToPyList(C->getDualFVector());
+
+        case libnormaliz::ConeProperty::DualFVectorOrbits:
+            return NmzVectorToPyList(C->getDualFVectorOrbits());
 
         case libnormaliz::ConeProperty::FaceLattice:
             return NmzFacelatticeToPython(C->getFaceLattice());
 
+        case libnormaliz::ConeProperty::FaceLatticeOrbits:
+            return NmzFacelatticeToPython(C->getFaceLatticeOrbits());
+
         case libnormaliz::ConeProperty::DualFaceLattice:
             return NmzFacelatticeToPython(C->getDualFaceLattice());
+
+        case libnormaliz::ConeProperty::DualFaceLatticeOrbits:
+            return NmzFacelatticeToPython(C->getDualFaceLatticeOrbits());
 
         case libnormaliz::ConeProperty::Automorphisms:
             return NmzAutomorphismsToPython(C->getAutomorphismGroup(
@@ -1841,6 +1874,9 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, const void* nf = nullptr)
         case libnormaliz::ConeProperty::EuclideanAutomorphisms:
             return NmzAutomorphismsToPython(C->getAutomorphismGroup(
                 libnormaliz::ConeProperty::EuclideanAutomorphisms));
+
+        case libnormaliz::ConeProperty::FusionData:
+            return NmzFusionDataToPython(C->getFusionDataMatrix());
 
         case libnormaliz::ConeProperty::Incidence:
             return NmzVectorToPyList(C->getIncidence());

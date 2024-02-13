@@ -13,7 +13,7 @@ A full documentation is conatined in [Appendix E](doc/PyNormaliz.pdf) of the Nor
 ## Requirements
 
 * python 3.4 or higher
-* Normaliz 3.9.0 or higher <https://github.com/Normaliz/Normaliz/releases>
+* Normaliz 3.10.2 or higher <https://github.com/Normaliz/Normaliz/releases>
 
 The source packages of the Normaliz realeases contain PyNormaliz.
 
@@ -66,7 +66,7 @@ Note that some Normaliz output types must be specially encoded for python. Our H
 to be read as follows: [1] is the numerator polynomial, [1,1] is the vector of exponents of t that occur in the denominator, which is (1-t)(1-t) in our case, and 0 is the shift.  So the Hilbert series is given by the rational function 1/(1-t)(1-t). (Aoso see ee [this introduction](doc/PyNormaliz_Tutorial.pdf).) But we can use
 
     print_series(C.HilbertSeries(HSOP = True))
-    
+
 with the result
 
         (1)
@@ -77,11 +77,11 @@ with the result
 One can also compute several data simultaneously and specify options ("PrimalMode" only added as an example, not because ot is particularly useful here):
 
     C.Compute("LatticePoints", "Volume", "PrimalMode")
-    
+
 Then
 
     C.Volume()
-    
+
 with the result
 
     1
@@ -89,21 +89,21 @@ with the result
 This is the lattice length of the diagonal in the square. The euclidean length, that has been computed simultaneously, is returned by
 
     C.EuclideanVolume()
-    
+
 with the expected value
 
     '1.4142'
-    
+
 Floating point numbers are formatted with 4 decimal places and returned as strings (may change). If you want the euclideal volume at the maximum floating point precision, you can use the low level interface which is intermediate between the class Cone and libnormaliz:
 
     NmzResult(C.cone,"EuclideanVolume")
     1.4142135623730951
-    
+
 One can find out whether a single goal has been computed by asking
 
     C.IsComputed("Automorphisms")
     False
-    
+
 If you use Compute instead of IsComputed, then Normaliz tries to compute the goal, and there are situations in which the computation is undesirable.
 
 Algebraic polyhedra can be computed by PyNormaliz as well:
@@ -120,7 +120,7 @@ It is important to note that fractions and algebraic numbers must be encoded as 
 Very hard to read! Somewhat better:
 
     print_matrix(S)
-    
+
               -1470/433*a+280/433 -1
     -32204/555417*a-668233/555417 -1
 
@@ -131,24 +131,24 @@ But we can also get floating point approximations:
     -4.1545 -1.0000
     -1.2851 -1.0000
 
-By using Python functions, the functionality of Normaliz can be extended. For example, 
-    
+By using Python functions, the functionality of Normaliz can be extended. For example,
+
     def intersection(cone1, cone2):
         intersection_ineq = cone1.SupportHyperplanes()+cone2.SupportHyperplanes()
         intersection_equat = cone1.Equations()+cone2.Equations()
         C = Cone(inequalities = intersection_ineq, equations = intersection_equat)
         return C
-        
+
 computes the intersection of two cones. So
 
     C1 = Cone(cone=[[1,2],[2,1]])
     C2 = Cone(cone=[[1,1],[1,3]])
     intersection(C1,C2).ExtremeRays()
-    
+
 yeilds the result
 
     [[1, 1], [1, 2]]
-    
+
 If you want to see what Normaliz is doing (especually in longer computations) activate the terminal output by
 
     C.setVerbose(True)

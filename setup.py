@@ -33,6 +33,6 @@ setup(
                               extra_compile_args=['-std=c++14'],
                               libraries=[ 'normaliz' ],
                               **extra_kwds) ],
-    
+
     package_data = {'': [ "COPYING", "GPLv2", "README.md" ] },
 )
