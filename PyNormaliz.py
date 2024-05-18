@@ -385,6 +385,9 @@ class Cone:
     def SetFaceCodimBound(self, bound=-1):
         return PyNormaliz_cpp.NmzSetFaceCodimBound(self.cone, bound)
 
+    def SetModularGrading(self, mod_gr=-1):
+        return PyNormaliz_cpp.NmzSetModularGrading(self.cone, mod_gr)
+
     def SetGBDegreeBound(self, bound=-1):
         return PyNormaliz_cpp.NmzSetGBDegreeBound(self.cone, bound)
 

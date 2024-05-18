@@ -180,11 +180,11 @@ static PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg
 #ifndef NMZ_RELEASE
 static_assert(
     false,
-    "Your Normaliz version (unknown) is too old! Update to 3.10.2 or newer.");
+    "Your Normaliz version (unknown) is too old! Update to 3.10.3 or newer.");
 #endif
-#if NMZ_RELEASE < 31000
+#if NMZ_RELEASE < 31003
 static_assert(false,
-              "Your Normaliz version is too old! Update to 3.10.2 or newer.");
+              "Your Normaliz version is too old! Update to 3.10.3 or newer.");
 #endif
 
 /***************************************************************************
@@ -711,6 +711,27 @@ NmzFacelatticeToPython(const map<dynamic_bitset, int>& lattice)
         curr++;
     }
     return list;
+}
+
+static PyObject*
+NmzModularGradingsToPython(const vector<vector<dynamic_bitset> >& gradings)
+{
+    ssize_t   nr_gradings = gradings.size();
+    PyObject* grad_list = PyList_New(nr_gradings);
+    if(nr_gradings == 0)
+        return grad_list;
+    size_t curr = 0;
+    for(auto& this_grad: gradings){
+        PyObject*  list_part = PyList_New(this_grad.size());
+        size_t inner_curr = 0;
+        for(auto& part: this_grad){
+            PyList_SetItem(list_part, inner_curr, NmzToPyNumber(part));
+            inner_curr++;
+        }
+        PyList_SetItem(grad_list, curr, list_part);
+        curr++;
+    }
+    return grad_list;
 }
 
 template < typename Integer >
@@ -1881,6 +1902,9 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, const void* nf = nullptr)
         case libnormaliz::ConeProperty::Incidence:
             return NmzVectorToPyList(C->getIncidence());
 
+        case libnormaliz::ConeProperty::ModularGradings:
+            return NmzModularGradingsToPython(C->getModularGradings());
+
         default: {
             switch (outputtype) {
                 case libnormaliz::OutputType::Matrix:
@@ -2295,7 +2319,7 @@ static PyObject* NmzSetPolynomialInequalities(PyObject* self, PyObject* args)
 
 /***************************************************************************
  *
- * FaceCodimBound
+ * FaceCodimBound and other numerical parameters
  *
  ***************************************************************************/
 
@@ -2331,6 +2355,45 @@ static PyObject* NmzSetFaceCodimBound(PyObject* self, PyObject* args)
     else {
          Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
          cone_ptr->setFaceCodimBound(bound);
+         Py_RETURN_TRUE;
+    }
+#endif
+
+    FUNC_END
+}
+
+static PyObject* NmzSetModularGrading(PyObject* self, PyObject* args)
+{
+
+    FUNC_BEGIN
+
+    PyObject* cone = PyTuple_GetItem(args, 0);
+
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+
+    PyObject* mod_gr_py = PyTuple_GetItem(args, 1);
+
+    TempSignalHandler tmpHandler; // use custom signal handler
+
+    int  overflow;
+    long mod_gr = PyLong_AsLongLongAndOverflow(mod_gr_py, &overflow);
+    if (is_cone_mpz(cone)) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        cone_ptr->setModularGraing(mod_gr);
+        Py_RETURN_TRUE;
+    }
+    else if (is_cone_long(cone)) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        cone_ptr->setModularGraing(mod_gr);
+        Py_RETURN_TRUE;
+    }
+#ifdef ENFNORMALIZ
+    else {
+         Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
+         cone_ptr->setModularGraing(mod_gr);
          Py_RETURN_TRUE;
     }
 #endif
@@ -2402,6 +2465,7 @@ static PyObject* NmzSetGBMinDegree(PyObject* self, PyObject* args)
     else if (is_cone_long(cone)) {
         Cone< long long >* cone_ptr = get_cone_long(cone);
         cone_ptr->setGBMinDegree(bound);
+        Py_RETURN_TRUE;
     }
 #ifdef ENFNORMALIZ
     else {
@@ -2942,6 +3006,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      METH_VARARGS, "Sets the polynomial inequalities for lattice points"},
     {"NmzSetFaceCodimBound", (PyCFunction)NmzSetFaceCodimBound,
      METH_VARARGS, "Sets the maximal codimension for the computed faces"},
+    {"NmzSetModularGrading", (PyCFunction)NmzSetModularGrading,
+     METH_VARARGS, "Picks a modular grading (counting from 1)"},
     {"NmzSetGBDegreeBound", (PyCFunction)NmzSetGBDegreeBound,
      METH_VARARGS, "Sets the maximal degree for binomials in Gröbner and Markov bases"},
     {"NmzSetGBMinDegree", (PyCFunction)NmzSetGBMinDegree,
