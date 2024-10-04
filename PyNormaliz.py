@@ -388,6 +388,9 @@ class Cone:
     def SetModularGrading(self, mod_gr=-1):
         return PyNormaliz_cpp.NmzSetModularGrading(self.cone, mod_gr)
 
+    def SetChosenFusionRing(self, chosen_ring=-1):
+        return PyNormaliz_cpp.NmzSetChosenFusionRing(self.cone, chosen_ring)
+
     def SetGBDegreeBound(self, bound=-1):
         return PyNormaliz_cpp.NmzSetGBDegreeBound(self.cone, bound)
 

@@ -180,11 +180,11 @@ static PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg
 #ifndef NMZ_RELEASE
 static_assert(
     false,
-    "Your Normaliz version (unknown) is too old! Update to 3.10.3 or newer.");
+    "Your Normaliz version (unknown) is too old! Update to 3.10.4 or newer.");
 #endif
-#if NMZ_RELEASE < 31003
+#if NMZ_RELEASE < 31004
 static_assert(false,
-              "Your Normaliz version is too old! Update to 3.10.3 or newer.");
+              "Your Normaliz version is too old! Update to 3.10.4 or newer.");
 #endif
 
 /***************************************************************************
@@ -1899,6 +1899,9 @@ _NmzResultImpl(Cone< Integer >* C, PyObject* prop_obj, const void* nf = nullptr)
         case libnormaliz::ConeProperty::FusionData:
             return NmzFusionDataToPython(C->getFusionDataMatrix());
 
+        case libnormaliz::ConeProperty::InductionMatrices:
+            return NmzFusionDataToPython(C->getInductionMatrices());
+
         case libnormaliz::ConeProperty::Incidence:
             return NmzVectorToPyList(C->getIncidence());
 
@@ -2394,6 +2397,45 @@ static PyObject* NmzSetModularGrading(PyObject* self, PyObject* args)
     else {
          Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
          cone_ptr->setModularGraing(mod_gr);
+         Py_RETURN_TRUE;
+    }
+#endif
+
+    FUNC_END
+}
+
+static PyObject* NmzSetChosenFusionRing(PyObject* self, PyObject* args)
+{
+
+    FUNC_BEGIN
+
+    PyObject* cone = PyTuple_GetItem(args, 0);
+
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+
+    PyObject* chosen_ring_py = PyTuple_GetItem(args, 1);
+
+    TempSignalHandler tmpHandler; // use custom signal handler
+
+    int  overflow;
+    long chosen_ring = PyLong_AsLongLongAndOverflow(chosen_ring_py, &overflow);
+    if (is_cone_mpz(cone)) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        cone_ptr->setChosenFusionRing(chosen_ring);
+        Py_RETURN_TRUE;
+    }
+    else if (is_cone_long(cone)) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        cone_ptr->setChosenFusionRing(chosen_ring);
+        Py_RETURN_TRUE;
+    }
+#ifdef ENFNORMALIZ
+    else {
+         Cone<renf_elem_class>* cone_ptr = get_cone_renf(cone);
+         cone_ptr->setChosenFusionRing(chosen_ring);
          Py_RETURN_TRUE;
     }
 #endif
@@ -3007,7 +3049,9 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
     {"NmzSetFaceCodimBound", (PyCFunction)NmzSetFaceCodimBound,
      METH_VARARGS, "Sets the maximal codimension for the computed faces"},
     {"NmzSetModularGrading", (PyCFunction)NmzSetModularGrading,
-     METH_VARARGS, "Picks a modular grading (counting from 1)"},
+    METH_VARARGS, "Sets the maximal codimension for the computed faces"},
+    {"NmzSetChosenFusionRing", (PyCFunction)NmzSetChosenFusionRing,
+     METH_VARARGS, "Picks a fusion ring (counting from 1)"},
     {"NmzSetGBDegreeBound", (PyCFunction)NmzSetGBDegreeBound,
      METH_VARARGS, "Sets the maximal degree for binomials in Gröbner and Markov bases"},
     {"NmzSetGBMinDegree", (PyCFunction)NmzSetGBMinDegree,
