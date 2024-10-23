@@ -46,7 +46,7 @@ jobs:
           ./.ci-run-tests.sh
 
   mac-os:
-    runs-on: macos-15
+    runs-on: macos-13
     env:
       EANTIC: yes
       NAUTY: yes
