@@ -77,7 +77,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository:   passagemath/passagemath
-          ref:          main
+          #ref:          main
+          ref:          refs/pull/1191/merge
 
       - uses: actions/download-artifact@v4
         with:
@@ -203,7 +204,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository:   passagemath/passagemath
-          ref:          main
+          #ref:          main
+          ref:          refs/pull/1191/merge
 
       - uses: actions/download-artifact@v4
         with:
