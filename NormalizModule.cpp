@@ -28,6 +28,7 @@ using libnormaliz::Cone;
 using libnormaliz::ConeProperties;
 using libnormaliz::Sublattice_Representation;
 using libnormaliz::Type::InputType;
+// using libnormaliz::BoolParam::Param;
 using libnormaliz::AutomorphismGroup;
 using libnormaliz::Matrix;
 
@@ -180,11 +181,11 @@ static PyObject* CallPythonFuncOnOneArg(PyObject* function, PyObject* single_arg
 #ifndef NMZ_RELEASE
 static_assert(
     false,
-    "Your Normaliz version (unknown) is too old! Update to 3.10.4 or newer.");
+    "Your Normaliz version (unknown) is too old! Update to 3.11.0 or newer.");
 #endif
-#if NMZ_RELEASE < 31004
+#if NMZ_RELEASE < 31100
 static_assert(false,
-              "Your Normaliz version is too old! Update to 3.10.4 or newer.");
+              "Your Normaliz version is too old! Update to 3.11.0 or newer.");
 #endif
 
 /***************************************************************************
@@ -1633,6 +1634,82 @@ static PyObject* NmzSetGrading(PyObject* self, PyObject* args)
 
 /***************************************************************************
  *
+ * Boolean parameters
+ *
+ ***************************************************************************/
+template < typename Integer >
+static PyObject* NmzSetBoolParam_inner(Cone<Integer>* cone_ptr, const libnormaliz::BoolParam::Param bool_param, bool value){
+
+    if(bool_param == libnormaliz::BoolParam::verbose)
+        cone_ptr->setVerbose(value);
+
+    if(bool_param == libnormaliz::BoolParam::nonnegative)
+        cone_ptr->setNonnegative(value);
+
+    if(bool_param == libnormaliz::BoolParam::total_degree)
+        cone_ptr->setTotalDegree(value);
+
+    if(bool_param == libnormaliz::BoolParam::convert_equations)
+        cone_ptr->setConvertEquations(value);
+
+    if(bool_param == libnormaliz::BoolParam::no_coord_transf)
+        cone_ptr->setNoCoordTransf(value);
+
+
+    if(bool_param == libnormaliz::BoolParam::list_polynomials)
+        cone_ptr->setListPolynomials(value);
+
+    if(bool_param == libnormaliz::BoolParam::no_pos_orth_def)
+        cone_ptr->setNoPosOrthDef(value);
+
+    if(bool_param == libnormaliz::BoolParam::not_a_bool_param)
+        throw libnormaliz::BadInputException("Invalid boolean parameter");
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* NmzSetBoolParam(PyObject* self, PyObject* args)
+{
+    FUNC_BEGIN
+    PyObject* cone = PyTuple_GetItem(args, 0);
+    PyObject* bool_param_py = PyTuple_GetItem(args, 1);
+    PyObject* bool_value_py = PyTuple_GetItem(args,2);
+    if (!is_cone(cone)) {
+        PyErr_SetString(PyNormaliz_cppError, "First argument must be a cone");
+        return NULL;
+    }
+
+    string param_as_string = PyUnicodeToString(bool_param_py);
+    libnormaliz::BoolParam::Param bool_param = libnormaliz::to_boolpar(param_as_string);
+
+    if (bool_value_py != Py_True && bool_value_py != Py_False) {
+        PyErr_SetString(PyNormaliz_cppError,
+                        "Argument must be True or False");
+        return NULL;
+    }
+    bool bool_value = (bool_value_py == Py_True);
+
+    if (is_cone_long(cone)) {
+        Cone< long long >* cone_ptr = get_cone_long(cone);
+        return NmzSetBoolParam_inner(cone_ptr, bool_param, bool_value);
+    }
+    if (is_cone_mpz(cone)) {
+        Cone< mpz_class >* cone_ptr = get_cone_mpz(cone);
+        return NmzSetBoolParam_inner(cone_ptr, bool_param, bool_value);
+    }
+#ifdef ENFNORMALIZ
+    if (is_cone_renf(cone)) {
+        Cone< renf_elem_class >* cone_ptr = get_cone_renf(cone);
+        return NmzSetBoolParam_inner(cone_ptr, bool_param, bool_value);
+    }
+#endif
+    FUNC_END
+    Py_RETURN_NONE;
+}
+
+
+/***************************************************************************
+ *
  * NmzSetProjectionCoords
  *
  ***************************************************************************/
@@ -1667,7 +1744,7 @@ PyObject* NmzSetProjectionCoords_inner(Cone< renf_elem_class >* cone, PyObject* 
     prepare_nf_input(coords_mat, PyHelpMat,cone->getRenf());
     coords_renf = coords_mat[0];
 
-    cone->resetGrading(coords_renf);
+    cone->resetProjectionCoords(coords_renf);
     Py_RETURN_NONE;
 }
 #endif
@@ -3017,6 +3094,8 @@ static PyMethodDef PyNormaliz_cppMethods[] = {
      "Check if property is computed "},
     {"NmzSetGrading", (PyCFunction)NmzSetGrading, METH_VARARGS,
      "Reset the grading of a cone"},
+    {"NmzSetBoolParam", (PyCFunction)NmzSetBoolParam, METH_VARARGS,
+     "Swts boolean parameters of a cone"},
     {"NmzSetProjectionCoords", (PyCFunction)NmzSetProjectionCoords, METH_VARARGS,
      "Reset the projection coordinates"},
     {"NmzResult", (PyCFunction)_NmzResult, METH_VARARGS | METH_KEYWORDS,

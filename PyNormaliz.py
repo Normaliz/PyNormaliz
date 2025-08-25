@@ -351,6 +351,9 @@ class Cone:
     def SetVerbose(self, verbose=True):
         return NmzSetVerbose(self.cone, verbose)
 
+    def SetBoolParam(self, bool_param, bool_value = True):
+        return NmzSetBoolParam(self.cone,bool_param, bool_value)
+
     # This one is not like the others!
     def IntegerHull(self):
         input_list=["IntegerHull"]
@@ -437,7 +440,7 @@ class Cone:
         return PyNormaliz_cpp.NmzResult(self.cone, name,RationalHandler = our_rat_handler, \
                NumberfieldElementHandler=our_renf_handler, FloatHandler = our_float_handler)
 
-# Generate getters for a bunch of Normalize properties
+# Generate getters for a bunch of Normaliz properties
 def add_dyn_getter(name):
     if hasattr(Cone, name):
         return
