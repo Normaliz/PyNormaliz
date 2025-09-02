@@ -46,7 +46,7 @@ jobs:
           ./.ci-run-tests.sh
 
   mac-os:
-    runs-on: macos-13
+    runs-on: macos-15
     env:
       EANTIC: yes
       NAUTY: yes
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.7'
+          python-version: '3.12'
       - name: "Setup compiler and build automake"
         run: |
           brew reinstall llvm automake
