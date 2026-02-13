@@ -69,6 +69,10 @@ jobs:
       CIBW_ENVIRONMENT: "PATH=$(pwd)/local/bin:$PATH CPATH=$(pwd)/local/include:$CPATH LIBRARY_PATH=$(pwd)/local/lib:$LIBRARY_PATH LD_LIBRARY_PATH=$(pwd)/local/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=$(pwd)/local/share/pkgconfig:$PKG_CONFIG_PATH ACLOCAL_PATH=/usr/share/aclocal"
       # Use 'build', not 'pip wheel'
       CIBW_BUILD_FRONTEND: build
+      CIBW_REPAIR_WHEEL_COMMAND_LINUX: "set -x && export LD_LIBRARY_PATH=$(pwd)/prefix/lib:$LD_LIBRARY_PATH && auditwheel -v -v -v -v repair -w {dest_dir} {wheel}"
+      CIBW_REPAIR_WHEEL_COMMAND_MACOS: "set -x && export DYLD_FALLBACK_LIBRARY_PATH=$(pwd)/prefix/lib:$DYLD_FALLBACK_LIBRARY_PATH && delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+      CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+      CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
     steps:
       - uses: actions/checkout@v4
         with:
@@ -137,20 +141,236 @@ jobs:
           mkdir -p unpacked
           for pkg in pynormaliz; do
               (cd unpacked && tar xfz - ) < dist/$pkg*.tar.gz
-              "${{ steps.python.outputs.python-path }}" -m pipx run cibuildwheel==3.2.1 unpacked/$pkg*
+              "${{ steps.python.outputs.python-path }}" -m pipx run cibuildwheel==3.3.0 unpacked/$pkg*
           done
+
+      - uses: actions/upload-artifact@v4
+        if:   always()
+        with:
+          name: ${{ matrix.os }}-${{ matrix.build }}-${{ matrix.arch }}-wheels
+          path: ./wheelhouse/*.whl
+
+  build_wheels_windows:
+    name: Build wheels on ${{ matrix.os }} using ${{ matrix.env }}
+    runs-on: ${{ matrix.os }}
+    needs: sdists_for_pypi
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os:      windows-2022
+          msystem: ucrt64
+          env:     ucrt-x86_64
+          arch:    auto
+          build:   "win_*64"
+        - os:      windows-11-arm
+          msystem: clangarm64
+          env:     clang-aarch64
+          arch:    auto
+          build:   "win_*64"
+    env:
+      # SPKGs to install as system packages
+      SPKGS: _bootstrap _prereq
+      # Non-Python packages to install as spkgs
+      TARGETS_PRE: normaliz
+      # Disable building PyPy wheels on all platforms
+      CIBW_SKIP: "pp*"
+      #
+      CIBW_ARCHS: ${{ matrix.arch }}
+      # https://cibuildwheel.readthedocs.io/en/stable/options/#requires-python
+      CIBW_PROJECT_REQUIRES_PYTHON: ">=3.9"
+      # Run before wheel build
+      CIBW_BEFORE_BUILD_WINDOWS: |
+        pip install delvewheel
+      # Environment during wheel build
+      # PYTHONUTF8=1 is for delvewheel
+      CIBW_ENVIRONMENT: >-
+        PATH="D:\\a\\sage\\sage\\sage-local\\bin;D:\\a\\sage\\sage\\build\\bin;$PATH"
+        INCLUDE="D:\\a\\sage\\sage\\sage-local\\include;%INCLUDE%"
+        LIB="D:\\a\\sage\\sage\\sage-local\\bin;D:\\a\\sage\\sage\\sage-local\\lib;%LIB%"
+        PKG_CONFIG_PATH=$(pwd)/prefix/lib/pkgconfig:$PKG_CONFIG_PATH
+        ACLOCAL_PATH=/usr/share/aclocal
+        PIP_FIND_LINKS=D:\\a\\sage\\sage\\wheelhouse' 'D:\\a\\sage\\sage\\dist
+        SAGE_NUM_THREADS=6
+        PYTHONUTF8=1
+      # Use 'build', not 'pip wheel'
+      CIBW_BUILD_FRONTEND: build
+      # CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -vv --custom-patch -w {dest_dir} {wheel}"
+      CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -vv -w {dest_dir} {wheel}"
+      #
+      CIBW_PLATFORM: windows
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository:   passagemath/passagemath
+          ref:          main
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - uses: msys2/setup-msys2@v2
+        name: Setup msys2
+        with:
+          install: >-
+            mingw-w64-${{ matrix.env }}-gcc
+            autotools
+            python
+            python-pip
+            python-setuptools
+            patch
+            bison
+            mingw-w64-${{ matrix.env }}-cmake
+            mingw-w64-${{ matrix.env }}-ninja
+            mingw-w64-${{ matrix.env }}-gtest
+            mingw-w64-${{ matrix.env }}-ncurses
+            mingw-w64-${{ matrix.env }}-readline
+            mingw-w64-${{ matrix.env }}-texinfo
+          msystem: ${{ matrix.msystem }}
+          path-type: inherit
+
+      - name: Retrieve configure tarball cache
+        id: cache-configure
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            build/pkgs/configure
+            upstream/configure*
+          key: >-
+            configure-build=${{
+              hashFiles('build',
+                        'configure.ac',
+                        'm4')
+            }}
+
+      - name: Bootstrap
+        if: steps.cache-configure.outputs.cache-hit != 'true'
+        # Patch python3 spkg-configure to allow Python 3.8.0 during the CIBW_BEFORE_ALL phase
+        run: |
+          export PATH=$(pwd)/build/bin:$PATH
+          eval $(sage-print-system-package-command auto --yes update)
+          eval $(sage-print-system-package-command auto --yes --no-install-recommends --spkg install _bootstrap bzip2 xz liblzma)
+          sed -i.bak '/m4_pushdef.*MIN_VERSION/s/3[0-9.]*/3.8.0/' build/pkgs/python3/spkg-configure.m4
+          ./bootstrap -s
+        shell: msys2 {0}
+
+      - name: Save configure tarball cache
+        if: steps.cache-configure.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            build/pkgs/configure
+            upstream/configure*
+          key: ${{ steps.cache-configure.outputs.cache-primary-key }}
+
+      - name: Retrieve SAGE_LOCAL cache
+        id:   cache-sage-local
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            config.status
+            sage-local
+          key: >-
+            ${{ runner.os }}-cibuildwheel-${{ matrix.arch }}-build=${{
+              hashFiles('build',
+                        'configure.ac',
+                        'm4')
+            }}
+          restore-keys: |
+            ${{ runner.os }}-cibuildwheel-${{ matrix.arch }}
+
+      - name: Unpack and prepare
+        id: unpack
+        # We build the wheels from the sdists so that MANIFEST filtering becomes effective.
+        # But we must run cibuildwheel with the unpacked source directory, not a tarball,
+        # so that SAGE_ROOT is copied into the build containers.
+        #
+        # In the CIBW_BEFORE_ALL phase, we install libraries using the Sage distribution.
+        # https://cibuildwheel.readthedocs.io/en/stable/options/#before-all
+        # For Linux, this is repeated for each of the packages that we build wheels for
+        # because CIBW starts with a fresh container on each invocation.
+        # Therefore we cache it in a directory mounted from the host: /host
+        # https://cibuildwheel.pypa.io/en/stable/faq/#linux-builds-in-containers
+        #
+        # - configure --with-sage-venv makes the SAGE_VENV separate from SAGE_LOCAL.
+        #   SAGE_LOCAL is put in PATH for the wheel building.
+        #   SAGE_VENV must not be in PATH so it does not shadow cibuildwheel's build tools.
+        #
+        run: |
+          if [ ! -x ./configure ]; then ./bootstrap -D; fi
+          touch configure
+          SAGE_LOCAL=$(pwd)/sage-local
+          # We set the installation records to the same mtime so that no rebuilds due to dependencies
+          # among these packages are triggered.
+          dummy="$SAGE_LOCAL"/var/lib/sage/installed/.dummy
+          if [ -f "$dummy" ]; then
+              touch "$dummy"
+              for tree in "$SAGE_LOCAL" "$SAGE_LOCAL"/var/lib/sage/venv*; do
+                  inst="$tree"/var/lib/sage/installed
+                  if [ -d "$inst" ]; then
+                      # -r is --reference; the macOS version of touch does not accept the long option.
+                      (cd "$inst" && touch -r "$dummy" .dummy *)
+                      # Show what has been built already.
+                      ls -l "$tree" "$inst"
+                  fi
+              done
+          fi
+
+          export PATH=build/bin:$PATH
+          echo CIBW_BEFORE_ALL="msys2 tools/cibw_before_all_windows.sh" >> "$GITHUB_ENV"
+          mkdir -p unpacked
+          set -x
+          for sdist in dist/$pkg*.tar.gz; do
+              (cd unpacked && tar xfz - && base=${sdist#dist/} && mv ${base%.tar.gz} ${base%-*}) < $sdist
+          done
+        shell: msys2 {0}
+
+      - name: pynormaliz wheels
+        id:   pynormaliz
+        uses: pypa/cibuildwheel@v3.3.0
+        with:
+          package-dir: unpacked/pynormaliz
+
+      - name: Save SAGE_LOCAL cache
+        if:   (success() || failure()) && steps.unpack.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            config.status
+            sage-local
+            !sage-local/lib64
+          key: ${{ steps.cache-sage-local.outputs.cache-primary-key }}
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-${{ matrix.arch }}-wheels
           path: ./wheelhouse/*.whl
 
+      - uses: actions/upload-artifact@v4
+        if:   always()
+        with:
+          name: unpacked-${{ matrix.os }}
+          path: ./unpacked
+
+      - uses: actions/upload-artifact@v4
+        if:   always()
+        with:
+          name: sage-local-${{ matrix.os }}
+          path: ./sage-local
+
+      - uses: actions/upload-artifact@v4
+        if:   always()
+        with:
+          name: logs-${{ matrix.os }}
+          path: ./logs
+
   pypi-publish:
     # This needs to be a separate job because pypa/gh-action-pypi-publish cannot run on macOS
     # https://github.com/pypa/gh-action-pypi-publish
     name: Upload wheels to PyPI
-    needs: build_wheels
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    needs: [build_wheels, build_wheels_windows]
+    if: (success() || failure()) && github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     runs-on: ubuntu-latest
     env:
       CAN_DEPLOY: ${{ secrets.PYPI_PASSWORD != '' }}
@@ -158,7 +378,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          pattern: "*-*-wheels"
+          pattern: "*-wheels"
           path: wheelhouse
           merge-multiple: true
 
